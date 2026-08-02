@@ -30,7 +30,7 @@
     "@angular-eslint/builder": "^18.3.0",
     "@angular-eslint/eslint-plugin": "^18.3.0",
     "@angular/cli": "^18.2.0",
-    "@angular/compiler-cli": "^18.2.0",
+    "@angular/compiler-cli": "^22.1.0",
     "@types/jasmine": "^5.1.4",
     "@typescript-eslint/eslint-plugin": "^8.5.0",
     "@typescript-eslint/parser": "^8.5.0",
