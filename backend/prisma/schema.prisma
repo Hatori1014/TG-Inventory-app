@@ -1,0 +1,308 @@
+// English naming for all code artifacts (models, fields, tables/columns via @map).
+// Business documentation (docs/plan-inicial-proyecto-inventario.md, section 7 — MER)
+// stays in Spanish for the functional user; this file is the English translation
+// of that same model. See convenciones.md, "Idioma".
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Roles and permissions (RBAC) ----------
+
+model Role {
+  id             String          @id @default(uuid())
+  name           String
+  description    String?
+  users          User[]
+  permissions    RolePermission[]
+  approvalFlows  ApprovalFlow[]
+
+  @@map("role")
+}
+
+model Permission {
+  id      String            @id @default(uuid())
+  module  String
+  action  String
+  roles   RolePermission[]
+
+  @@map("permission")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+  @@map("role_permission")
+}
+
+enum UserStatus {
+  active
+  blocked
+}
+
+model User {
+  id                String                @id @default(uuid())
+  name              String
+  email             String                @unique
+  passwordHash      String                @map("password_hash")
+  roleId            String                @map("role_id")
+  role              Role                  @relation(fields: [roleId], references: [id])
+  status            UserStatus            @default(active)
+  createdAt         DateTime              @default(now()) @map("created_at")
+  movements         InventoryMovement[]
+  purchases         Purchase[]
+  requestsCreated   Request[]             @relation("requester")
+  requestsApproved  Request[]             @relation("approver")
+  auditEvents       AuditEvent[]
+
+  @@map("user")
+}
+
+// ---------- Locations ----------
+
+enum LocationStatus {
+  active
+  inactive
+}
+
+model Location {
+  id             String              @id @default(uuid())
+  name           String
+  parentId       String?             @map("parent_id")
+  parent         Location?           @relation("hierarchy", fields: [parentId], references: [id])
+  children       Location[]          @relation("hierarchy")
+  status         LocationStatus      @default(active)
+  stock          LocationStock[]
+  minimumStock   MinimumStock[]
+  movements      InventoryMovement[]
+  requestItems   RequestItem[]
+
+  @@map("location")
+}
+
+// ---------- Catalog and inventory ----------
+
+enum ProductStatus {
+  active
+  discontinued
+}
+
+model Product {
+  id            String              @id @default(uuid())
+  name          String
+  description   String?
+  unit          String              @map("unit")
+  category      String?
+  requiresBatch Boolean             @default(false) @map("requires_batch")
+  imageUrl      String?             @map("image_url") // HU-26, post-MVP
+  status        ProductStatus       @default(active)
+  batches       Batch[]
+  stock         LocationStock[]
+  minimumStock  MinimumStock[]
+  movements     InventoryMovement[]
+  purchaseItems PurchaseItem[]
+  requestItems  RequestItem[]
+
+  @@map("product")
+}
+
+model Batch {
+  id           String              @id @default(uuid())
+  productId    String              @map("product_id")
+  product      Product             @relation(fields: [productId], references: [id])
+  batchNumber  String              @map("batch_number")
+  expiresAt    DateTime?           @map("expires_at")
+  receivedAt   DateTime            @default(now()) @map("received_at")
+  stock        LocationStock[]
+  movements    InventoryMovement[]
+
+  @@map("batch")
+}
+
+// Derived table — NOT the source of truth. Updated together with
+// InventoryMovement in the same transaction (see section 7.3 of the plan).
+model LocationStock {
+  id          String    @id @default(uuid())
+  productId   String    @map("product_id")
+  product     Product   @relation(fields: [productId], references: [id])
+  locationId  String    @map("location_id")
+  location    Location  @relation(fields: [locationId], references: [id])
+  batchId     String?   @map("batch_id")
+  batch       Batch?    @relation(fields: [batchId], references: [id])
+  quantity    Decimal   @default(0) @db.Decimal(14, 4)
+
+  @@unique([productId, locationId, batchId])
+  @@map("location_stock")
+}
+
+model MinimumStock {
+  id               String    @id @default(uuid())
+  productId        String    @map("product_id")
+  product          Product   @relation(fields: [productId], references: [id])
+  locationId       String    @map("location_id")
+  location         Location  @relation(fields: [locationId], references: [id])
+  minimumQuantity  Decimal   @map("minimum_quantity") @db.Decimal(14, 4)
+
+  @@unique([productId, locationId])
+  @@map("minimum_stock")
+}
+
+enum MovementType {
+  in
+  out
+  transfer_in
+  transfer_out
+  adjustment
+}
+
+// Immutable ledger — the source of truth for inventory.
+model InventoryMovement {
+  id          String        @id @default(uuid())
+  productId   String        @map("product_id")
+  product     Product       @relation(fields: [productId], references: [id])
+  locationId  String        @map("location_id")
+  location    Location      @relation(fields: [locationId], references: [id])
+  batchId     String?       @map("batch_id")
+  batch       Batch?        @relation(fields: [batchId], references: [id])
+  type        MovementType
+  quantity    Decimal       @db.Decimal(14, 4)
+  userId      String        @map("user_id")
+  user        User          @relation(fields: [userId], references: [id])
+  purchaseId  String?       @map("purchase_id")
+  purchase    Purchase?     @relation(fields: [purchaseId], references: [id])
+  requestId   String?       @map("request_id")
+  request     Request?      @relation(fields: [requestId], references: [id])
+  occurredAt  DateTime      @default(now()) @map("occurred_at")
+  notes       String?
+
+  @@map("inventory_movement")
+}
+
+// ---------- Suppliers and purchases ----------
+
+enum SupplierStatus {
+  active
+  inactive
+}
+
+model Supplier {
+  id        String          @id @default(uuid())
+  name      String
+  taxId     String?         @map("tax_id")
+  contact   String?
+  phone     String?
+  email     String?
+  status    SupplierStatus  @default(active)
+  purchases Purchase[]
+
+  @@map("supplier")
+}
+
+enum PurchaseStatus {
+  registered
+  received
+}
+
+model Purchase {
+  id          String                @id @default(uuid())
+  supplierId  String                @map("supplier_id")
+  supplier    Supplier              @relation(fields: [supplierId], references: [id])
+  userId      String                @map("user_id")
+  user        User                  @relation(fields: [userId], references: [id])
+  purchasedAt DateTime              @default(now()) @map("purchased_at")
+  status      PurchaseStatus        @default(registered)
+  items       PurchaseItem[]
+  movements   InventoryMovement[]
+
+  @@map("purchase")
+}
+
+model PurchaseItem {
+  id         String    @id @default(uuid())
+  purchaseId String    @map("purchase_id")
+  purchase   Purchase  @relation(fields: [purchaseId], references: [id])
+  productId  String    @map("product_id")
+  product    Product   @relation(fields: [productId], references: [id])
+  quantity   Decimal   @db.Decimal(14, 4)
+  unitPrice  Decimal   @map("unit_price") @db.Decimal(14, 2) // input for HU-14
+
+  @@map("purchase_item")
+}
+
+// ---------- Requests ----------
+
+enum RequestType {
+  purchase
+  consumption
+}
+
+enum RequestStatus {
+  pending
+  approved
+  rejected
+  completed
+}
+
+model Request {
+  id           String                @id @default(uuid())
+  type         RequestType
+  requesterId  String                @map("requester_id")
+  requester    User                  @relation("requester", fields: [requesterId], references: [id])
+  approverId   String?               @map("approver_id")
+  approver     User?                 @relation("approver", fields: [approverId], references: [id])
+  status       RequestStatus         @default(pending)
+  createdAt    DateTime              @default(now()) @map("created_at")
+  resolvedAt   DateTime?             @map("resolved_at")
+  notes        String?
+  items        RequestItem[]
+  movements    InventoryMovement[]
+
+  @@map("request")
+}
+
+model RequestItem {
+  id               String    @id @default(uuid())
+  requestId        String    @map("request_id")
+  request          Request   @relation(fields: [requestId], references: [id])
+  productId        String    @map("product_id")
+  product          Product   @relation(fields: [productId], references: [id])
+  locationId       String    @map("location_id")
+  location         Location  @relation(fields: [locationId], references: [id])
+  quantity         Decimal   @db.Decimal(14, 4)
+  estimatedPrice   Decimal?  @map("estimated_price") @db.Decimal(14, 2)
+
+  @@map("request_item")
+}
+
+// Configurable — supports 1 or several levels without a schema migration (HU-18, post-MVP)
+model ApprovalFlow {
+  id           String       @id @default(uuid())
+  requestType  RequestType  @map("request_type")
+  level        Int
+  roleId       String       @map("role_id")
+  role         Role         @relation(fields: [roleId], references: [id])
+
+  @@map("approval_flow")
+}
+
+// ---------- Audit (post-MVP for the visual interface — HU-23) ----------
+
+model AuditEvent {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id])
+  action     String
+  entity     String
+  entityId   String   @map("entity_id")
+  occurredAt DateTime @default(now()) @map("occurred_at")
+
+  @@map("audit_event")
+}

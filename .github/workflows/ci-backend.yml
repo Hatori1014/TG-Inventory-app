@@ -1,0 +1,38 @@
+name: CI Backend
+
+on:
+  pull_request:
+    paths: ['backend/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run build -- --noEmit || npx tsc --noEmit
+
+      - name: Tests (unit + BDD)
+        run: npm run test
+
+      - name: Dependency audit (HU-24)
+        run: npm audit --audit-level=critical
+
+      - name: Build
+        run: npm run build
