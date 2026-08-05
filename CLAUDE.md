@@ -2,6 +2,8 @@
 
 Read `PROJECT-STATUS.md` first — current phase, what's done, and the immediate next step live there.
 
+`docs/` layout: `docs/esp/` (Spanish), `docs/en/` (English), `docs/Diagrams/` (architecture/flow diagrams), `docs/Design/` (Claude Design reference exports only — the live prototype stays in Claude Design's own workspace, never copy its raw HTML/CSS/JS into `frontend/`).
+
 ## Project
 Inventory control system (suppliers, locations, inventory, alerts, purchases, requests, RBAC). Single developer, weekends only, adapted Scrumban methodology. Full detail: `docs/esp/PRD.md` / `docs/en/PRD.en.md`.
 
