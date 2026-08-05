@@ -20,7 +20,10 @@ Full detail in `docs/esp/convenciones.md` / `docs/en/conventions.en.md`. Key poi
 ## Before making changes
 - Check `PROJECT-STATUS.md` for current phase and what's already done
 - Check `docs/esp/decisiones.md` (ADRs) before proposing a new technical decision — don't silently contradict one already made
-- Reflect any HU/TT worked on in the Trello board too: https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario (not automated from here — update manually or from a claude.ai session with the Trello connector)
+
+## After completing a task (TT or HU)
+- Update `PROJECT-STATUS.md` yourself, in the same commit as the work — mark the item done, with a one-line note of what was actually verified (not just "done", say how: e.g. "migrate deploy ran clean against staging DB"). This file is the single source of truth other Claude sessions (including claude.ai) read to know the real state — if you don't update it, they won't know what happened here.
+- Do NOT touch Trello — no connector available from this environment. Just make sure `PROJECT-STATUS.md` clearly says what changed, so a human or a claude.ai session with Trello connected can sync the board afterward.
 
 ## Testing
 TDD for critical domain logic (stock calculation, movement validation). BDD (Gherkin, jest-cucumber) for critical business flows (approvals, RBAC, alerts). Full detail: `docs/esp/flujo-de-trabajo.md`.
