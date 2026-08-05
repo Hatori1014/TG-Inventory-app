@@ -1,6 +1,6 @@
 # Estado del proyecto — leer esto primero
 
-> Última actualización: TT-02 a TT-10 ya tienen checklists de pasos accionables en Trello. Próximo paso literal: abrir un PR de prueba para resolver TT-02 y TT-07 a la vez. Actualízalo tú mismo al cerrar cada iteración. English version below.
+> Última actualización: TT-07 verificado end-to-end (PR de prueba, CI corriendo, varios bugs reales encontrados y arreglados). TT-02 quedó bloqueado a mitad de camino — el branching y el flujo de PR funcionan, pero configurar la *regla* de branch protection en GitHub requiere plan Pro o repo público (el repo es privado, plan Free). Actualízalo tú mismo al cerrar cada iteración. English version below.
 
 ## Nota de estructura
 
@@ -14,14 +14,14 @@ Sistema de control de inventario: proveedores, inventario por ubicaciones, alert
 
 **Fase**: Iteración 0 (setup), en curso. **No se ha escrito ninguna HU de negocio todavía.**
 
-### Próximo paso inmediato: el PR de prueba
+### Próximo paso inmediato: decidir cómo cerrar TT-02
 
-Resuelve **TT-02 y TT-07 a la vez** (ver secuencia completa en `docs/Diagrams/branch-protection-setup-sequence.png`):
-1. Crear una rama nueva desde `staging` (ej. `chore/verify-ci-pipeline`)
-2. Hacer un cambio trivial que toque `backend/` o `frontend/` (ej. un comentario, o bump de versión en un `package.json`)
-3. Push + abrir el PR contra `staging`
-4. Confirmar en la pestaña "Actions" del repo que `ci-backend.yml`/`ci-frontend.yml` corrieron
-5. Recién ahí, ir a `Settings → Branches` — ya se puede seleccionar el check en la regla de protección (ver checklist completo en la tarjeta TT-02 de Trello)
+Branch protection en GitHub (clásica y rulesets) devuelve `403 Upgrade to GitHub Pro or make this repository public` para este repo — es privado, plan Free. Sin eso, TT-02 no se puede terminar tal como está escrita en Trello. Opciones, sin decidir todavía:
+1. Pagar GitHub Pro (~$4/mes) y configurar la regla exigiendo los checks `backend` y `frontend`
+2. Hacer el repo público (gratis, pero expone el código)
+3. Seguir sin la regla automática por ahora — disciplina manual de un solo desarrollador: no mergear PRs con CI en rojo
+
+Mientras tanto, el flujo de PR + CI **sí funciona y ya se probó de punta a punta** (ver detalle de TT-07 abajo).
 
 ### Tareas técnicas, en detalle
 
@@ -31,15 +31,24 @@ Resuelve **TT-02 y TT-07 a la vez** (ver secuencia completa en `docs/Diagrams/br
 | TT-11 (health-check) | ✅ Hecho — re-validado |
 | TT-12 (Prisma + migración) | ✅ Hecho — re-validado |
 | TT-13 (Docker Postgres local) | ✅ Hecho — re-validado |
-| TT-02 (branching + branch protection) | ⬜ Pendiente — checklist completo en Trello, es el siguiente paso literal (ver arriba) |
-| TT-07 (CI) | ⬜ Pendiente de verificación — se resuelve con el mismo PR de prueba que TT-02 |
+| TT-07 (CI) | ✅ Hecho — verificado con PRs reales (#13, #14) contra `staging`, ambos checks (`backend`, `frontend`) en verde. Ver "Qué se encontró y arregló" abajo |
+| TT-02 (branching + branch protection) | 🟡 Parcial — el flujo de branching/PR funciona y está probado; la *regla* de protección está bloqueada por el plan de GitHub (ver arriba). No cerrar en Trello hasta resolver eso |
 | TT-03 (Vercel) | ⬜ Pendiente — checklist completo en Trello |
 | TT-04 (Render/Fly.io) | ⬜ Pendiente — checklist completo en Trello |
 | TT-05 (Neon/Supabase) | ⬜ Pendiente — checklist completo en Trello |
 | TT-06 (Cloudflare) | ⬜ Pendiente — checklist completo en Trello, no bloquea MVP 1-4 |
 | TT-08 (CD) | ⬜ Pendiente — **NO es un workflow**, es configuración en los dashboards de Vercel/Render; depende de TT-03/04 |
-| TT-09 (Dependabot) | ⬜ Pendiente — checklist completo en Trello (requiere confirmación manual en Settings → Code security) |
+| TT-09 (Dependabot) | 🟡 Parcial — `dependabot.yml` ya agrupa por ecosistema (máx. 3 PRs/semana en vez de 1 por paquete); falta la confirmación manual en Settings → Code security |
 | TT-10 (secrets) | ⬜ Pendiente — checklist completo en Trello, depende de TT-03/04/05 |
+
+### Qué se encontró y arregló al verificar CI (TT-07)
+
+CI nunca había corrido de verdad antes de esto — el PR de prueba (#13) reveló varios bugs reales en el esqueleto, ya arreglados:
+- **Backend**: `npm audit --audit-level=critical` fallaba por una vulnerabilidad crítica real en `node-tar`, alcanzable vía `bcrypt` (dependencia de producción) → `@mapbox/node-pre-gyp` → `tar`. Se subió `bcrypt` a `6.0.0` (sin código que lo use todavía, cero riesgo real). El gate de auditoría (HU-24) ahora usa `--omit=dev` en ambos workflows para no bloquear por vulnerabilidades de herramientas de build (webpack/Angular CLI) que no llegan a producción.
+- **Frontend**: `package-lock.json` estaba desincronizado de `package.json` (`npm ci` lo rechazaba) — regenerado. No existía ni `.eslintrc.js` ni el target `lint` en `angular.json` — `ng lint` no tenía nada que correr. No existía ni un solo `.spec.ts` — el step de Tests fallaba por config vacía. Se agregó `.eslintrc.js`, el target de lint, y un spec mínimo de `AppComponent`.
+- **Ambos**: `tsconfig.json` no tenía `rootDir` explícito (deprecado en TS6) y el backend tenía un `baseUrl` sin usar (deprecado en TS7) — corregido. Los dos workflows tenían su job llamado igual (`test`), así que GitHub reportaba dos checks indistinguibles por nombre — se les puso nombre explícito (`backend` / `frontend`) para que branch protection pueda exigirlos por separado el día que se configure.
+
+Verificado con `npm run lint`, `npm run build` y `npm run test` localmente en ambos proyectos, más los checks reales de GitHub Actions en los PR #13 y #14.
 
 ### Backlog de HU (30, en la columna `Backlog`)
 
@@ -47,8 +56,8 @@ Formato base consistente en las 30 (rol/acción/beneficio). ~10 todavía no tien
 
 **Lo que ya existe en código, ya subido a GitHub**:
 - Backend NestJS: estructura hexagonal, `schema.prisma` completo (17 entidades, en inglés), guards/decoradores de RBAC, health-check
-- Frontend Angular: estructura por features (todas en inglés), feature `suppliers` como plantilla de referencia
-- `docker-compose.yml`, workflows de CI, `dependabot.yml` — escritos, todavía sin verificar en GitHub Actions (ese es el paso inmediato de arriba)
+- Frontend Angular: estructura por features (todas en inglés), feature `suppliers` como plantilla de referencia, ahora con lint y un spec base funcionando
+- `docker-compose.yml`, workflows de CI (verificados y en verde), `dependabot.yml` (agrupado por ecosistema)
 - `frontend/public/logo-placeholder.png` — logo temporal
 
 ## Qué leer, y en qué orden, si retomas esto en una conversación nueva
@@ -67,7 +76,7 @@ https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario — 43 tarjetas, 
 
 # Project status — read this first
 
-> Last updated: TT-02 through TT-10 now have actionable step checklists in Trello. Literal next step: open a test PR to resolve TT-02 and TT-07 at once. Keep this updated yourself as each iteration closes.
+> Last updated: TT-07 verified end-to-end (test PR, CI actually running, several real bugs found and fixed). TT-02 got stuck halfway — branching and the PR flow work, but configuring the branch protection *rule* on GitHub requires a Pro plan or a public repo (this repo is private, Free plan). Keep this updated yourself as each iteration closes.
 
 ## Structure note
 
@@ -81,14 +90,14 @@ Inventory control system: suppliers, inventory by location, stock alerts, purcha
 
 **Phase**: Iteration 0 (setup), in progress. **No business story has been implemented yet.**
 
-### Immediate next step: the test PR
+### Immediate next step: decide how to close out TT-02
 
-Resolves **TT-02 and TT-07 at once** (full sequence in `docs/Diagrams/branch-protection-setup-sequence.png`):
-1. Create a new branch from `staging` (e.g. `chore/verify-ci-pipeline`)
-2. Make a trivial change touching `backend/` or `frontend/` (e.g. a comment, or a version bump in a `package.json`)
-3. Push + open the PR against `staging`
-4. Confirm in the repo's "Actions" tab that `ci-backend.yml`/`ci-frontend.yml` ran
-5. Only then, go to `Settings → Branches` — the check will now be selectable in the protection rule (full checklist on the TT-02 Trello card)
+Branch protection on GitHub (classic and rulesets) returns a `403 Upgrade to GitHub Pro or make this repository public` for this repo — it's private, Free plan. Without that, TT-02 can't be finished as written in Trello. Options, undecided:
+1. Pay for GitHub Pro (~$4/month) and configure the rule requiring the `backend` and `frontend` checks
+2. Make the repo public (free, but exposes the code)
+3. Skip the automatic rule for now — single-developer manual discipline: don't merge PRs with red CI
+
+Meanwhile, the PR + CI flow itself **works and has been verified end to end** (see TT-07 detail below).
 
 ### Technical tasks, in detail
 
@@ -98,15 +107,24 @@ Resolves **TT-02 and TT-07 at once** (full sequence in `docs/Diagrams/branch-pro
 | TT-11 (health-check) | ✅ Done — re-validated |
 | TT-12 (Prisma + migration) | ✅ Done — re-validated |
 | TT-13 (local Docker Postgres) | ✅ Done — re-validated |
-| TT-02 (branching + branch protection) | ⬜ Pending — full checklist in Trello, the literal next step (see above) |
-| TT-07 (CI) | ⬜ Pending verification — resolved by the same test PR as TT-02 |
+| TT-07 (CI) | ✅ Done — verified with real PRs (#13, #14) against `staging`, both checks (`backend`, `frontend`) green. See "What was found and fixed" below |
+| TT-02 (branching + branch protection) | 🟡 Partial — the branching/PR flow works and is proven; the protection *rule* is blocked by the GitHub plan (see above). Don't close in Trello until that's resolved |
 | TT-03 (Vercel) | ⬜ Pending — full checklist in Trello |
 | TT-04 (Render/Fly.io) | ⬜ Pending — full checklist in Trello |
 | TT-05 (Neon/Supabase) | ⬜ Pending — full checklist in Trello |
 | TT-06 (Cloudflare) | ⬜ Pending — full checklist in Trello, doesn't block MVP 1-4 |
 | TT-08 (CD) | ⬜ Pending — **NOT a workflow**, it's configuration inside the Vercel/Render dashboards; depends on TT-03/04 |
-| TT-09 (Dependabot) | ⬜ Pending — full checklist in Trello (needs manual confirmation in Settings → Code security) |
+| TT-09 (Dependabot) | 🟡 Partial — `dependabot.yml` now groups by ecosystem (max 3 PRs/week instead of 1 per package); manual confirmation in Settings → Code security still pending |
 | TT-10 (secrets) | ⬜ Pending — full checklist in Trello, depends on TT-03/04/05 |
+
+### What was found and fixed while verifying CI (TT-07)
+
+CI had never actually run before this — the test PR (#13) surfaced several real bugs in the skeleton, now fixed:
+- **Backend**: `npm audit --audit-level=critical` failed on a real critical vulnerability in `node-tar`, reachable via `bcrypt` (a production dependency) → `@mapbox/node-pre-gyp` → `tar`. Bumped `bcrypt` to `6.0.0` (no call sites use it yet, so zero real risk). The audit gate (HU-24) now uses `--omit=dev` in both workflows so devDependency-only vulnerabilities (build tooling like webpack/Angular CLI) don't block merges.
+- **Frontend**: `package-lock.json` was out of sync with `package.json` (`npm ci` rejected it) — regenerated. Neither `.eslintrc.js` nor the `lint` target in `angular.json` existed — `ng lint` had nothing to run. Zero `.spec.ts` files existed — the Tests step failed on empty config. Added `.eslintrc.js`, the lint target, and a baseline `AppComponent` spec.
+- **Both**: `tsconfig.json` had no explicit `rootDir` (deprecated in TS6) and the backend had an unused `baseUrl` (deprecated in TS7) — fixed. Both workflows' job was named `test`, so GitHub reported two indistinguishable-by-name checks — given explicit names (`backend` / `frontend`) so branch protection can require them separately once configured.
+
+Verified with `npm run lint`, `npm run build`, and `npm run test` locally in both projects, plus the real GitHub Actions checks on PRs #13 and #14.
 
 ### Story backlog (30, in the `Backlog` column)
 
@@ -114,8 +132,8 @@ Consistent base format across all 30 (role/action/benefit). ~10 still lack a ver
 
 **What already exists in code, already pushed to GitHub**:
 - NestJS backend: hexagonal structure, full `schema.prisma` (17 entities, in English), RBAC guards/decorators, health-check
-- Angular frontend: feature-based structure (all in English), `suppliers` feature as the reference template
-- `docker-compose.yml`, CI workflows, `dependabot.yml` — written, still unverified in GitHub Actions (that's the immediate next step above)
+- Angular frontend: feature-based structure (all in English), `suppliers` feature as the reference template, now with working lint and a baseline spec
+- `docker-compose.yml`, CI workflows (verified and green), `dependabot.yml` (grouped by ecosystem)
 - `frontend/public/logo-placeholder.png` — temporary logo
 
 ## What to read, and in what order, if picking this up in a new conversation
