@@ -44,4 +44,11 @@ Descartado: solo español (lo que había hasta esta decisión) o solo inglés. P
 **ADR-14 — UI: selector de idioma (ES/EN) y modo claro/oscuro**
 Agregado al backlog como Epic 9 (HU-29, HU-30), explícitamente marcado para abordarse **al final**, después de MVP 4 — no es parte del alcance original del usuario y no bloquea ninguna funcionalidad de negocio. Ver sección 3 del plan y el tablero de Trello.
 
+**ADR-15 — Migraciones a staging/producción: manuales, no automatizadas en el deploy**
+Descartado: correr `prisma migrate deploy` automáticamente en cada push, ya sea agregándolo al *Start Command* de Render o mediante un workflow `cd-deploy.yml`. Por qué: el modelo de CD elegido (sección 9.2 del plan, auto-deploy nativo de Vercel/Render) no orquesta ningún paso de "migrar antes de arrancar" salvo que se inyecte explícitamente — y para un solo desarrollador, mientras el schema todavía cambia seguido (Iteración 0-1), tener un checkpoint manual (`npm run prisma:migrate:staging`) antes de tocar la base compartida es más seguro que dejarlo disparar sin supervisión en cada push. Mismo criterio que ya aplica a la prohibición de `migrate dev` contra staging/producción (ver `CLAUDE.md`).
+[PENDIENTE: revisar esta decisión cuando la aplicación esté estable y las migraciones de schema sean infrecuentes — en ese punto, evaluar mover `npx prisma migrate deploy` al Start Command de Render para automatizarlo]
+
+**ADR-16 — Documentación (`docs/`): organizada en subcarpetas por tipo**
+Descartado: todos los archivos sueltos en la raíz de `docs/`, distinguidos solo por el sufijo `.en.md` (planteamiento original de ADR-13). Por qué: al agregar diagramas (PNG) y la carpeta de reference-exports de Claude Design, mezclar todo en un único nivel se volvía difícil de navegar. Estructura final: `docs/esp/` (español), `docs/en/` (inglés), `docs/Diagrams/` (diagramas de arquitectura/flujo), `docs/Design/` (solo exports de referencia de Claude Design — el prototipo vivo se queda en su propio workspace, nunca se copia su HTML/CSS/JS crudo a `frontend/`). ADR-13 (bilingüe) sigue aplicando dentro de `esp/` y `en/`. Ver `CLAUDE.md`.
+
 [PENDIENTE: cualquier decisión técnica que se tome durante la implementación real (Iteración 0 en adelante) y que no esté en el documento de planeación — este archivo debe actualizarse desde los commits/PRs una vez exista código]
