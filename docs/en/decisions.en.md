@@ -44,4 +44,11 @@ Discarded: Spanish-only (what existed before this decision) or English-only. Why
 **ADR-14 — UI: language switcher (ES/EN) and light/dark mode**
 Added to the backlog as Epic 9 (HU-29, HU-30), explicitly flagged to be tackled **last**, after MVP 4 — not part of the user's original scope and doesn't block any business functionality. See plan section 3 and the Trello board.
 
+**ADR-15 — Staging/production migrations: manual, not automated in deploy**
+Discarded: running `prisma migrate deploy` automatically on every push, either by adding it to Render's *Start Command* or via a `cd-deploy.yml` workflow. Why: the chosen CD model (plan section 9.2, native Vercel/Render auto-deploy) doesn't orchestrate any "migrate before starting" step unless explicitly wired in — and for a single developer, while the schema is still changing often (Iteration 0-1), having a manual checkpoint (`npm run prisma:migrate:staging`) before touching the shared database is safer than letting it fire unsupervised on every push. Same reasoning already applied to the ban on `migrate dev` against staging/production (see `CLAUDE.md`).
+[PENDING: revisit this decision once the application is stable and schema migrations are infrequent — at that point, evaluate moving `npx prisma migrate deploy` into Render's Start Command to automate it]
+
+**ADR-16 — Documentation (`docs/`): organized into subfolders by type**
+Discarded: all files loose in the `docs/` root, distinguished only by the `.en.md` suffix (ADR-13's original approach). Why: once diagrams (PNGs) and the Claude Design reference-export folder were added, mixing everything at a single level became hard to navigate. Final structure: `docs/esp/` (Spanish), `docs/en/` (English), `docs/Diagrams/` (architecture/flow diagrams), `docs/Design/` (Claude Design reference exports only — the live prototype stays in its own workspace, its raw HTML/CSS/JS is never copied into `frontend/`). ADR-13 (bilingual) still applies within `esp/` and `en/`. See `CLAUDE.md`.
+
 [PENDING: any technical decision made during actual implementation (Iteration 0 onward) that isn't in the planning document — this file should be updated from commits/PRs once code exists]

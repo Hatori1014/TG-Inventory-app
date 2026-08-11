@@ -1,10 +1,10 @@
 # Estado del proyecto — leer esto primero
 
-> Última actualización: TT-07 verificado end-to-end (PR de prueba, CI corriendo, varios bugs reales encontrados y arreglados). TT-02 quedó bloqueado a mitad de camino — el branching y el flujo de PR funcionan, pero configurar la *regla* de branch protection en GitHub requiere plan Pro o repo público (el repo es privado, plan Free). Actualízalo tú mismo al cerrar cada iteración. English version below.
+> Última actualización: TT-02 cerrada — repo pasado a público y branch protection (rulesets) configurada y activa en `main` y `staging`, exigiendo los checks `backend` y `frontend`. Actualízalo tú mismo al cerrar cada iteración. English version below.
 
 ## Nota de estructura
 
-`docs/` está organizado en subcarpetas — `docs/esp/` (español), `docs/en/` (inglés), `docs/Diagrams/` (todos los PNG). Ver ADR-15 en `decisiones.md`.
+`docs/` está organizado en subcarpetas — `docs/esp/` (español), `docs/en/` (inglés), `docs/Diagrams/` (todos los PNG). Ver ADR-16 en `decisiones.md`.
 
 ## Qué es este proyecto
 
@@ -14,14 +14,14 @@ Sistema de control de inventario: proveedores, inventario por ubicaciones, alert
 
 **Fase**: Iteración 0 (setup), en curso. **No se ha escrito ninguna HU de negocio todavía.**
 
-### Próximo paso inmediato: decidir cómo cerrar TT-02
+### Próximo paso inmediato: elegir la siguiente tarea técnica
 
-Branch protection en GitHub (clásica y rulesets) devuelve `403 Upgrade to GitHub Pro or make this repository public` para este repo — es privado, plan Free. Sin eso, TT-02 no se puede terminar tal como está escrita en Trello. Opciones, sin decidir todavía:
-1. Pagar GitHub Pro (~$4/mes) y configurar la regla exigiendo los checks `backend` y `frontend`
-2. Hacer el repo público (gratis, pero expone el código)
-3. Seguir sin la regla automática por ahora — disciplina manual de un solo desarrollador: no mergear PRs con CI en rojo
+TT-02 ya está cerrada (ver tabla abajo). Lo que queda pendiente en la iteración actual, sin decidir todavía qué sigue primero:
+- TT-09 (Dependabot): solo falta la confirmación manual en Settings → Code security, es rápido
+- TT-03/04/05 (Vercel / Render-Fly.io / Neon-Supabase): setup de hosting e infraestructura, checklist completo en Trello
+- TT-06 (Cloudflare): no bloquea el MVP, se puede dejar para después
 
-Mientras tanto, el flujo de PR + CI **sí funciona y ya se probó de punta a punta** (ver detalle de TT-07 abajo).
+El flujo de PR + CI **funciona y ya se probó de punta a punta** (ver detalle de TT-07 abajo), y ahora además está reforzado por la regla de branch protection.
 
 ### Tareas técnicas, en detalle
 
@@ -32,9 +32,9 @@ Mientras tanto, el flujo de PR + CI **sí funciona y ya se probó de punta a pun
 | TT-12 (Prisma + migración) | ✅ Hecho — re-validado |
 | TT-13 (Docker Postgres local) | ✅ Hecho — re-validado |
 | TT-07 (CI) | ✅ Hecho — verificado con PRs reales (#13, #14) contra `staging`, ambos checks (`backend`, `frontend`) en verde. Ver "Qué se encontró y arregló" abajo |
-| TT-02 (branching + branch protection) | 🟡 Parcial — el flujo de branching/PR funciona y está probado; la *regla* de protección está bloqueada por el plan de GitHub (ver arriba). No cerrar en Trello hasta resolver eso |
-| TT-03 (Vercel) | ⬜ Pendiente — checklist completo en Trello |
-| TT-04 (Render/Fly.io) | ⬜ Pendiente — checklist completo en Trello |
+| TT-02 (branching + branch protection) | ✅ Hecho — repo pasado a público; dos rulesets creados en GitHub (`main` y `staging`), Enforcement status `Active` en ambos, con `Require status checks to pass` exigiendo `backend` y `frontend`. Falta sincronizar el estado en Trello (sin conector desde este entorno) |
+| TT-03 (Vercel) | 🟡 Parcial — proyecto creado en `https://tg-inventory-app.vercel.app`; falta verificar que el auto-deploy está conectado al repo/rama correcta |
+| TT-04 (Render/Fly.io) | ⬜ Pendiente — checklist completo en Trello. Backend ya lee `FRONTEND_URL` para CORS (`main.ts`) y `.env.example` documenta el valor esperado (URL de Vercel de arriba); falta crear el servicio y setear la variable real |
 | TT-05 (Neon/Supabase) | ⬜ Pendiente — checklist completo en Trello |
 | TT-06 (Cloudflare) | ⬜ Pendiente — checklist completo en Trello, no bloquea MVP 1-4 |
 | TT-08 (CD) | ⬜ Pendiente — **NO es un workflow**, es configuración en los dashboards de Vercel/Render; depende de TT-03/04 |
@@ -76,11 +76,11 @@ https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario — 43 tarjetas, 
 
 # Project status — read this first
 
-> Last updated: TT-07 verified end-to-end (test PR, CI actually running, several real bugs found and fixed). TT-02 got stuck halfway — branching and the PR flow work, but configuring the branch protection *rule* on GitHub requires a Pro plan or a public repo (this repo is private, Free plan). Keep this updated yourself as each iteration closes.
+> Last updated: TT-02 closed — repo switched to public and branch protection (rulesets) configured and active on `main` and `staging`, requiring the `backend` and `frontend` checks. Keep this updated yourself as each iteration closes.
 
 ## Structure note
 
-`docs/` is organized into subfolders — `docs/esp/` (Spanish), `docs/en/` (English), `docs/Diagrams/` (all PNGs). See ADR-15 in `decisions.en.md`.
+`docs/` is organized into subfolders — `docs/esp/` (Spanish), `docs/en/` (English), `docs/Diagrams/` (all PNGs). See ADR-16 in `decisions.en.md`.
 
 ## What this project is
 
@@ -90,14 +90,14 @@ Inventory control system: suppliers, inventory by location, stock alerts, purcha
 
 **Phase**: Iteration 0 (setup), in progress. **No business story has been implemented yet.**
 
-### Immediate next step: decide how to close out TT-02
+### Immediate next step: pick the next technical task
 
-Branch protection on GitHub (classic and rulesets) returns a `403 Upgrade to GitHub Pro or make this repository public` for this repo — it's private, Free plan. Without that, TT-02 can't be finished as written in Trello. Options, undecided:
-1. Pay for GitHub Pro (~$4/month) and configure the rule requiring the `backend` and `frontend` checks
-2. Make the repo public (free, but exposes the code)
-3. Skip the automatic rule for now — single-developer manual discipline: don't merge PRs with red CI
+TT-02 is now closed (see table below). What's left in the current iteration, order not decided yet:
+- TT-09 (Dependabot): only the manual confirmation in Settings → Code security is missing, quick to close
+- TT-03/04/05 (Vercel / Render-Fly.io / Neon-Supabase): hosting/infra setup, full checklist in Trello
+- TT-06 (Cloudflare): doesn't block the MVP, can wait
 
-Meanwhile, the PR + CI flow itself **works and has been verified end to end** (see TT-07 detail below).
+The PR + CI flow itself **works and has been verified end to end** (see TT-07 detail below), and is now backed by the branch protection rule too.
 
 ### Technical tasks, in detail
 
@@ -108,9 +108,9 @@ Meanwhile, the PR + CI flow itself **works and has been verified end to end** (s
 | TT-12 (Prisma + migration) | ✅ Done — re-validated |
 | TT-13 (local Docker Postgres) | ✅ Done — re-validated |
 | TT-07 (CI) | ✅ Done — verified with real PRs (#13, #14) against `staging`, both checks (`backend`, `frontend`) green. See "What was found and fixed" below |
-| TT-02 (branching + branch protection) | 🟡 Partial — the branching/PR flow works and is proven; the protection *rule* is blocked by the GitHub plan (see above). Don't close in Trello until that's resolved |
-| TT-03 (Vercel) | ⬜ Pending — full checklist in Trello |
-| TT-04 (Render/Fly.io) | ⬜ Pending — full checklist in Trello |
+| TT-02 (branching + branch protection) | ✅ Done — repo switched to public; two GitHub rulesets created (`main` and `staging`), Enforcement status `Active` on both, with `Require status checks to pass` requiring `backend` and `frontend`. Trello status still needs manual sync (no connector from this environment) |
+| TT-03 (Vercel) | 🟡 Partial — project created at `https://tg-inventory-app.vercel.app`; still need to verify auto-deploy is wired to the right repo/branch |
+| TT-04 (Render/Fly.io) | ⬜ Pending — full checklist in Trello. Backend already reads `FRONTEND_URL` for CORS (`main.ts`) and `.env.example` documents the expected value (Vercel URL above); still need to create the service and set the real variable |
 | TT-05 (Neon/Supabase) | ⬜ Pending — full checklist in Trello |
 | TT-06 (Cloudflare) | ⬜ Pending — full checklist in Trello, doesn't block MVP 1-4 |
 | TT-08 (CD) | ⬜ Pending — **NOT a workflow**, it's configuration inside the Vercel/Render dashboards; depends on TT-03/04 |
