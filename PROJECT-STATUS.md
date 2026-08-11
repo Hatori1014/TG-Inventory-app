@@ -1,6 +1,6 @@
 # Estado del proyecto — leer esto primero
 
-> Última actualización: TT-02 cerrada — repo pasado a público y branch protection (rulesets) configurada y activa en `main` y `staging`, exigiendo los checks `backend` y `frontend`. Actualízalo tú mismo al cerrar cada iteración. English version below.
+> Última actualización: TT-04 cerrada — backend desplegado en Render (`tg-inventory-backend`, `https://tg-inventory-backend.onrender.com`), health-check (`/health`) en `200 OK` con `database: ok`, y CORS validado end-to-end contra el frontend de Vercel (GET y preflight OPTIONS ambos devuelven el origen correcto). TT-02, TT-03 y TT-05 también cerradas. Actualízalo tú mismo al cerrar cada iteración. English version below.
 
 ## Nota de estructura
 
@@ -16,9 +16,9 @@ Sistema de control de inventario: proveedores, inventario por ubicaciones, alert
 
 ### Próximo paso inmediato: elegir la siguiente tarea técnica
 
-TT-02 ya está cerrada (ver tabla abajo). Lo que queda pendiente en la iteración actual, sin decidir todavía qué sigue primero:
+TT-02, TT-03, TT-04 y TT-05 ya están cerradas (ver tabla abajo). Lo que queda pendiente en la iteración actual, sin decidir todavía qué sigue primero:
 - TT-09 (Dependabot): solo falta la confirmación manual en Settings → Code security, es rápido
-- TT-03/04/05 (Vercel / Render-Fly.io / Neon-Supabase): setup de hosting e infraestructura, checklist completo en Trello
+- TT-10 (secrets): ya cargados los que se usan hoy (`DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `FRONTEND_URL`, `NODE_ENV` en Render); falta revisar si se necesita algo más en GitHub Actions
 - TT-06 (Cloudflare): no bloquea el MVP, se puede dejar para después
 
 El flujo de PR + CI **funciona y ya se probó de punta a punta** (ver detalle de TT-07 abajo), y ahora además está reforzado por la regla de branch protection.
@@ -33,13 +33,13 @@ El flujo de PR + CI **funciona y ya se probó de punta a punta** (ver detalle de
 | TT-13 (Docker Postgres local) | ✅ Hecho — re-validado |
 | TT-07 (CI) | ✅ Hecho — verificado con PRs reales (#13, #14) contra `staging`, ambos checks (`backend`, `frontend`) en verde. Ver "Qué se encontró y arregló" abajo |
 | TT-02 (branching + branch protection) | ✅ Hecho — repo pasado a público; dos rulesets creados en GitHub (`main` y `staging`), Enforcement status `Active` en ambos, con `Require status checks to pass` exigiendo `backend` y `frontend`. Falta sincronizar el estado en Trello (sin conector desde este entorno) |
-| TT-03 (Vercel) | 🟡 Parcial — proyecto creado en `https://tg-inventory-app.vercel.app`; falta verificar que el auto-deploy está conectado al repo/rama correcta |
-| TT-04 (Render/Fly.io) | ⬜ Pendiente — checklist completo en Trello. Backend ya lee `FRONTEND_URL` para CORS (`main.ts`) y `.env.example` documenta el valor esperado (URL de Vercel de arriba); falta crear el servicio y setear la variable real |
-| TT-05 (Neon/Supabase) | ⬜ Pendiente — checklist completo en Trello |
+| TT-03 (Vercel) | ✅ Hecho — proyecto conectado al repo (auto-deploy en push a `main` confirmado); tras corregir Framework Preset (`Angular`) y Output Directory (`dist/frontend/browser`, requerido por el builder `application` de Angular 18), `https://tg-inventory-app.vercel.app` responde `200 OK` sirviendo `index.html` |
+| TT-04 (Render/Fly.io) | ✅ Hecho — servicio `tg-inventory-backend` creado en Render (`https://tg-inventory-backend.onrender.com`), conectado al repo; variables `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV`, `FRONTEND_URL` cargadas. Verificado con `curl`: `/health` → `200 OK` (`database: ok`), y CORS (GET + preflight OPTIONS) devuelve `access-control-allow-origin: https://tg-inventory-app.vercel.app` |
+| TT-05 (Neon/Supabase) | ✅ Hecho — base de datos creada en Neon, migraciones aplicadas con `npm run prisma:migrate:staging`, `DATABASE_URL` ya copiada a los secrets de Render (TT-04) |
 | TT-06 (Cloudflare) | ⬜ Pendiente — checklist completo en Trello, no bloquea MVP 1-4 |
 | TT-08 (CD) | ⬜ Pendiente — **NO es un workflow**, es configuración en los dashboards de Vercel/Render; depende de TT-03/04 |
 | TT-09 (Dependabot) | 🟡 Parcial — `dependabot.yml` ya agrupa por ecosistema (máx. 3 PRs/semana en vez de 1 por paquete); falta la confirmación manual en Settings → Code security |
-| TT-10 (secrets) | ⬜ Pendiente — checklist completo en Trello, depende de TT-03/04/05 |
+| TT-10 (secrets) | ✅ Hecho para lo que existe hoy — `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV`, `FRONTEND_URL` cargados en Render (nunca en el repo, ver `.env.example`). **GitHub Actions no necesita secrets**: revisé `ci-backend.yml`/`ci-frontend.yml` y ninguno usa `secrets.*` ni toca una BD real o la API desplegada (solo `lint`/`test` unitario/`audit`/`build`); y por decisión ya tomada (`CLAUDE.md`, plan sección 9.2) no existe workflow de CD que necesitaría credenciales de deploy. Se revisita si algún día se agregan tests e2e contra staging en CI |
 
 ### Qué se encontró y arregló al verificar CI (TT-07)
 
@@ -76,7 +76,7 @@ https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario — 43 tarjetas, 
 
 # Project status — read this first
 
-> Last updated: TT-02 closed — repo switched to public and branch protection (rulesets) configured and active on `main` and `staging`, requiring the `backend` and `frontend` checks. Keep this updated yourself as each iteration closes.
+> Last updated: TT-04 closed — backend deployed on Render (`tg-inventory-backend`, `https://tg-inventory-backend.onrender.com`), health-check (`/health`) returns `200 OK` with `database: ok`, and CORS validated end to end against the Vercel frontend (both GET and preflight OPTIONS return the correct origin). TT-02, TT-03, and TT-05 are also closed. Keep this updated yourself as each iteration closes.
 
 ## Structure note
 
@@ -92,9 +92,9 @@ Inventory control system: suppliers, inventory by location, stock alerts, purcha
 
 ### Immediate next step: pick the next technical task
 
-TT-02 is now closed (see table below). What's left in the current iteration, order not decided yet:
+TT-02, TT-03, TT-04, and TT-05 are now closed (see table below). What's left in the current iteration, order not decided yet:
 - TT-09 (Dependabot): only the manual confirmation in Settings → Code security is missing, quick to close
-- TT-03/04/05 (Vercel / Render-Fly.io / Neon-Supabase): hosting/infra setup, full checklist in Trello
+- TT-10 (secrets): the ones used today are already loaded (`DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `FRONTEND_URL`, `NODE_ENV` on Render); still need to check whether anything else is needed in GitHub Actions
 - TT-06 (Cloudflare): doesn't block the MVP, can wait
 
 The PR + CI flow itself **works and has been verified end to end** (see TT-07 detail below), and is now backed by the branch protection rule too.
@@ -109,13 +109,13 @@ The PR + CI flow itself **works and has been verified end to end** (see TT-07 de
 | TT-13 (local Docker Postgres) | ✅ Done — re-validated |
 | TT-07 (CI) | ✅ Done — verified with real PRs (#13, #14) against `staging`, both checks (`backend`, `frontend`) green. See "What was found and fixed" below |
 | TT-02 (branching + branch protection) | ✅ Done — repo switched to public; two GitHub rulesets created (`main` and `staging`), Enforcement status `Active` on both, with `Require status checks to pass` requiring `backend` and `frontend`. Trello status still needs manual sync (no connector from this environment) |
-| TT-03 (Vercel) | 🟡 Partial — project created at `https://tg-inventory-app.vercel.app`; still need to verify auto-deploy is wired to the right repo/branch |
-| TT-04 (Render/Fly.io) | ⬜ Pending — full checklist in Trello. Backend already reads `FRONTEND_URL` for CORS (`main.ts`) and `.env.example` documents the expected value (Vercel URL above); still need to create the service and set the real variable |
-| TT-05 (Neon/Supabase) | ⬜ Pending — full checklist in Trello |
+| TT-03 (Vercel) | ✅ Done — project connected to the repo (auto-deploy on push to `main` confirmed); after fixing the Framework Preset (`Angular`) and Output Directory (`dist/frontend/browser`, required by Angular 18's `application` builder), `https://tg-inventory-app.vercel.app` responds `200 OK` serving `index.html` |
+| TT-04 (Render/Fly.io) | ✅ Done — `tg-inventory-backend` service created on Render (`https://tg-inventory-backend.onrender.com`), connected to the repo; `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV`, `FRONTEND_URL` all set. Verified with `curl`: `/health` → `200 OK` (`database: ok`), and CORS (GET + preflight OPTIONS) returns `access-control-allow-origin: https://tg-inventory-app.vercel.app` |
+| TT-05 (Neon/Supabase) | ✅ Done — database created on Neon, migrations applied with `npm run prisma:migrate:staging`, `DATABASE_URL` already copied into Render's secrets (TT-04) |
 | TT-06 (Cloudflare) | ⬜ Pending — full checklist in Trello, doesn't block MVP 1-4 |
 | TT-08 (CD) | ⬜ Pending — **NOT a workflow**, it's configuration inside the Vercel/Render dashboards; depends on TT-03/04 |
 | TT-09 (Dependabot) | 🟡 Partial — `dependabot.yml` now groups by ecosystem (max 3 PRs/week instead of 1 per package); manual confirmation in Settings → Code security still pending |
-| TT-10 (secrets) | ⬜ Pending — full checklist in Trello, depends on TT-03/04/05 |
+| TT-10 (secrets) | ✅ Done for what exists today — `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV`, `FRONTEND_URL` loaded on Render (never in the repo, see `.env.example`). **GitHub Actions needs no secrets**: checked `ci-backend.yml`/`ci-frontend.yml` and neither uses `secrets.*` or touches a real DB or the deployed API (only `lint`/unit `test`/`audit`/`build`); and by an already-made decision (`CLAUDE.md`, plan section 9.2) there's no CD workflow that would need deploy credentials. Revisit if e2e tests against staging are ever added to CI |
 
 ### What was found and fixed while verifying CI (TT-07)
 

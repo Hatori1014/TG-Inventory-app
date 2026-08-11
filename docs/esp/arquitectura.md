@@ -49,6 +49,25 @@ inventario-app/
 
 [PENDIENTE: verificar que la implementación real respeta esta transacción — es un punto de fallo silencioso si no]
 
+## Patrones tácticos de DDD dentro de `domain/` (ADR-17)
+
+Ejemplo concreto con el módulo `inventory` (cálculo de stock, HU-10):
+
+```
+backend/src/modules/inventory/
+├── domain/
+│   ├── entities/inventory-movement.entity.ts
+│   ├── value-objects/stock-quantity.value-object.ts   # inmutable, valida >= 0
+│   ├── services/calculate-stock.domain-service.ts      # regla pura: movimientos → StockQuantity
+│   └── inventory-movement.repository.interface.ts      # puerto
+├── application/use-cases/
+│   └── calculate-stock.use-case.ts                      # orquesta: repository (IO) + domain-service (regla)
+└── infrastructure/
+    └── inventory-movement.prisma.repository.ts          # adaptador
+```
+
+El `use-case` no contiene la fórmula de cálculo — la pide al `calculate-stock.domain-service.ts`, que es una función/clase pura sin dependencias de NestJS ni Prisma. Esto es lo que permite testear la regla con TDD (sección 5 del plan) sin mockear un repository: el test unitario construye movimientos de ejemplo, llama al domain service, y verifica el `StockQuantity` resultante directamente.
+
 ## Qué NO existe (ni está planeado para el MVP)
 
 - Microservicios, colas de mensajes o eventos asíncronos

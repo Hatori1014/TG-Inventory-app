@@ -11,9 +11,11 @@
 ## Naming — backend (NestJS)
 
 Por tipo de archivo, dentro de cada módulo (kebab-case + sufijo, en inglés):
-- `*.entity.ts` — entidad de dominio
+- `*.entity.ts` — entidad de dominio, **con comportamiento** (no solo datos — ver ADR-17)
+- `*.value-object.ts` — Value Object de dominio: inmutable, se auto-valida al construirse (ADR-17), en `domain/`
+- `*.domain-service.ts` — Domain Service: regla de negocio pura que no pertenece a una sola entidad (ADR-17), en `domain/services/`
 - `*.repository.interface.ts` — puerto (interfaz de repositorio, en `domain/`)
-- `*.use-case.ts` — caso de uso (en `application/use-cases/`), ej. `create-supplier.use-case.ts`
+- `*.use-case.ts` — caso de uso (en `application/use-cases/`), ej. `create-supplier.use-case.ts` — orquesta IO + `domain/`, no contiene la regla de negocio en sí
 - `*.prisma.repository.ts` — adaptador de infraestructura (en `infrastructure/`)
 - `*.dto.ts` — DTO validado con `class-validator`
 - `*.controller.ts`, `*.module.ts`
@@ -27,6 +29,7 @@ Por tipo de archivo, dentro de cada módulo (kebab-case + sufijo, en inglés):
 ## Patrones que usamos
 
 - Arquitectura hexagonal por módulo backend (domain → application → infrastructure) — **solo en módulos con lógica de negocio real** (inventory, requests). Los CRUD triviales (ej. locations) pueden empezar sin las 4 capas.
+- Patrones tácticos de DDD dentro de `domain/` (ADR-17): Entidades con comportamiento, Value Objects, Domain Services. El use-case orquesta, no decide — la regla de negocio vive en `domain/`.
 - DTOs validados con `class-validator` en todo endpoint de escritura (HU-21)
 - RBAC vía Guards + decorador `@Roles()`, evaluado siempre en backend, nunca solo ocultando UI
 - Movimientos de inventario: nunca se actualiza `LocationStock` directo — siempre a través de un registro en `InventoryMovement` en la misma transacción
@@ -37,6 +40,7 @@ Por tipo de archivo, dentro de cada módulo (kebab-case + sufijo, en inglés):
 
 - Concatenar strings para construir queries SQL — siempre queries parametrizadas vía Prisma
 - Lógica de negocio dentro de un controller (debe vivir en el use-case)
+- Lógica de negocio dentro del use-case cuando debería vivir en una entidad/Value Object/Domain Service (ADR-17) — el use-case orquesta, no decide
 - Llamar a Prisma directamente desde un controller, saltándose el repository
 - Guardar archivos subidos por el usuario en el disco del servidor de aplicación (deben ir a Cloudflare R2)
 - Confiar en el frontend como única capa de control de acceso
