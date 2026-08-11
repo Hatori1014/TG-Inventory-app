@@ -32,9 +32,15 @@ Mientras tanto, el flujo de PR + CI **sí funciona y ya se probó de punta a pun
 | TT-12 (Prisma + migración) | ✅ Hecho — re-validado |
 | TT-13 (Docker Postgres local) | ✅ Hecho — re-validado |
 | TT-07 (CI) | ✅ Hecho — verificado con PRs reales (#13, #14) contra `staging`, ambos checks (`backend`, `frontend`) en verde. Ver "Qué se encontró y arregló" abajo |
+<<<<<<< Updated upstream
 | TT-02 (branching + branch protection) | 🟡 Parcial — el flujo de branching/PR funciona y está probado; la *regla* de protección está bloqueada por el plan de GitHub (ver arriba). No cerrar en Trello hasta resolver eso |
 | TT-03 (Vercel) | ⬜ Pendiente — checklist completo en Trello |
 | TT-04 (Render/Fly.io) | ⬜ Pendiente — checklist completo en Trello |
+=======
+| TT-02 (branching + branch protection) | ✅ Hecho — repo pasado a público; dos rulesets creados en GitHub (`main` y `staging`), Enforcement status `Active` en ambos, con `Require status checks to pass` exigiendo `backend` y `frontend`. Falta sincronizar el estado en Trello (sin conector desde este entorno) |
+| TT-03 (Vercel) | 🟡 Parcial — proyecto creado en `https://tg-inventory-app.vercel.app`; falta verificar que el auto-deploy está conectado al repo/rama correcta |
+| TT-04 (Render/Fly.io) | ⬜ Pendiente — checklist completo en Trello. Backend ya lee `FRONTEND_URL` para CORS (`main.ts`) y `.env.example` documenta el valor esperado (URL de Vercel de arriba); falta crear el servicio y setear la variable real |
+>>>>>>> Stashed changes
 | TT-05 (Neon/Supabase) | ⬜ Pendiente — checklist completo en Trello |
 | TT-06 (Cloudflare) | ⬜ Pendiente — checklist completo en Trello, no bloquea MVP 1-4 |
 | TT-08 (CD) | ⬜ Pendiente — **NO es un workflow**, es configuración en los dashboards de Vercel/Render; depende de TT-03/04 |
@@ -108,9 +114,15 @@ Meanwhile, the PR + CI flow itself **works and has been verified end to end** (s
 | TT-12 (Prisma + migration) | ✅ Done — re-validated |
 | TT-13 (local Docker Postgres) | ✅ Done — re-validated |
 | TT-07 (CI) | ✅ Done — verified with real PRs (#13, #14) against `staging`, both checks (`backend`, `frontend`) green. See "What was found and fixed" below |
+<<<<<<< Updated upstream
 | TT-02 (branching + branch protection) | 🟡 Partial — the branching/PR flow works and is proven; the protection *rule* is blocked by the GitHub plan (see above). Don't close in Trello until that's resolved |
 | TT-03 (Vercel) | ⬜ Pending — full checklist in Trello |
 | TT-04 (Render/Fly.io) | ⬜ Pending — full checklist in Trello |
+=======
+| TT-02 (branching + branch protection) | ✅ Done — repo switched to public; two GitHub rulesets created (`main` and `staging`), Enforcement status `Active` on both, with `Require status checks to pass` requiring `backend` and `frontend`. Trello status still needs manual sync (no connector from this environment) |
+| TT-03 (Vercel) | 🟡 Partial — project created at `https://tg-inventory-app.vercel.app`; still need to verify auto-deploy is wired to the right repo/branch |
+| TT-04 (Render/Fly.io) | ⬜ Pending — full checklist in Trello. Backend already reads `FRONTEND_URL` for CORS (`main.ts`) and `.env.example` documents the expected value (Vercel URL above); still need to create the service and set the real variable |
+>>>>>>> Stashed changes
 | TT-05 (Neon/Supabase) | ⬜ Pending — full checklist in Trello |
 | TT-06 (Cloudflare) | ⬜ Pending — full checklist in Trello, doesn't block MVP 1-4 |
 | TT-08 (CD) | ⬜ Pending — **NOT a workflow**, it's configuration inside the Vercel/Render dashboards; depends on TT-03/04 |
