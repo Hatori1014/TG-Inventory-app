@@ -26,6 +26,10 @@ npm install
 npx prisma migrate dev --name init
 npm run start:dev           # http://localhost:3000 (docs en /docs)
 
+# Para aplicar migraciones a Neon (staging), en vez de a Docker:
+# 1. Crear backend/.env.staging con el DATABASE_URL de Neon (no se commitea, ver .gitignore)
+# 2. npm run prisma:migrate:staging   (usa `prisma migrate deploy`, nunca `migrate dev`, contra staging)
+
 # 3. Frontend (en otra terminal)
 cd frontend
 npm install
@@ -40,17 +44,11 @@ El frontend no necesita un segundo archivo `.env` como el backend: Angular ya re
 
 Estas tareas técnicas (sección 3.2 del plan) requieren crear cuentas reales y no se pueden automatizar:
 
-<<<<<<< Updated upstream
-- [ ] **TT-01** — Crear el repositorio en GitHub y subir este contenido
-- [ ] **TT-02** — Configurar protección de ramas (`main`, `staging`) exigiendo que `ci-backend.yml`/`ci-frontend.yml` pasen antes de mergear (sección 9.1 del plan)
-- [ ] **TT-03** — Crear proyecto en Vercel (frontend), conectado al repo
-=======
 - [x] **TT-01** — Crear el repositorio en GitHub y subir este contenido
 - [x] **TT-02** — Configurar protección de ramas (`main`, `staging`) exigiendo que `backend`/`frontend` pasen antes de mergear (sección 9.1 del plan)
 - [ ] **TT-03** — Crear proyecto en Vercel (frontend), conectado al repo — URL: https://tg-inventory-app.vercel.app (falta verificar auto-deploy end-to-end)
->>>>>>> Stashed changes
 - [ ] **TT-04** — Crear servicio en Render o Fly.io (backend), conectado al repo
-- [ ] **TT-05** — Crear base de datos en Neon o Supabase, copiar `DATABASE_URL` a los secrets de staging/producción
+- [x] **TT-05** — Crear base de datos en Neon, migraciones aplicadas (`npm run prisma:migrate:staging`); falta copiar `DATABASE_URL` a los secrets de Render al hacer TT-04
 - [ ] **TT-06** — Crear cuenta Cloudflare (proxy/WAF) + bucket R2 (solo necesario para MVP 5)
 - [ ] **TT-10** — Cargar `JWT_SECRET`, `DATABASE_URL`, `FRONTEND_URL`, etc. como secrets en GitHub Actions y en cada proveedor (nunca en el repo)
 
@@ -98,6 +96,10 @@ npm install
 npx prisma migrate dev --name init
 npm run start:dev           # http://localhost:3000 (docs at /docs)
 
+# To apply migrations to Neon (staging) instead of Docker:
+# 1. Create backend/.env.staging with Neon's DATABASE_URL (never committed, see .gitignore)
+# 2. npm run prisma:migrate:staging   (uses `prisma migrate deploy`, never `migrate dev`, against staging)
+
 # 3. Frontend (in another terminal)
 cd frontend
 npm install
@@ -112,17 +114,11 @@ The frontend doesn't need a second `.env` file like the backend: Angular already
 
 These technical tasks (plan section 3.2) require creating real accounts and can't be automated:
 
-<<<<<<< Updated upstream
-- [ ] **TT-01** — Create the GitHub repository and push this content
-- [ ] **TT-02** — Set up branch protection (`main`, `staging`) requiring `ci-backend.yml`/`ci-frontend.yml` to pass before merging (plan section 9.1)
-- [ ] **TT-03** — Create a Vercel project (frontend), connected to the repo
-=======
 - [x] **TT-01** — Create the GitHub repository and push this content
 - [x] **TT-02** — Set up branch protection (`main`, `staging`) requiring `backend`/`frontend` to pass before merging (plan section 9.1)
 - [ ] **TT-03** — Create a Vercel project (frontend), connected to the repo — URL: https://tg-inventory-app.vercel.app (end-to-end auto-deploy still needs verifying)
->>>>>>> Stashed changes
 - [ ] **TT-04** — Create a Render or Fly.io service (backend), connected to the repo
-- [ ] **TT-05** — Create a database on Neon or Supabase, copy `DATABASE_URL` into the staging/production secrets
+- [x] **TT-05** — Create a database on Neon, migrations applied (`npm run prisma:migrate:staging`); still need to copy `DATABASE_URL` into Render's secrets during TT-04
 - [ ] **TT-06** — Create a Cloudflare account (proxy/WAF) + R2 bucket (only needed for MVP 5)
 - [ ] **TT-10** — Load `JWT_SECRET`, `DATABASE_URL`, `FRONTEND_URL`, etc. as secrets in GitHub Actions and in each provider (never in the repo)
 
