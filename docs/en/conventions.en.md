@@ -48,6 +48,15 @@ By file type, inside each module (kebab-case + suffix, in English):
 
 [PENDING: exact `tsconfig` settings (strict mode, no-implicit-any) — not fully specified, only that the language is typed TypeScript]
 
+## Logging (TT-21)
+
+`nestjs-pino` — structured JSON to stdout in `staging`/`production` (Render captures it automatically, no extra infra), readable pretty-print in `development`. Every request carries a correlation id (`X-Request-Id`, generated or propagated if the client already sends one) present in every log line it produces, so a single request can be traced. `req.headers.authorization`, cookies, and `password`/`token` in the body are always redacted (`backend/src/config/logger.config.ts`) — they never show up in plaintext in a log, not even by accident.
+
+What to log:
+- **Always**: unhandled errors and 5xx responses (already done by `GlobalExceptionFilter`, TT-15, with the real logger, not `console.log`)
+- **Critical write operations**: inventory movements, request approvals, role changes — use `new Logger(ModuleName)` (the same pattern already used by `main.ts`/`GlobalExceptionFilter`), not `console.log`
+- **No need to explicitly log** every request/response — `pino-http` already covers that automatically (method, route, status, response time)
+
 ## Tests
 
 | Type | When | Tool | Location |
