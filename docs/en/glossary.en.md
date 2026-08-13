@@ -33,6 +33,7 @@
 | **RBAC** | Role-Based Access Control |
 | **TDD** | Test Driven Development — writing the test before the code, for critical domain logic |
 | **BDD** | Behavior Driven Development — Gherkin scenarios for critical business flows |
+| **DDD** | Domain-Driven Design — a domain-modeling approach. Only its tactical patterns are adopted here (Entities with behavior, Value Objects, Domain Services) inside the hexagonal architecture already decided, not strategic DDD (bounded contexts). See ADR-17 |
 | **i18n** | Internationalization — standard abbreviation (18 letters between the "i" and the "n"). See HU-29. |
 | **Scrumban** | The adapted methodology used in this project: Scrum's backlog and user stories + a continuous Kanban-style flow, without team ceremonies (since it's a solo developer) |
 | **Iteration** | Equivalent to a "sprint", but 3-4 weeks long (weekend pace) instead of a team's 2 weeks |
