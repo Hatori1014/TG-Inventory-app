@@ -1,6 +1,6 @@
 # Estado del proyecto — leer esto primero
 
-> Última actualización: TT-21 cerrada — logging estructurado (`nestjs-pino`) en el backend: JSON a stdout en staging/producción, pretty-print en desarrollo, correlation id (`X-Request-Id`) por request, y redacción automática de `Authorization`/cookies/`password`/`token`. Verificado en vivo con el servidor compilado. Actualízalo tú mismo al cerrar cada iteración. English version below.
+> Última actualización: TT-19 cerrada — convención de paginación estándar (offset/limit) para todo endpoint de listado futuro: `PaginationQueryDto`/`PaginatedResponseDto`/`pagination.util.ts` en `backend/src/common/`, documentada en `TRD.md` sección 4. Actualízalo tú mismo al cerrar cada iteración. English version below.
 
 ## Nota de estructura
 
@@ -16,7 +16,7 @@ Sistema de control de inventario: proveedores, inventario por ubicaciones, alert
 
 ### Próximo paso inmediato: elegir la siguiente tarea técnica
 
-TT-02 a TT-05 ya están cerradas (ver tabla abajo). Ahora mismo en curso: **TT-14 a TT-21**, ocho tareas técnicas nuevas de una revisión de arquitectura (ver "Gaps de arquitectura" abajo) — TT-14, TT-15, TT-16 y TT-21 ya cerradas, siguiendo el orden acordado: TT-19 → TT-20 → TT-17 → TT-18. Van antes de escribir cualquier HU de negocio real.
+TT-02 a TT-05 ya están cerradas (ver tabla abajo). Ahora mismo en curso: **TT-14 a TT-21**, ocho tareas técnicas nuevas de una revisión de arquitectura (ver "Gaps de arquitectura" abajo) — TT-14, TT-15, TT-16, TT-21 y TT-19 ya cerradas, siguiendo el orden acordado: TT-20 → TT-17 → TT-18. Van antes de escribir cualquier HU de negocio real.
 
 Pendiente de menor prioridad, sin bloquear lo anterior:
 - TT-09 (Dependabot): solo falta la confirmación manual en Settings → Code security, es rápido
@@ -33,7 +33,8 @@ Origen: sesión de revisión de arquitectura (2026-08-12), motivada por una preg
 - **TT-15 (manejo de errores global)** — ✅ Hecho. Ver fila en la tabla de abajo.
 - **TT-16 (límites de conexión Prisma)** — ✅ Hecho. Ver fila en la tabla de abajo.
 - **TT-21 (logging)** — ✅ Hecho. Ver fila en la tabla de abajo.
-- **TT-19 (paginación)**, **TT-20 (índices)**, **TT-17 (locking optimista en stock)**, **TT-18 (idempotencia)** — ⬜ Pendientes, en ese orden.
+- **TT-19 (paginación)** — ✅ Hecho. Ver fila en la tabla de abajo.
+- **TT-20 (índices)**, **TT-17 (locking optimista en stock)**, **TT-18 (idempotencia)** — ⬜ Pendientes, en ese orden.
 
 ### Tareas técnicas, en detalle
 
@@ -56,6 +57,7 @@ Origen: sesión de revisión de arquitectura (2026-08-12), motivada por una preg
 | TT-15 (manejo de errores global) | ✅ Hecho — `GlobalExceptionFilter` (`backend/src/common/filters/`) registrado vía `APP_FILTER`: cualquier excepción (conocida o no) responde con formato consistente (`statusCode`, `message`, `timestamp`, `path`); errores desconocidos devuelven 500 genérico sin filtrar detalles internos, logueados server-side. `process.on('uncaughtException'/'unhandledRejection')` en `main.ts` loguean y cierran controladamente (Render reinicia el contenedor). Verificado con 3 tests unitarios (`global-exception.filter.spec.ts`) y probado en vivo: servidor compilado levantado localmente, `/health` → `200`, ruta inexistente → `404` con el formato del filtro |
 | TT-16 (límites de conexión Prisma) | ✅ Hecho, incluida la variable real en Render — `connection_limit=5`, `pool_timeout=10`, `connect_timeout=10`, `options=-c statement_timeout=10000` documentados en `.env.example`/`TRD.md` y ya aplicados en el `DATABASE_URL` de Render. Verificado empíricamente contra Postgres local (query 2s pasa, 15s se cancela a los ~10s con el error real de Postgres `57014`) y en vivo: `curl` a `/health` en producción → `200 OK`, `database: ok`. Números de Neon (104 conexiones a 0.25 CU, 97 tras reservar 7 para el superusuario) confirmados en su documentación oficial. **Incidente durante el rollout**: el primer intento en Render falló con `P1001 (Can't reach database server)` — la causa real era una comilla `"` sobrante al final (y probablemente al inicio) del valor pegado en el campo de Render, arrastrada del formato `DATABASE_URL="..."` de los archivos `.env` (Render no le hace ese parseo tipo dotenv, toma el valor tal cual se pega). Reproducido localmente para confirmar antes de indicar el fix. **Gotcha a tener en cuenta** al copiar cualquier otro valor desde `.env.example`/`.env.staging` hacia el dashboard de Render: pegar solo el contenido entre comillas, nunca las comillas mismas |
 | TT-21 (logging estructurado) | ✅ Hecho — `nestjs-pino` (`backend/src/config/logger.config.ts`, cargado en `app.module.ts`, `app.useLogger()` en `main.ts` con `bufferLogs: true`). JSON estructurado a stdout en `staging`/`production`, pretty-print en `development`. Correlation id por request (`X-Request-Id`, propagado si el cliente ya lo manda). Redacción automática de `Authorization`, cookies, `password`/`token` del body — nunca en texto plano. Convención documentada en `convenciones.md` (qué loguear: errores/5xx siempre, escrituras críticas explícitas, requests ya cubiertos por `pino-http`). Verificado en vivo con el servidor compilado en ambos modos: JSON crudo en `production`, pretty-print en `development`, header `Authorization` con token real confirmado como `[Redacted]` en el log. `npm run lint`/`build`/`test` en verde |
+| TT-19 (paginación estándar) | ✅ Hecho — convención offset/limit para todo endpoint de listado futuro (HU-05/08/10), documentada en `TRD.md` sección 4 y `convenciones.md`. Implementación compartida en `backend/src/common/`: `dto/pagination-query.dto.ts` (`page`/`pageSize`, validado con `class-validator`, tope `pageSize` máx. 100 para evitar el "noisy neighbor" de TT-16), `dto/paginated-response.dto.ts` (shape `{ items, total, page, pageSize }`), `utils/pagination.util.ts` (`toPrismaSkipTake()`, `buildPaginatedResponse()`). 8 tests unitarios nuevos (defaults, validación de límites, cálculo de `skip`/`take`). De paso se corrigió un gap real en `jest.config.js` — faltaba `setupFiles: ['reflect-metadata']`, sin eso cualquier DTO con `@Type()` de `class-transformer` fallaba en tests con `Reflect.getMetadata is not a function`. `npm run lint`/`build`/`test` en verde (12 tests, toda la suite) |
 
 ### Qué se encontró y arregló al verificar CI (TT-07)
 
@@ -92,7 +94,7 @@ https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario — 43 tarjetas, 
 
 # Project status — read this first
 
-> Last updated: TT-21 closed — structured logging (`nestjs-pino`) in the backend: JSON to stdout in staging/production, pretty-print in development, a correlation id (`X-Request-Id`) per request, and automatic redaction of `Authorization`/cookies/`password`/`token`. Verified live with the compiled server. Keep this updated yourself as each iteration closes.
+> Last updated: TT-19 closed — standard pagination convention (offset/limit) for every future listing endpoint: `PaginationQueryDto`/`PaginatedResponseDto`/`pagination.util.ts` in `backend/src/common/`, documented in `TRD.en.md` section 4. Keep this updated yourself as each iteration closes.
 
 ## Structure note
 
@@ -108,7 +110,7 @@ Inventory control system: suppliers, inventory by location, stock alerts, purcha
 
 ### Immediate next step: pick the next technical task
 
-TT-02 through TT-05 are now closed (see table below). Currently in progress: **TT-14 through TT-21**, eight new technical tasks from an architecture review (see "Architecture gaps" below) — TT-14, TT-15, TT-16, and TT-21 are done, following the agreed order: TT-19 → TT-20 → TT-17 → TT-18. These come before writing any real business story.
+TT-02 through TT-05 are now closed (see table below). Currently in progress: **TT-14 through TT-21**, eight new technical tasks from an architecture review (see "Architecture gaps" below) — TT-14, TT-15, TT-16, TT-21, and TT-19 are done, following the agreed order: TT-20 → TT-17 → TT-18. These come before writing any real business story.
 
 Lower-priority, not blocking the above:
 - TT-09 (Dependabot): only the manual confirmation in Settings → Code security is missing, quick to close
@@ -125,7 +127,8 @@ Origin: an architecture review session (2026-08-12), triggered by a concrete que
 - **TT-15 (global error handling)** — ✅ Done. See row in the table below.
 - **TT-16 (Prisma connection limits)** — ✅ Done. See row in the table below.
 - **TT-21 (logging)** — ✅ Done. See row in the table below.
-- **TT-19 (pagination)**, **TT-20 (indexes)**, **TT-17 (optimistic locking on stock)**, **TT-18 (idempotency)** — ⬜ Pending, in that order.
+- **TT-19 (pagination)** — ✅ Done. See row in the table below.
+- **TT-20 (indexes)**, **TT-17 (optimistic locking on stock)**, **TT-18 (idempotency)** — ⬜ Pending, in that order.
 
 ### Technical tasks, in detail
 
@@ -148,6 +151,7 @@ Origin: an architecture review session (2026-08-12), triggered by a concrete que
 | TT-15 (global error handling) | ✅ Done — `GlobalExceptionFilter` (`backend/src/common/filters/`) registered via `APP_FILTER`: any exception (known or not) responds with a consistent shape (`statusCode`, `message`, `timestamp`, `path`); unknown errors return a generic 500 without leaking internal details, logged server-side. `process.on('uncaughtException'/'unhandledRejection')` in `main.ts` log and shut down in a controlled way (Render restarts the container). Verified with 3 unit tests (`global-exception.filter.spec.ts`) and a live check: compiled server run locally, `/health` → `200`, a nonexistent route → `404` in the filter's format |
 | TT-16 (Prisma connection limits) | ✅ Done, including the real variable on Render — `connection_limit=5`, `pool_timeout=10`, `connect_timeout=10`, `options=-c statement_timeout=10000` documented in `.env.example`/`TRD.en.md` and already applied to Render's `DATABASE_URL`. Verified empirically against local Postgres (a 2s query passes, a 15s query gets cancelled at ~10s with Postgres' real `57014` error) and live: `curl` to production `/health` → `200 OK`, `database: ok`. Neon's numbers (104 connections at 0.25 CU, 97 after reserving 7 for the superuser) confirmed against its official docs. **Incident during rollout**: the first attempt on Render failed with `P1001 (Can't reach database server)` — the real cause was a stray trailing `"` (and likely a leading one too) carried over from the `DATABASE_URL="..."` format used in `.env` files when the value was pasted into Render's field (Render doesn't do dotenv-style parsing — it takes the pasted value verbatim). Reproduced locally to confirm before pointing to the fix. **Gotcha to remember** when copying any other value from `.env.example`/`.env.staging` into Render's dashboard: paste only the content between the quotes, never the quotes themselves |
 | TT-21 (structured logging) | ✅ Done — `nestjs-pino` (`backend/src/config/logger.config.ts`, loaded in `app.module.ts`, `app.useLogger()` in `main.ts` with `bufferLogs: true`). Structured JSON to stdout in `staging`/`production`, pretty-print in `development`. Correlation id per request (`X-Request-Id`, propagated if the client already sends one). Automatic redaction of `Authorization`, cookies, `password`/`token` in the body — never in plaintext. Convention documented in `conventions.en.md` (what to log: errors/5xx always, explicit critical writes, requests already covered by `pino-http`). Verified live with the compiled server in both modes: raw JSON in `production`, pretty-print in `development`, `Authorization` header with a real token confirmed as `[Redacted]` in the log. `npm run lint`/`build`/`test` green |
+| TT-19 (standard pagination) | ✅ Done — offset/limit convention for every future listing endpoint (HU-05/08/10), documented in `TRD.en.md` section 4 and `conventions.en.md`. Shared implementation in `backend/src/common/`: `dto/pagination-query.dto.ts` (`page`/`pageSize`, validated with `class-validator`, `pageSize` capped at 100 to avoid TT-16's "noisy neighbor"), `dto/paginated-response.dto.ts` (`{ items, total, page, pageSize }` shape), `utils/pagination.util.ts` (`toPrismaSkipTake()`, `buildPaginatedResponse()`). 8 new unit tests (defaults, boundary validation, `skip`/`take` math). Along the way, fixed a real gap in `jest.config.js` — `setupFiles: ['reflect-metadata']` was missing, without it any DTO using `class-transformer`'s `@Type()` failed in tests with `Reflect.getMetadata is not a function`. `npm run lint`/`build`/`test` green (12 tests, full suite) |
 
 ### What was found and fixed while verifying CI (TT-07)
 

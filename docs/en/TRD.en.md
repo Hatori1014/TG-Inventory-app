@@ -35,6 +35,14 @@ Key decisions:
 
 Full spec of 10 REST modules (Auth, Users/Roles, Suppliers, Locations, Products, Inventory, Alerts, Purchases, Requests, Audit) in the plan, section 7.4 — includes method, route, action, minimum required role, and associated story.
 
+### Pagination (TT-19)
+
+Standard convention for every listing endpoint (HU-05 purchase history, HU-08 movements, HU-10 stock, and any future one): offset/limit, not cursor — simpler and enough at this scale (dozens/hundreds of users, no need to paginate over data that changes in real time).
+
+- **Query params**: `page` (default `1`, minimum `1`) and `pageSize` (default `20`, maximum `100` — the cap stops a client from requesting a huge `pageSize` and turning a listing endpoint into the "noisy neighbor" TT-16 was meant to prevent).
+- **Response**: `{ items: T[], total: number, page: number, pageSize: number }`.
+- **Shared implementation** in `backend/src/common/`: `dto/pagination-query.dto.ts` (query DTO validated with `class-validator`/`class-transformer`), `dto/paginated-response.dto.ts` (response shape), `utils/pagination.util.ts` (`toPrismaSkipTake()` converts `page`/`pageSize` into Prisma's `skip`/`take`; `buildPaginatedResponse()` builds the response). Every listing module reuses these — pagination logic isn't repeated per use-case.
+
 ## 5. Non-functional requirements
 
 | Attribute | Requirement |

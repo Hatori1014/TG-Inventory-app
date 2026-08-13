@@ -31,6 +31,7 @@ Por tipo de archivo, dentro de cada módulo (kebab-case + sufijo, en inglés):
 - Arquitectura hexagonal por módulo backend (domain → application → infrastructure) — **solo en módulos con lógica de negocio real** (inventory, requests). Los CRUD triviales (ej. locations) pueden empezar sin las 4 capas.
 - Patrones tácticos de DDD dentro de `domain/` (ADR-17): Entidades con comportamiento, Value Objects, Domain Services. El use-case orquesta, no decide — la regla de negocio vive en `domain/`.
 - Fronteras entre módulos reforzadas con lint, no solo convención (ADR-18): un módulo nunca importa `domain/` ni `infrastructure/` de otro módulo — solo los servicios exportados por su `*.module.ts`. `eslint-plugin-boundaries` lo hace fallar el build (`backend/.eslintrc.js`, corre en `ci-backend.yml` vía `npm run lint`).
+- Paginación estándar en todo endpoint de listado (TT-19): offset/limit vía `PaginationQueryDto`/`PaginatedResponseDto`/`pagination.util.ts` en `backend/src/common/` — nunca reimplementar `skip`/`take` a mano en un use-case. Detalle en `TRD.md` sección 4.
 - DTOs validados con `class-validator` en todo endpoint de escritura (HU-21)
 - RBAC vía Guards + decorador `@Roles()`, evaluado siempre en backend, nunca solo ocultando UI
 - Movimientos de inventario: nunca se actualiza `LocationStock` directo — siempre a través de un registro en `InventoryMovement` en la misma transacción
