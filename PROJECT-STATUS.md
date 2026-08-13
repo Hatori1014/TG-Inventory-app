@@ -1,6 +1,6 @@
 # Estado del proyecto — leer esto primero
 
-> Última actualización: TT-16 cerrada (límites de conexión Prisma + timeouts) — ver sección "Gaps de arquitectura" abajo para el contexto de por qué existen TT-14 a TT-21. Actualízalo tú mismo al cerrar cada iteración. English version below.
+> Última actualización: ADR-19 — los checks de CI requeridos (`backend`/`frontend`) ya no se quedan esperando para siempre en PRs de solo-docs; `paths:` salió del trigger y el trabajo real se gatea por step con `dorny/paths-filter`, así los PRs que no tocan `backend/`/`frontend/` pasan sin necesitar bypass de branch protection. Actualízalo tú mismo al cerrar cada iteración. English version below.
 
 ## Nota de estructura
 
@@ -42,7 +42,7 @@ Origen: sesión de revisión de arquitectura (2026-08-12), motivada por una preg
 | TT-11 (health-check) | ✅ Hecho — re-validado |
 | TT-12 (Prisma + migración) | ✅ Hecho — re-validado |
 | TT-13 (Docker Postgres local) | ✅ Hecho — re-validado |
-| TT-07 (CI) | ✅ Hecho — verificado con PRs reales (#13, #14) contra `staging`, ambos checks (`backend`, `frontend`) en verde. Ver "Qué se encontró y arregló" abajo |
+| TT-07 (CI) | ✅ Hecho — verificado con PRs reales (#13, #14) contra `staging`, ambos checks (`backend`, `frontend`) en verde. Ver "Qué se encontró y arregló" abajo. **Refinamiento (ADR-19)**: los checks tenían `paths:` en el trigger, así que en PRs de solo-docs (varios en esta sesión) el check requerido nunca se disparaba y branch protection quedaba esperando para siempre — obligaba a usar bypass. Se quitó `paths:` del trigger y se agregó `dorny/paths-filter` para gatear el trabajo real por step; ahora un PR de solo-docs pasa en segundos sin bypass, y uno que sí toca `backend/`/`frontend/` corre el pipeline completo igual que antes |
 | TT-02 (branching + branch protection) | ✅ Hecho — repo pasado a público; dos rulesets creados en GitHub (`main` y `staging`), Enforcement status `Active` en ambos, con `Require status checks to pass` exigiendo `backend` y `frontend`. Falta sincronizar el estado en Trello (sin conector desde este entorno) |
 | TT-03 (Vercel) | ✅ Hecho — proyecto conectado al repo (auto-deploy en push a `main` confirmado); tras corregir Framework Preset (`Angular`) y Output Directory (`dist/frontend/browser`, requerido por el builder `application` de Angular 18), `https://tg-inventory-app.vercel.app` responde `200 OK` sirviendo `index.html` |
 | TT-04 (Render/Fly.io) | ✅ Hecho — servicio `tg-inventory-backend` creado en Render (`https://tg-inventory-backend.onrender.com`), conectado al repo; variables `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV`, `FRONTEND_URL` cargadas. Verificado con `curl`: `/health` → `200 OK` (`database: ok`), y CORS (GET + preflight OPTIONS) devuelve `access-control-allow-origin: https://tg-inventory-app.vercel.app` |
@@ -90,7 +90,7 @@ https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario — 43 tarjetas, 
 
 # Project status — read this first
 
-> Last updated: TT-16 closed (Prisma connection limits + timeouts) — see "Architecture gaps" section below for why TT-14 through TT-21 exist. Keep this updated yourself as each iteration closes.
+> Last updated: ADR-19 — the required CI checks (`backend`/`frontend`) no longer wait forever on docs-only PRs; `paths:` came off the trigger and real work is gated per step with `dorny/paths-filter`, so PRs that don't touch `backend/`/`frontend/` pass without needing a branch-protection bypass. Keep this updated yourself as each iteration closes.
 
 ## Structure note
 
@@ -132,7 +132,7 @@ Origin: an architecture review session (2026-08-12), triggered by a concrete que
 | TT-11 (health-check) | ✅ Done — re-validated |
 | TT-12 (Prisma + migration) | ✅ Done — re-validated |
 | TT-13 (local Docker Postgres) | ✅ Done — re-validated |
-| TT-07 (CI) | ✅ Done — verified with real PRs (#13, #14) against `staging`, both checks (`backend`, `frontend`) green. See "What was found and fixed" below |
+| TT-07 (CI) | ✅ Done — verified with real PRs (#13, #14) against `staging`, both checks (`backend`, `frontend`) green. See "What was found and fixed" below. **Refinement (ADR-19)**: the checks had `paths:` on the trigger, so on docs-only PRs (several this session) the required check never fired and branch protection waited forever — forcing a bypass. Dropped `paths:` from the trigger and added `dorny/paths-filter` to gate the real work per step; now a docs-only PR passes in seconds without a bypass, and one that does touch `backend/`/`frontend/` still runs the full pipeline as before |
 | TT-02 (branching + branch protection) | ✅ Done — repo switched to public; two GitHub rulesets created (`main` and `staging`), Enforcement status `Active` on both, with `Require status checks to pass` requiring `backend` and `frontend`. Trello status still needs manual sync (no connector from this environment) |
 | TT-03 (Vercel) | ✅ Done — project connected to the repo (auto-deploy on push to `main` confirmed); after fixing the Framework Preset (`Angular`) and Output Directory (`dist/frontend/browser`, required by Angular 18's `application` builder), `https://tg-inventory-app.vercel.app` responds `200 OK` serving `index.html` |
 | TT-04 (Render/Fly.io) | ✅ Done — `tg-inventory-backend` service created on Render (`https://tg-inventory-backend.onrender.com`), connected to the repo; `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV`, `FRONTEND_URL` all set. Verified with `curl`: `/health` → `200 OK` (`database: ok`), and CORS (GET + preflight OPTIONS) returns `access-control-allow-origin: https://tg-inventory-app.vercel.app` |
