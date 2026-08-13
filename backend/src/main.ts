@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
@@ -24,7 +25,15 @@ process.on('unhandledRejection', (reason) => {
 });
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // bufferLogs holds any log emitted before useLogger() runs below, instead
+  // of losing it to the default console logger
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+
+  // TT-21 — replace Nest's default logger app-wide with the structured
+  // (pino) one; every existing `new Logger(context)` call, including the
+  // uncaughtException/unhandledRejection handlers above, starts emitting
+  // structured JSON through this from here on
+  app.useLogger(app.get(PinoLogger));
 
   // HU-22 — security HTTP headers (CSP, HSTS, X-Frame-Options, etc.)
   app.use(helmet());
@@ -55,7 +64,6 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  // eslint-disable-next-line no-console
-  console.log(`Backend running at http://localhost:${port} (docs at /docs)`);
+  logger.log(`Backend running at http://localhost:${port} (docs at /docs)`);
 }
 bootstrap();
