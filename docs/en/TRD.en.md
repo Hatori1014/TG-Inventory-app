@@ -48,6 +48,10 @@ Unlike MySQL, PostgreSQL **doesn't automatically index FK columns** — verified
 
 Full spec of 10 REST modules (Auth, Users/Roles, Suppliers, Locations, Products, Inventory, Alerts, Purchases, Requests, Audit) in the plan, section 7.4 — includes method, route, action, minimum required role, and associated story.
 
+### Idempotency on critical writes (TT-18, ADR-21)
+
+Endpoints that create inventory movements, purchases, requests, or role changes (HU-08, HU-13, HU-15, HU-16) must be marked with `@Idempotent()` (`backend/src/common/decorators/idempotent.decorator.ts`) and `@UseInterceptors(IdempotencyInterceptor)` (`backend/src/common/interceptors/`). The client generates an `Idempotency-Key` (UUID) per logical operation and sends it as a header; the interceptor requires it, returns the response already stored in `IdempotencyKey` (a table with a unique `key`) if the key repeats, without re-running the handler, and resolves the race between two concurrent requests sharing a key via Postgres' unique constraint. See ADR-21 for the discarded alternatives (disabling the frontend button, Redis).
+
 ### Pagination (TT-19)
 
 Standard convention for every listing endpoint (HU-05 purchase history, HU-08 movements, HU-10 stock, and any future one): offset/limit, not cursor — simpler and enough at this scale (dozens/hundreds of users, no need to paginate over data that changes in real time).
