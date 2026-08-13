@@ -30,6 +30,7 @@ By file type, inside each module (kebab-case + suffix, in English):
 
 - Hexagonal architecture per backend module (domain → application → infrastructure) — **only in modules with real business logic** (inventory, requests). Trivial CRUDs (e.g. locations) can start without the 4 layers.
 - DDD tactical patterns inside `domain/` (ADR-17): Entities with behavior, Value Objects, Domain Services. The use-case orchestrates, it doesn't decide — the business rule lives in `domain/`.
+- Module boundaries enforced with lint, not just convention (ADR-18): a module never imports `domain/` or `infrastructure/` from another module — only the services exported by its `*.module.ts`. `eslint-plugin-boundaries` fails the build (`backend/.eslintrc.js`, runs in `ci-backend.yml` via `npm run lint`).
 - DTOs validated with `class-validator` on every write endpoint (HU-21)
 - RBAC via Guards + the `@Roles()` decorator, always enforced in the backend, never just hiding UI
 - Inventory movements: `LocationStock` is never updated directly — always through a record in `InventoryMovement` in the same transaction
