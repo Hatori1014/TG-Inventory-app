@@ -44,6 +44,10 @@ PostgreSQL, a diferencia de MySQL, **no indexa automáticamente las columnas FK*
 
 `LocationStock` tiene columna `version Int @default(0)` para locking optimista: dos requests concurrentes actualizando el mismo registro (lost update) se detectan porque el segundo `UPDATE` no encuentra la versión que esperaba. Patrón para el use-case que actualiza stock (aún no implementado): `updateMany({ where: { id, version }, data: { ..., version: { increment: 1 } } })`; si no afecta filas, releer y reintentar hasta 3 veces (`withOptimisticLock()` en `backend/src/common/utils/optimistic-lock.util.ts`) antes de devolver `409 Conflict`. Ver ADR-20 para las alternativas descartadas (`SELECT FOR UPDATE`, 409 sin reintento).
 
+### Borrado lógico (TT-22, ADR-22)
+
+No hay `DELETE` físico planeado para ningún endpoint. Cuando una HU real defina una acción de "eliminar" sobre un modelo sin `status` (`User`/`Location`/`Product`/`Supplier` ya lo tienen y no cambian), se le agrega `deletedAt DateTime?` a ese modelo puntual, con lectura filtrada vía extensión de Prisma Client — nunca de forma preventiva en los 17 modelos. Nunca aplica a `InventoryMovement`/`AuditEvent` (registro histórico) ni a tablas de enlace/config o filas derivadas sin ciclo de vida propio. Ver ADR-22 para el detalle completo y las alternativas descartadas.
+
 ## 4. API
 
 Especificación completa de 10 módulos REST (Auth, Users/Roles, Suppliers, Locations, Products, Inventory, Alerts, Purchases, Requests, Audit) en el plan, sección 7.4 — incluye método, ruta, acción, rol mínimo requerido y HU asociada.
