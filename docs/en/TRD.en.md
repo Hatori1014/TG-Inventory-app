@@ -44,6 +44,10 @@ Unlike MySQL, PostgreSQL **doesn't automatically index FK columns** — verified
 
 `LocationStock` has a `version Int @default(0)` column for optimistic locking: two concurrent requests updating the same row (a lost update) get caught because the second `UPDATE` doesn't find the version it expected. Pattern for the use-case that updates stock (not implemented yet): `updateMany({ where: { id, version }, data: { ..., version: { increment: 1 } } })`; if it affects zero rows, re-read and retry up to 3 times (`withOptimisticLock()` in `backend/src/common/utils/optimistic-lock.util.ts`) before returning `409 Conflict`. See ADR-20 for the discarded alternatives (`SELECT FOR UPDATE`, 409 with no retry).
 
+### Soft delete (TT-22, ADR-22)
+
+No physical `DELETE` is planned for any endpoint. Once a real story defines a "delete" action on a model without `status` (`User`/`Location`/`Product`/`Supplier` already have it and stay unchanged), that specific model gets a `deletedAt DateTime?` field, with reads filtered via a Prisma Client extension — never added preemptively across all 17 models. Never applied to `InventoryMovement`/`AuditEvent` (historical record) nor to link/config tables or derived rows with no lifecycle of their own. See ADR-22 for full detail and the discarded alternatives.
+
 ## 4. API
 
 Full spec of 10 REST modules (Auth, Users/Roles, Suppliers, Locations, Products, Inventory, Alerts, Purchases, Requests, Audit) in the plan, section 7.4 — includes method, route, action, minimum required role, and associated story.
