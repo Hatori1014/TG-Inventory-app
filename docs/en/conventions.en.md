@@ -11,9 +11,11 @@
 ## Naming — backend (NestJS)
 
 By file type, inside each module (kebab-case + suffix, in English):
-- `*.entity.ts` — domain entity
+- `*.entity.ts` — domain entity, **with behavior** (not just data — see ADR-17)
+- `*.value-object.ts` — domain Value Object: immutable, self-validating on construction (ADR-17), in `domain/`
+- `*.domain-service.ts` — Domain Service: a pure business rule that doesn't belong to a single entity (ADR-17), in `domain/services/`
 - `*.repository.interface.ts` — port (repository interface, in `domain/`)
-- `*.use-case.ts` — use case (in `application/use-cases/`), e.g. `create-supplier.use-case.ts`
+- `*.use-case.ts` — use case (in `application/use-cases/`), e.g. `create-supplier.use-case.ts` — orchestrates IO + `domain/`, holds no business rule itself
 - `*.prisma.repository.ts` — infrastructure adapter (in `infrastructure/`)
 - `*.dto.ts` — DTO validated with `class-validator`
 - `*.controller.ts`, `*.module.ts`
@@ -27,6 +29,8 @@ By file type, inside each module (kebab-case + suffix, in English):
 ## Patterns we use
 
 - Hexagonal architecture per backend module (domain → application → infrastructure) — **only in modules with real business logic** (inventory, requests). Trivial CRUDs (e.g. locations) can start without the 4 layers.
+- DDD tactical patterns inside `domain/` (ADR-17): Entities with behavior, Value Objects, Domain Services. The use-case orchestrates, it doesn't decide — the business rule lives in `domain/`.
+- Module boundaries enforced with lint, not just convention (ADR-18): a module never imports `domain/` or `infrastructure/` from another module — only the services exported by its `*.module.ts`. `eslint-plugin-boundaries` fails the build (`backend/.eslintrc.js`, runs in `ci-backend.yml` via `npm run lint`).
 - DTOs validated with `class-validator` on every write endpoint (HU-21)
 - RBAC via Guards + the `@Roles()` decorator, always enforced in the backend, never just hiding UI
 - Inventory movements: `LocationStock` is never updated directly — always through a record in `InventoryMovement` in the same transaction
@@ -37,6 +41,7 @@ By file type, inside each module (kebab-case + suffix, in English):
 
 - String concatenation to build SQL queries — always parameterized queries via Prisma
 - Business logic inside a controller (it belongs in the use-case)
+- Business logic inside the use-case when it should live in an entity/Value Object/Domain Service (ADR-17) — the use-case orchestrates, it doesn't decide
 - Calling Prisma directly from a controller, bypassing the repository
 - Storing user-uploaded files on the application server's disk (must go to Cloudflare R2)
 - Relying on the frontend as the only access-control layer

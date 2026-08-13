@@ -1,8 +1,27 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+
+const logger = new Logger('Bootstrap');
+
+// TT-15 — the global exception filter only covers errors thrown inside the
+// request/response cycle. An error thrown outside it (a rejected promise
+// nobody awaited, a callback throwing async) would otherwise crash the
+// whole process silently — every module goes down with it, not just the
+// one that misbehaved. Log it and exit so Render restarts the container
+// in a known state, instead of limping along zombied.
+process.on('uncaughtException', (error) => {
+  logger.error('uncaughtException — shutting down', error.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  const error = reason instanceof Error ? reason.stack : reason;
+  logger.error('unhandledRejection — shutting down', error);
+  process.exit(1);
+});
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

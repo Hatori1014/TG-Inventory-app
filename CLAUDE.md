@@ -22,6 +22,7 @@ Full detail in `docs/esp/convenciones.md` / `docs/en/conventions.en.md`. Key poi
 ## Before making changes
 - Check `PROJECT-STATUS.md` for current phase and what's already done
 - Check `docs/esp/decisiones.md` (ADRs) before proposing a new technical decision — don't silently contradict one already made
+- Don't trust a "done" status at face value. If an item in PROJECT-STATUS.md is marked done but the note doesn't say concretely how it was verified (a command output, a test result, a URL that was actually checked), treat it as unverified and re-check before building on top of it. This project is also worked on from a separate claude.ai/Cowork session with Trello access — that session may have corrected something here after the fact, or discovered that a "done" mark was wrong (this has happened twice already: TT-03 and TT-07 were both marked done without real evidence and had to be reverted). If in doubt, ask the user for the latest sync note instead of assuming this file is fully current.
 
 ## After completing a task (TT or HU)
 - Update `PROJECT-STATUS.md` yourself, in the same commit as the work — mark the item done, with a one-line note of what was actually verified (not just "done", say how: e.g. "migrate deploy ran clean against staging DB"). This file is the single source of truth other Claude sessions (including claude.ai) read to know the real state — if you don't update it, they won't know what happened here.

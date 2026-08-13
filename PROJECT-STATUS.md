@@ -1,6 +1,6 @@
 # Estado del proyecto — leer esto primero
 
-> Última actualización: TT-02 cerrada — repo pasado a público y branch protection (rulesets) configurada y activa en `main` y `staging`, exigiendo los checks `backend` y `frontend`. Actualízalo tú mismo al cerrar cada iteración. English version below.
+> Última actualización: ADR-19 — los checks de CI requeridos (`backend`/`frontend`) ya no se quedan esperando para siempre en PRs de solo-docs; `paths:` salió del trigger y el trabajo real se gatea por step con `dorny/paths-filter`, así los PRs que no tocan `backend/`/`frontend/` pasan sin necesitar bypass de branch protection. Actualízalo tú mismo al cerrar cada iteración. English version below.
 
 ## Nota de estructura
 
@@ -16,12 +16,23 @@ Sistema de control de inventario: proveedores, inventario por ubicaciones, alert
 
 ### Próximo paso inmediato: elegir la siguiente tarea técnica
 
-TT-02 ya está cerrada (ver tabla abajo). Lo que queda pendiente en la iteración actual, sin decidir todavía qué sigue primero:
+TT-02 a TT-05 ya están cerradas (ver tabla abajo). Ahora mismo en curso: **TT-14 a TT-21**, ocho tareas técnicas nuevas de una revisión de arquitectura (ver "Gaps de arquitectura" abajo) — TT-14, TT-15 y TT-16 ya cerradas, siguiendo el orden acordado: TT-21 → TT-19 → TT-20 → TT-17 → TT-18. Van antes de escribir cualquier HU de negocio real.
+
+Pendiente de menor prioridad, sin bloquear lo anterior:
 - TT-09 (Dependabot): solo falta la confirmación manual en Settings → Code security, es rápido
-- TT-03/04/05 (Vercel / Render-Fly.io / Neon-Supabase): setup de hosting e infraestructura, checklist completo en Trello
+- TT-10 (secrets): ya cargados los que se usan hoy (`DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `FRONTEND_URL`, `NODE_ENV` en Render); falta revisar si se necesita algo más en GitHub Actions
 - TT-06 (Cloudflare): no bloquea el MVP, se puede dejar para después
 
 El flujo de PR + CI **funciona y ya se probó de punta a punta** (ver detalle de TT-07 abajo), y ahora además está reforzado por la regla de branch protection.
+
+### Gaps de arquitectura (TT-14 a TT-21)
+
+Origen: sesión de revisión de arquitectura (2026-08-12), motivada por una pregunta concreta — "si falla un módulo, ¿se caen otros?". El diseño es monolito modular (todos los módulos en un solo proceso Node, un solo `schema.prisma`/`PrismaClient`) — sin disciplina explícita, la respuesta es sí. Ocho TT (no HU, son prerrequisitos técnicos transversales) atacan esto y gaps relacionados (concurrencia, idempotencia, paginación, índices, logging, fronteras entre módulos), antes de implementar cualquier HU de negocio. Detalle completo de cada una en Trello, lista "Iteración actual".
+
+- **TT-14 (fronteras entre módulos)** — ✅ Hecho. Ver fila en la tabla de abajo.
+- **TT-15 (manejo de errores global)** — ✅ Hecho. Ver fila en la tabla de abajo.
+- **TT-16 (límites de conexión Prisma)** — ✅ Hecho. Ver fila en la tabla de abajo.
+- **TT-21 (logging)**, **TT-19 (paginación)**, **TT-20 (índices)**, **TT-17 (locking optimista en stock)**, **TT-18 (idempotencia)** — ⬜ Pendientes, en ese orden.
 
 ### Tareas técnicas, en detalle
 
@@ -31,15 +42,18 @@ El flujo de PR + CI **funciona y ya se probó de punta a punta** (ver detalle de
 | TT-11 (health-check) | ✅ Hecho — re-validado |
 | TT-12 (Prisma + migración) | ✅ Hecho — re-validado |
 | TT-13 (Docker Postgres local) | ✅ Hecho — re-validado |
-| TT-07 (CI) | ✅ Hecho — verificado con PRs reales (#13, #14) contra `staging`, ambos checks (`backend`, `frontend`) en verde. Ver "Qué se encontró y arregló" abajo |
+| TT-07 (CI) | ✅ Hecho — verificado con PRs reales (#13, #14) contra `staging`, ambos checks (`backend`, `frontend`) en verde. Ver "Qué se encontró y arregló" abajo. **Refinamiento (ADR-19)**: los checks tenían `paths:` en el trigger, así que en PRs de solo-docs (varios en esta sesión) el check requerido nunca se disparaba y branch protection quedaba esperando para siempre — obligaba a usar bypass. Se quitó `paths:` del trigger y se agregó `dorny/paths-filter` para gatear el trabajo real por step; ahora un PR de solo-docs pasa en segundos sin bypass, y uno que sí toca `backend/`/`frontend/` corre el pipeline completo igual que antes |
 | TT-02 (branching + branch protection) | ✅ Hecho — repo pasado a público; dos rulesets creados en GitHub (`main` y `staging`), Enforcement status `Active` en ambos, con `Require status checks to pass` exigiendo `backend` y `frontend`. Falta sincronizar el estado en Trello (sin conector desde este entorno) |
-| TT-03 (Vercel) | 🟡 Parcial — proyecto creado en `https://tg-inventory-app.vercel.app`; falta verificar que el auto-deploy está conectado al repo/rama correcta |
-| TT-04 (Render/Fly.io) | ⬜ Pendiente — checklist completo en Trello. Backend ya lee `FRONTEND_URL` para CORS (`main.ts`) y `.env.example` documenta el valor esperado (URL de Vercel de arriba); falta crear el servicio y setear la variable real |
-| TT-05 (Neon/Supabase) | ⬜ Pendiente — checklist completo en Trello |
+| TT-03 (Vercel) | ✅ Hecho — proyecto conectado al repo (auto-deploy en push a `main` confirmado); tras corregir Framework Preset (`Angular`) y Output Directory (`dist/frontend/browser`, requerido por el builder `application` de Angular 18), `https://tg-inventory-app.vercel.app` responde `200 OK` sirviendo `index.html` |
+| TT-04 (Render/Fly.io) | ✅ Hecho — servicio `tg-inventory-backend` creado en Render (`https://tg-inventory-backend.onrender.com`), conectado al repo; variables `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV`, `FRONTEND_URL` cargadas. Verificado con `curl`: `/health` → `200 OK` (`database: ok`), y CORS (GET + preflight OPTIONS) devuelve `access-control-allow-origin: https://tg-inventory-app.vercel.app` |
+| TT-05 (Neon/Supabase) | ✅ Hecho — base de datos creada en Neon, migraciones aplicadas con `npm run prisma:migrate:staging`, `DATABASE_URL` ya copiada a los secrets de Render (TT-04) |
 | TT-06 (Cloudflare) | ⬜ Pendiente — checklist completo en Trello, no bloquea MVP 1-4 |
 | TT-08 (CD) | ⬜ Pendiente — **NO es un workflow**, es configuración en los dashboards de Vercel/Render; depende de TT-03/04 |
 | TT-09 (Dependabot) | 🟡 Parcial — `dependabot.yml` ya agrupa por ecosistema (máx. 3 PRs/semana en vez de 1 por paquete); falta la confirmación manual en Settings → Code security |
-| TT-10 (secrets) | ⬜ Pendiente — checklist completo en Trello, depende de TT-03/04/05 |
+| TT-10 (secrets) | ✅ Hecho para lo que existe hoy — `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV`, `FRONTEND_URL` cargados en Render (nunca en el repo, ver `.env.example`). **GitHub Actions no necesita secrets**: revisé `ci-backend.yml`/`ci-frontend.yml` y ninguno usa `secrets.*` ni toca una BD real o la API desplegada (solo `lint`/`test` unitario/`audit`/`build`); y por decisión ya tomada (`CLAUDE.md`, plan sección 9.2) no existe workflow de CD que necesitaría credenciales de deploy. Se revisita si algún día se agregan tests e2e contra staging en CI |
+| TT-14 (fronteras entre módulos) | ✅ Hecho — ADR-18 documentado; `eslint-plugin-boundaries` en `backend/.eslintrc.js`, falla `npm run lint` (y por tanto `ci-backend.yml`) si un módulo importa `domain/`/`infrastructure/` de otro. Verificado con fixture temporal (mismo módulo pasa, cruzado falla con el mensaje del ADR-18) — fixture descartado después de confirmar |
+| TT-15 (manejo de errores global) | ✅ Hecho — `GlobalExceptionFilter` (`backend/src/common/filters/`) registrado vía `APP_FILTER`: cualquier excepción (conocida o no) responde con formato consistente (`statusCode`, `message`, `timestamp`, `path`); errores desconocidos devuelven 500 genérico sin filtrar detalles internos, logueados server-side. `process.on('uncaughtException'/'unhandledRejection')` en `main.ts` loguean y cierran controladamente (Render reinicia el contenedor). Verificado con 3 tests unitarios (`global-exception.filter.spec.ts`) y probado en vivo: servidor compilado levantado localmente, `/health` → `200`, ruta inexistente → `404` con el formato del filtro |
+| TT-16 (límites de conexión Prisma) | ✅ Hecho, incluida la variable real en Render — `connection_limit=5`, `pool_timeout=10`, `connect_timeout=10`, `options=-c statement_timeout=10000` documentados en `.env.example`/`TRD.md` y ya aplicados en el `DATABASE_URL` de Render. Verificado empíricamente contra Postgres local (query 2s pasa, 15s se cancela a los ~10s con el error real de Postgres `57014`) y en vivo: `curl` a `/health` en producción → `200 OK`, `database: ok`. Números de Neon (104 conexiones a 0.25 CU, 97 tras reservar 7 para el superusuario) confirmados en su documentación oficial. **Incidente durante el rollout**: el primer intento en Render falló con `P1001 (Can't reach database server)` — la causa real era una comilla `"` sobrante al final (y probablemente al inicio) del valor pegado en el campo de Render, arrastrada del formato `DATABASE_URL="..."` de los archivos `.env` (Render no le hace ese parseo tipo dotenv, toma el valor tal cual se pega). Reproducido localmente para confirmar antes de indicar el fix. **Gotcha a tener en cuenta** al copiar cualquier otro valor desde `.env.example`/`.env.staging` hacia el dashboard de Render: pegar solo el contenido entre comillas, nunca las comillas mismas |
 
 ### Qué se encontró y arregló al verificar CI (TT-07)
 
@@ -76,7 +90,7 @@ https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario — 43 tarjetas, 
 
 # Project status — read this first
 
-> Last updated: TT-02 closed — repo switched to public and branch protection (rulesets) configured and active on `main` and `staging`, requiring the `backend` and `frontend` checks. Keep this updated yourself as each iteration closes.
+> Last updated: ADR-19 — the required CI checks (`backend`/`frontend`) no longer wait forever on docs-only PRs; `paths:` came off the trigger and real work is gated per step with `dorny/paths-filter`, so PRs that don't touch `backend/`/`frontend/` pass without needing a branch-protection bypass. Keep this updated yourself as each iteration closes.
 
 ## Structure note
 
@@ -92,12 +106,23 @@ Inventory control system: suppliers, inventory by location, stock alerts, purcha
 
 ### Immediate next step: pick the next technical task
 
-TT-02 is now closed (see table below). What's left in the current iteration, order not decided yet:
+TT-02 through TT-05 are now closed (see table below). Currently in progress: **TT-14 through TT-21**, eight new technical tasks from an architecture review (see "Architecture gaps" below) — TT-14, TT-15, and TT-16 are done, following the agreed order: TT-21 → TT-19 → TT-20 → TT-17 → TT-18. These come before writing any real business story.
+
+Lower-priority, not blocking the above:
 - TT-09 (Dependabot): only the manual confirmation in Settings → Code security is missing, quick to close
-- TT-03/04/05 (Vercel / Render-Fly.io / Neon-Supabase): hosting/infra setup, full checklist in Trello
+- TT-10 (secrets): the ones used today are already loaded (`DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `FRONTEND_URL`, `NODE_ENV` on Render); still need to check whether anything else is needed in GitHub Actions
 - TT-06 (Cloudflare): doesn't block the MVP, can wait
 
 The PR + CI flow itself **works and has been verified end to end** (see TT-07 detail below), and is now backed by the branch protection rule too.
+
+### Architecture gaps (TT-14 through TT-21)
+
+Origin: an architecture review session (2026-08-12), triggered by a concrete question — "if one module fails, do the others go down with it?". The design is a modular monolith (every module in a single Node process, one shared `schema.prisma`/`PrismaClient`) — without explicit discipline, the answer is yes. Eight TTs (not HUs — cross-cutting technical prerequisites) address this and related gaps (concurrency, idempotency, pagination, indexes, logging, module boundaries), before any real business story gets implemented. Full detail on each in Trello, "Current iteration" list.
+
+- **TT-14 (module boundaries)** — ✅ Done. See row in the table below.
+- **TT-15 (global error handling)** — ✅ Done. See row in the table below.
+- **TT-16 (Prisma connection limits)** — ✅ Done. See row in the table below.
+- **TT-21 (logging)**, **TT-19 (pagination)**, **TT-20 (indexes)**, **TT-17 (optimistic locking on stock)**, **TT-18 (idempotency)** — ⬜ Pending, in that order.
 
 ### Technical tasks, in detail
 
@@ -107,15 +132,18 @@ The PR + CI flow itself **works and has been verified end to end** (see TT-07 de
 | TT-11 (health-check) | ✅ Done — re-validated |
 | TT-12 (Prisma + migration) | ✅ Done — re-validated |
 | TT-13 (local Docker Postgres) | ✅ Done — re-validated |
-| TT-07 (CI) | ✅ Done — verified with real PRs (#13, #14) against `staging`, both checks (`backend`, `frontend`) green. See "What was found and fixed" below |
+| TT-07 (CI) | ✅ Done — verified with real PRs (#13, #14) against `staging`, both checks (`backend`, `frontend`) green. See "What was found and fixed" below. **Refinement (ADR-19)**: the checks had `paths:` on the trigger, so on docs-only PRs (several this session) the required check never fired and branch protection waited forever — forcing a bypass. Dropped `paths:` from the trigger and added `dorny/paths-filter` to gate the real work per step; now a docs-only PR passes in seconds without a bypass, and one that does touch `backend/`/`frontend/` still runs the full pipeline as before |
 | TT-02 (branching + branch protection) | ✅ Done — repo switched to public; two GitHub rulesets created (`main` and `staging`), Enforcement status `Active` on both, with `Require status checks to pass` requiring `backend` and `frontend`. Trello status still needs manual sync (no connector from this environment) |
-| TT-03 (Vercel) | 🟡 Partial — project created at `https://tg-inventory-app.vercel.app`; still need to verify auto-deploy is wired to the right repo/branch |
-| TT-04 (Render/Fly.io) | ⬜ Pending — full checklist in Trello. Backend already reads `FRONTEND_URL` for CORS (`main.ts`) and `.env.example` documents the expected value (Vercel URL above); still need to create the service and set the real variable |
-| TT-05 (Neon/Supabase) | ⬜ Pending — full checklist in Trello |
+| TT-03 (Vercel) | ✅ Done — project connected to the repo (auto-deploy on push to `main` confirmed); after fixing the Framework Preset (`Angular`) and Output Directory (`dist/frontend/browser`, required by Angular 18's `application` builder), `https://tg-inventory-app.vercel.app` responds `200 OK` serving `index.html` |
+| TT-04 (Render/Fly.io) | ✅ Done — `tg-inventory-backend` service created on Render (`https://tg-inventory-backend.onrender.com`), connected to the repo; `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV`, `FRONTEND_URL` all set. Verified with `curl`: `/health` → `200 OK` (`database: ok`), and CORS (GET + preflight OPTIONS) returns `access-control-allow-origin: https://tg-inventory-app.vercel.app` |
+| TT-05 (Neon/Supabase) | ✅ Done — database created on Neon, migrations applied with `npm run prisma:migrate:staging`, `DATABASE_URL` already copied into Render's secrets (TT-04) |
 | TT-06 (Cloudflare) | ⬜ Pending — full checklist in Trello, doesn't block MVP 1-4 |
 | TT-08 (CD) | ⬜ Pending — **NOT a workflow**, it's configuration inside the Vercel/Render dashboards; depends on TT-03/04 |
 | TT-09 (Dependabot) | 🟡 Partial — `dependabot.yml` now groups by ecosystem (max 3 PRs/week instead of 1 per package); manual confirmation in Settings → Code security still pending |
-| TT-10 (secrets) | ⬜ Pending — full checklist in Trello, depends on TT-03/04/05 |
+| TT-10 (secrets) | ✅ Done for what exists today — `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV`, `FRONTEND_URL` loaded on Render (never in the repo, see `.env.example`). **GitHub Actions needs no secrets**: checked `ci-backend.yml`/`ci-frontend.yml` and neither uses `secrets.*` or touches a real DB or the deployed API (only `lint`/unit `test`/`audit`/`build`); and by an already-made decision (`CLAUDE.md`, plan section 9.2) there's no CD workflow that would need deploy credentials. Revisit if e2e tests against staging are ever added to CI |
+| TT-14 (module boundaries) | ✅ Done — ADR-18 documented; `eslint-plugin-boundaries` in `backend/.eslintrc.js` fails `npm run lint` (and therefore `ci-backend.yml`) if a module imports another module's `domain/`/`infrastructure/`. Verified with a throwaway fixture (same-module import passes, cross-module fails with the ADR-18 message) — fixture discarded after confirming |
+| TT-15 (global error handling) | ✅ Done — `GlobalExceptionFilter` (`backend/src/common/filters/`) registered via `APP_FILTER`: any exception (known or not) responds with a consistent shape (`statusCode`, `message`, `timestamp`, `path`); unknown errors return a generic 500 without leaking internal details, logged server-side. `process.on('uncaughtException'/'unhandledRejection')` in `main.ts` log and shut down in a controlled way (Render restarts the container). Verified with 3 unit tests (`global-exception.filter.spec.ts`) and a live check: compiled server run locally, `/health` → `200`, a nonexistent route → `404` in the filter's format |
+| TT-16 (Prisma connection limits) | ✅ Done, including the real variable on Render — `connection_limit=5`, `pool_timeout=10`, `connect_timeout=10`, `options=-c statement_timeout=10000` documented in `.env.example`/`TRD.en.md` and already applied to Render's `DATABASE_URL`. Verified empirically against local Postgres (a 2s query passes, a 15s query gets cancelled at ~10s with Postgres' real `57014` error) and live: `curl` to production `/health` → `200 OK`, `database: ok`. Neon's numbers (104 connections at 0.25 CU, 97 after reserving 7 for the superuser) confirmed against its official docs. **Incident during rollout**: the first attempt on Render failed with `P1001 (Can't reach database server)` — the real cause was a stray trailing `"` (and likely a leading one too) carried over from the `DATABASE_URL="..."` format used in `.env` files when the value was pasted into Render's field (Render doesn't do dotenv-style parsing — it takes the pasted value verbatim). Reproduced locally to confirm before pointing to the fix. **Gotcha to remember** when copying any other value from `.env.example`/`.env.staging` into Render's dashboard: paste only the content between the quotes, never the quotes themselves |
 
 ### What was found and fixed while verifying CI (TT-07)
 
