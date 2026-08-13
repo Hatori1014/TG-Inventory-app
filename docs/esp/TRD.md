@@ -31,6 +31,15 @@ Decisiones clave:
 - `InventoryMovement` es la fuente de verdad (bitácora inmutable); `LocationStock` es una tabla derivada actualizada en la misma transacción
 - `ApprovalFlow` es configurable (soporta 1 o varios niveles) sin necesidad de migrar el esquema
 
+### Índices (TT-20)
+
+PostgreSQL, a diferencia de MySQL, **no indexa automáticamente las columnas FK** — verificado empíricamente en la migración inicial (`20260803001328_init`): ninguna de las 27 columnas FK tenía índice, solo las cubiertas por `@unique`/`@@unique`. Criterio aplicado en la migración `20260813043614_add_indexes` (17 índices nuevos, sin tocar datos):
+
+- **Toda FK usada como filtro o join** — salvo en tablas de configuración muy pequeñas donde el costo de escritura no se justifica (`ApprovalFlow`, `RolePermission`: decenas de filas, no cientos de miles).
+- **`InventoryMovement`** (la bitácora, la tabla más grande y más consultada) recibió la indexación más deliberada: `[productId, locationId]` compuesto (historial de un producto en una ubicación, HU-08/HU-10), `occurredAt` (reportes por rango de fecha), y cada FK restante por separado (`batchId`, `userId`, `purchaseId`, `requestId`) porque cada una responde una consulta distinta y real (movimientos de un lote, de un usuario, ligados a una compra o a una solicitud).
+- **Compuestos donde el patrón de consulta es compuesto**: `Purchase[supplierId, purchasedAt]` (historial de compras por proveedor, HU-05), `AuditEvent[entity, entityId]` (historial de una entidad específica).
+- **No se duplica un índice ya cubierto** por un `@@unique` existente salvo que el patrón de consulta no calce con el prefijo izquierdo — ej. `LocationStock` ya tiene `@@unique([productId, locationId, batchId])`, pero consultar "todo el stock de una ubicación, cualquier producto" no usa ese índice (no es el prefijo izquierdo) — se agregó `@@index([locationId])` aparte.
+
 ## 4. API
 
 Especificación completa de 10 módulos REST (Auth, Users/Roles, Suppliers, Locations, Products, Inventory, Alerts, Purchases, Requests, Audit) en el plan, sección 7.4 — incluye método, ruta, acción, rol mínimo requerido y HU asociada.
