@@ -1,6 +1,6 @@
 # Estado del proyecto — leer esto primero
 
-> Última actualización: TT-15 cerrada (manejo de errores global) — ver sección "Gaps de arquitectura" abajo para el contexto de por qué existen TT-14 a TT-21. Actualízalo tú mismo al cerrar cada iteración. English version below.
+> Última actualización: TT-16 cerrada (límites de conexión Prisma + timeouts) — ver sección "Gaps de arquitectura" abajo para el contexto de por qué existen TT-14 a TT-21. Actualízalo tú mismo al cerrar cada iteración. English version below.
 
 ## Nota de estructura
 
@@ -16,7 +16,9 @@ Sistema de control de inventario: proveedores, inventario por ubicaciones, alert
 
 ### Próximo paso inmediato: elegir la siguiente tarea técnica
 
-TT-02 a TT-05 ya están cerradas (ver tabla abajo). Ahora mismo en curso: **TT-14 a TT-21**, ocho tareas técnicas nuevas de una revisión de arquitectura (ver "Gaps de arquitectura" abajo) — TT-14 y TT-15 ya cerradas, siguiendo el orden acordado: TT-16 → TT-21 → TT-19 → TT-20 → TT-17 → TT-18. Van antes de escribir cualquier HU de negocio real.
+TT-02 a TT-05 ya están cerradas (ver tabla abajo). Ahora mismo en curso: **TT-14 a TT-21**, ocho tareas técnicas nuevas de una revisión de arquitectura (ver "Gaps de arquitectura" abajo) — TT-14, TT-15 y TT-16 ya cerradas, siguiendo el orden acordado: TT-21 → TT-19 → TT-20 → TT-17 → TT-18. Van antes de escribir cualquier HU de negocio real.
+
+**Acción pendiente fuera del repo**: `DATABASE_URL` en Render y en tu `.env.staging` local todavía NO tiene los parámetros nuevos de TT-16 (`connection_limit`, `pool_timeout`, `connect_timeout`, `statement_timeout`) — solo actualicé `.env.example` y el `.env` local. Ver fila de TT-16 abajo para el valor exacto a copiar.
 
 Pendiente de menor prioridad, sin bloquear lo anterior:
 - TT-09 (Dependabot): solo falta la confirmación manual en Settings → Code security, es rápido
@@ -31,7 +33,8 @@ Origen: sesión de revisión de arquitectura (2026-08-12), motivada por una preg
 
 - **TT-14 (fronteras entre módulos)** — ✅ Hecho. Ver fila en la tabla de abajo.
 - **TT-15 (manejo de errores global)** — ✅ Hecho. Ver fila en la tabla de abajo.
-- **TT-16 (límites de conexión Prisma)**, **TT-21 (logging)**, **TT-19 (paginación)**, **TT-20 (índices)**, **TT-17 (locking optimista en stock)**, **TT-18 (idempotencia)** — ⬜ Pendientes, en ese orden.
+- **TT-16 (límites de conexión Prisma)** — ✅ Hecho. Ver fila en la tabla de abajo.
+- **TT-21 (logging)**, **TT-19 (paginación)**, **TT-20 (índices)**, **TT-17 (locking optimista en stock)**, **TT-18 (idempotencia)** — ⬜ Pendientes, en ese orden.
 
 ### Tareas técnicas, en detalle
 
@@ -52,6 +55,7 @@ Origen: sesión de revisión de arquitectura (2026-08-12), motivada por una preg
 | TT-10 (secrets) | ✅ Hecho para lo que existe hoy — `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV`, `FRONTEND_URL` cargados en Render (nunca en el repo, ver `.env.example`). **GitHub Actions no necesita secrets**: revisé `ci-backend.yml`/`ci-frontend.yml` y ninguno usa `secrets.*` ni toca una BD real o la API desplegada (solo `lint`/`test` unitario/`audit`/`build`); y por decisión ya tomada (`CLAUDE.md`, plan sección 9.2) no existe workflow de CD que necesitaría credenciales de deploy. Se revisita si algún día se agregan tests e2e contra staging en CI |
 | TT-14 (fronteras entre módulos) | ✅ Hecho — ADR-18 documentado; `eslint-plugin-boundaries` en `backend/.eslintrc.js`, falla `npm run lint` (y por tanto `ci-backend.yml`) si un módulo importa `domain/`/`infrastructure/` de otro. Verificado con fixture temporal (mismo módulo pasa, cruzado falla con el mensaje del ADR-18) — fixture descartado después de confirmar |
 | TT-15 (manejo de errores global) | ✅ Hecho — `GlobalExceptionFilter` (`backend/src/common/filters/`) registrado vía `APP_FILTER`: cualquier excepción (conocida o no) responde con formato consistente (`statusCode`, `message`, `timestamp`, `path`); errores desconocidos devuelven 500 genérico sin filtrar detalles internos, logueados server-side. `process.on('uncaughtException'/'unhandledRejection')` en `main.ts` loguean y cierran controladamente (Render reinicia el contenedor). Verificado con 3 tests unitarios (`global-exception.filter.spec.ts`) y probado en vivo: servidor compilado levantado localmente, `/health` → `200`, ruta inexistente → `404` con el formato del filtro |
+| TT-16 (límites de conexión Prisma) | ✅ Hecho en código/docs — `connection_limit=5`, `pool_timeout=10`, `connect_timeout=10`, `options=-c statement_timeout=10000` documentados en `.env.example` y detallados con el porqué en `TRD.md`. Verificado empíricamente contra Postgres local: query de 2s no se ve afectada, query de 15s se cancela a los ~10s con el error real de Postgres (`57014`). Números de Neon (104 conexiones a 0.25 CU, 97 tras reservar 7 para el superusuario) confirmados en su documentación oficial. **Falta acción manual fuera del repo**: actualizar `DATABASE_URL` real en Render y en `.env.staging` con estos mismos parámetros — no se hizo porque no tengo acceso a esas variables desde aquí |
 
 ### Qué se encontró y arregló al verificar CI (TT-07)
 
@@ -88,7 +92,7 @@ https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario — 43 tarjetas, 
 
 # Project status — read this first
 
-> Last updated: TT-15 closed (global error handling) — see "Architecture gaps" section below for why TT-14 through TT-21 exist. Keep this updated yourself as each iteration closes.
+> Last updated: TT-16 closed (Prisma connection limits + timeouts) — see "Architecture gaps" section below for why TT-14 through TT-21 exist. Keep this updated yourself as each iteration closes.
 
 ## Structure note
 
@@ -104,7 +108,9 @@ Inventory control system: suppliers, inventory by location, stock alerts, purcha
 
 ### Immediate next step: pick the next technical task
 
-TT-02 through TT-05 are now closed (see table below). Currently in progress: **TT-14 through TT-21**, eight new technical tasks from an architecture review (see "Architecture gaps" below) — TT-14 and TT-15 are done, following the agreed order: TT-16 → TT-21 → TT-19 → TT-20 → TT-17 → TT-18. These come before writing any real business story.
+TT-02 through TT-05 are now closed (see table below). Currently in progress: **TT-14 through TT-21**, eight new technical tasks from an architecture review (see "Architecture gaps" below) — TT-14, TT-15, and TT-16 are done, following the agreed order: TT-21 → TT-19 → TT-20 → TT-17 → TT-18. These come before writing any real business story.
+
+**Pending action outside the repo**: `DATABASE_URL` on Render and in your local `.env.staging` still does NOT have TT-16's new parameters (`connection_limit`, `pool_timeout`, `connect_timeout`, `statement_timeout`) — only `.env.example` and the local `.env` were updated. See the TT-16 row below for the exact value to copy.
 
 Lower-priority, not blocking the above:
 - TT-09 (Dependabot): only the manual confirmation in Settings → Code security is missing, quick to close
@@ -119,7 +125,8 @@ Origin: an architecture review session (2026-08-12), triggered by a concrete que
 
 - **TT-14 (module boundaries)** — ✅ Done. See row in the table below.
 - **TT-15 (global error handling)** — ✅ Done. See row in the table below.
-- **TT-16 (Prisma connection limits)**, **TT-21 (logging)**, **TT-19 (pagination)**, **TT-20 (indexes)**, **TT-17 (optimistic locking on stock)**, **TT-18 (idempotency)** — ⬜ Pending, in that order.
+- **TT-16 (Prisma connection limits)** — ✅ Done. See row in the table below.
+- **TT-21 (logging)**, **TT-19 (pagination)**, **TT-20 (indexes)**, **TT-17 (optimistic locking on stock)**, **TT-18 (idempotency)** — ⬜ Pending, in that order.
 
 ### Technical tasks, in detail
 
@@ -140,6 +147,7 @@ Origin: an architecture review session (2026-08-12), triggered by a concrete que
 | TT-10 (secrets) | ✅ Done for what exists today — `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV`, `FRONTEND_URL` loaded on Render (never in the repo, see `.env.example`). **GitHub Actions needs no secrets**: checked `ci-backend.yml`/`ci-frontend.yml` and neither uses `secrets.*` or touches a real DB or the deployed API (only `lint`/unit `test`/`audit`/`build`); and by an already-made decision (`CLAUDE.md`, plan section 9.2) there's no CD workflow that would need deploy credentials. Revisit if e2e tests against staging are ever added to CI |
 | TT-14 (module boundaries) | ✅ Done — ADR-18 documented; `eslint-plugin-boundaries` in `backend/.eslintrc.js` fails `npm run lint` (and therefore `ci-backend.yml`) if a module imports another module's `domain/`/`infrastructure/`. Verified with a throwaway fixture (same-module import passes, cross-module fails with the ADR-18 message) — fixture discarded after confirming |
 | TT-15 (global error handling) | ✅ Done — `GlobalExceptionFilter` (`backend/src/common/filters/`) registered via `APP_FILTER`: any exception (known or not) responds with a consistent shape (`statusCode`, `message`, `timestamp`, `path`); unknown errors return a generic 500 without leaking internal details, logged server-side. `process.on('uncaughtException'/'unhandledRejection')` in `main.ts` log and shut down in a controlled way (Render restarts the container). Verified with 3 unit tests (`global-exception.filter.spec.ts`) and a live check: compiled server run locally, `/health` → `200`, a nonexistent route → `404` in the filter's format |
+| TT-16 (Prisma connection limits) | ✅ Done in code/docs — `connection_limit=5`, `pool_timeout=10`, `connect_timeout=10`, `options=-c statement_timeout=10000` documented in `.env.example` and detailed with the why in `TRD.en.md`. Verified empirically against local Postgres: a 2s query is unaffected, a 15s query gets cancelled at ~10s with Postgres' real error (`57014`). Neon's numbers (104 connections at 0.25 CU, 97 after reserving 7 for the superuser) confirmed against its official docs. **Manual action still needed outside the repo**: update the real `DATABASE_URL` on Render and in `.env.staging` with these same parameters — not done here since I don't have access to those variables |
 
 ### What was found and fixed while verifying CI (TT-07)
 
