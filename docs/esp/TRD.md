@@ -45,6 +45,19 @@ Especificación completa de 10 módulos REST (Auth, Users/Roles, Suppliers, Loca
 | Trazabilidad | Todo movimiento/aprobación registrado de forma inmutable |
 | Mantenibilidad | Arquitectura hexagonal, TDD/BDD, convenciones de código documentadas |
 
+### Límites de conexión y timeouts de BD (TT-16)
+
+Todos los módulos comparten un único `PrismaClient`/pool de conexiones — sin límites explícitos, un query pesado o mal escrito en un módulo puede agotar el pool y afectar por timeout a módulos sin relación con el problema ("noisy neighbor" dentro del mismo proceso). Parámetros añadidos a `DATABASE_URL` (ver `backend/.env.example`):
+
+| Parámetro | Valor | Por qué |
+|---|---|---|
+| `connection_limit` | `5` | Explícito en vez del default de Prisma (`núm. CPUs físicas × 2 + 1`, impredecible según el host). Neon free tier: al mínimo de autoscaling (0.25 CU) permite 104 conexiones directas, 7 reservadas para el superusuario → 97 disponibles. 5 deja margen amplio para un solo proceso Node de bajo tráfico (Iteración 0-1). |
+| `pool_timeout` | `10` (segundos) | Cuánto espera un query a que se libere una conexión del pool de Prisma antes de fallar — evita que un query en cola espere indefinidamente por culpa de otro módulo. |
+| `connect_timeout` | `10` (segundos) | Subido del default de Prisma (5s) por el "cold start" de Neon: el compute puede estar suspendido (autoscale-to-zero) y tardar unos segundos en despertar en la primera conexión. |
+| `options=-c statement_timeout=10000` | `10000` ms | Timeout de query a nivel Postgres (no es un parámetro nativo de Prisma — se pasa vía `options`, el mecanismo estándar de libpq). Evita que un query colgado retenga una conexión indefinidamente. Verificado empíricamente contra Postgres local: un `pg_sleep(15)` se cancela a los ~10s con el error real de Postgres (`57014 — canceling statement due to statement timeout`); un query de 2s no se ve afectado. |
+
+Fuente de los números de Neon: [documentación de connection pooling de Neon](https://neon.com/docs/connect/connection-pooling) (tabla de `max_connections` por tamaño de compute, consultada 2026-08-13).
+
 ## 6. Seguridad
 
 - RBAC validado en backend (nunca solo en frontend)

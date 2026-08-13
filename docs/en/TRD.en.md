@@ -45,6 +45,19 @@ Full spec of 10 REST modules (Auth, Users/Roles, Suppliers, Locations, Products,
 | Traceability | Every movement/approval recorded immutably |
 | Maintainability | Hexagonal architecture, TDD/BDD, documented code conventions |
 
+### DB connection limits and timeouts (TT-16)
+
+Every module shares a single `PrismaClient`/connection pool — without explicit limits, one heavy or poorly written query in a module can exhaust the pool and time out modules unrelated to the problem ("noisy neighbor" inside the same process). Parameters added to `DATABASE_URL` (see `backend/.env.example`):
+
+| Parameter | Value | Why |
+|---|---|---|
+| `connection_limit` | `5` | Explicit instead of Prisma's default (`physical CPUs × 2 + 1`, host-dependent and unpredictable). Neon free tier: at the minimum autoscaling size (0.25 CU) it allows 104 direct connections, 7 reserved for the superuser → 97 available. 5 leaves generous headroom for a single low-traffic Node process (Iteration 0-1). |
+| `pool_timeout` | `10` (seconds) | How long a query waits for a free connection from Prisma's pool before failing — stops a queued query from waiting indefinitely because of another module. |
+| `connect_timeout` | `10` (seconds) | Raised from Prisma's default (5s) because of Neon's cold start: the compute can be suspended (scale-to-zero) and take a few seconds to wake on the first connection. |
+| `options=-c statement_timeout=10000` | `10000` ms | Postgres-level query timeout (not a native Prisma parameter — passed through `options`, the standard libpq mechanism). Stops a hung query from holding a connection indefinitely. Verified empirically against local Postgres: a `pg_sleep(15)` gets cancelled at ~10s with Postgres' real error (`57014 — canceling statement due to statement timeout`); a 2s query is unaffected. |
+
+Source for the Neon numbers: [Neon's connection pooling docs](https://neon.com/docs/connect/connection-pooling) (max_connections-by-compute-size table, checked 2026-08-13).
+
 ## 6. Security
 
 - RBAC enforced in the backend (never only in the frontend)
