@@ -2,7 +2,6 @@ name: CI Backend
 
 on:
   pull_request:
-    paths: ['backend/**']
 
 jobs:
   test:
@@ -14,26 +13,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Branch protection requires this check to pass, but a required check
+      # that never runs (because paths: filtered it out) blocks the PR
+      # forever instead of skipping it. Keep the job always triggered, and
+      # gate the actual work per-step instead, so PRs that don't touch
+      # backend/ still get a fast, real "success" instead of needing a bypass.
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+
       - uses: actions/setup-node@v4
+        if: steps.filter.outputs.backend == 'true'
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
       - name: Instalar dependencias
+        if: steps.filter.outputs.backend == 'true'
         run: npm ci
 
       - name: Lint
+        if: steps.filter.outputs.backend == 'true'
         run: npm run lint
 
       - name: Type check
+        if: steps.filter.outputs.backend == 'true'
         run: npm run build -- --noEmit || npx tsc --noEmit
 
       - name: Tests (unit + BDD)
+        if: steps.filter.outputs.backend == 'true'
         run: npm run test
 
       - name: Dependency audit (HU-24)
+        if: steps.filter.outputs.backend == 'true'
         run: npm audit --omit=dev --audit-level=critical
 
       - name: Build
+        if: steps.filter.outputs.backend == 'true'
         run: npm run build
