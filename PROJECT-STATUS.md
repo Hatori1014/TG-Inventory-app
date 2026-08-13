@@ -1,6 +1,6 @@
 # Estado del proyecto — leer esto primero
 
-> Última actualización: TT-20 cerrada — 17 índices nuevos en `schema.prisma` (PostgreSQL no indexa FK automáticamente, verificado empíricamente contra la migración inicial), migración `20260813043614_add_indexes` aplicada y verificada en local **y en Neon staging** (`npm run prisma:migrate:staging`, backend en Render verificado en vivo tras la migración). También se identificó (fuera de alcance de TT-20) que no hay borrado lógico ni `DELETE` planeado en ningún endpoint — 13 de 17 modelos no tienen ni siquiera el patrón `status` que sí usan `User`/`Location`/`Product`/`Supplier`; queda para una TT nueva que el usuario agregará a Trello. Actualízalo tú mismo al cerrar cada iteración. English version below.
+> Última actualización: cierre de sesión (2026-08-13) — TT-14, TT-15, TT-16, TT-19, TT-20 y TT-21 cerradas hoy (revisión de arquitectura). Quedan **TT-17** (locking optimista en stock) y **TT-18** (idempotencia) para retomar la próxima sesión, en ese orden. Se creó además **TT-22** (borrado lógico: estrategia y alcance), sin priorizar todavía, a partir de un hallazgo durante TT-20. Actualízalo tú mismo al cerrar cada iteración. English version below.
 
 ## Nota de estructura
 
@@ -16,7 +16,7 @@ Sistema de control de inventario: proveedores, inventario por ubicaciones, alert
 
 ### Próximo paso inmediato: elegir la siguiente tarea técnica
 
-TT-02 a TT-05 ya están cerradas (ver tabla abajo). Ahora mismo en curso: **TT-14 a TT-21**, ocho tareas técnicas nuevas de una revisión de arquitectura (ver "Gaps de arquitectura" abajo) — TT-14, TT-15, TT-16, TT-21 y TT-19 ya cerradas, siguiendo el orden acordado: TT-20 → TT-17 → TT-18. Van antes de escribir cualquier HU de negocio real.
+TT-02 a TT-05 ya están cerradas (ver tabla abajo). De las ocho tareas técnicas de la revisión de arquitectura (ver "Gaps de arquitectura" abajo), seis ya están cerradas — **quedan TT-17 → TT-18**, en ese orden, antes de escribir cualquier HU de negocio real. TT-22 (borrado lógico, nueva) está en el backlog de la iteración actual, sin decidir todavía cuándo entra.
 
 Pendiente de menor prioridad, sin bloquear lo anterior:
 - TT-09 (Dependabot): solo falta la confirmación manual en Settings → Code security, es rápido
@@ -36,6 +36,8 @@ Origen: sesión de revisión de arquitectura (2026-08-12), motivada por una preg
 - **TT-19 (paginación)** — ✅ Hecho. Ver fila en la tabla de abajo.
 - **TT-20 (índices)** — ✅ Hecho. Ver fila en la tabla de abajo.
 - **TT-17 (locking optimista en stock)**, **TT-18 (idempotencia)** — ⬜ Pendientes, en ese orden.
+
+**TT-22 — Borrado lógico** (nueva, no es parte de las ocho originales): hallazgo durante TT-20 — no hay `DELETE` planeado en ningún endpoint de la API, y 13 de 17 modelos no tienen ni `status` ni `deletedAt`. Sin decidir todavía la estrategia (campo `deletedAt` generalizado vs. extender el patrón `status` caso por caso) ni cuándo entra en la cola. Ver tarjeta en Trello para el detalle completo.
 
 ### Tareas técnicas, en detalle
 
@@ -90,13 +92,13 @@ Formato base consistente en las 30 (rol/acción/beneficio). ~10 todavía no tien
 
 ## Tablero de Trello
 
-https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario — 43 tarjetas, todas las de `Iteración actual` (TT-02 a TT-10) ya tienen checklist de pasos, no solo descripción de una línea.
+https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario — incluye TT-14 a TT-22 en la lista `Iteración actual` (TT-14/15/16/19/20/21 ya movidas a `Hecho`, con evidencia en su descripción), además de las tarjetas originales TT-02 a TT-10.
 
 ---
 
 # Project status — read this first
 
-> Last updated: TT-20 closed — 17 new indexes in `schema.prisma` (PostgreSQL doesn't auto-index FKs, verified empirically against the initial migration), migration `20260813043614_add_indexes` applied and verified locally **and on Neon staging** (`npm run prisma:migrate:staging`, Render backend verified live after the migration). Also found (out of TT-20's scope) that there's no soft-delete and no `DELETE` planned on any endpoint — 13 of 17 models don't even have the `status` pattern that `User`/`Location`/`Product`/`Supplier` use; left for a new TT the user will add to Trello. Keep this updated yourself as each iteration closes.
+> Last updated: end of session (2026-08-13) — TT-14, TT-15, TT-16, TT-19, TT-20, and TT-21 closed today (architecture review). **TT-17** (optimistic locking on stock) and **TT-18** (idempotency) remain for the next session, in that order. Also created **TT-22** (soft-delete: strategy and scope), not yet prioritized, from a finding during TT-20. Keep this updated yourself as each iteration closes.
 
 ## Structure note
 
@@ -112,7 +114,7 @@ Inventory control system: suppliers, inventory by location, stock alerts, purcha
 
 ### Immediate next step: pick the next technical task
 
-TT-02 through TT-05 are now closed (see table below). Currently in progress: **TT-14 through TT-21**, eight new technical tasks from an architecture review (see "Architecture gaps" below) — TT-14, TT-15, TT-16, TT-21, and TT-19 are done, following the agreed order: TT-20 → TT-17 → TT-18. These come before writing any real business story.
+TT-02 through TT-05 are now closed (see table below). Of the eight technical tasks from the architecture review (see "Architecture gaps" below), six are now closed — **TT-17 → TT-18 remain**, in that order, before writing any real business story. TT-22 (soft-delete, new) sits in the current iteration's backlog, not yet scheduled.
 
 Lower-priority, not blocking the above:
 - TT-09 (Dependabot): only the manual confirmation in Settings → Code security is missing, quick to close
@@ -132,6 +134,8 @@ Origin: an architecture review session (2026-08-12), triggered by a concrete que
 - **TT-19 (pagination)** — ✅ Done. See row in the table below.
 - **TT-20 (indexes)** — ✅ Done. See row in the table below.
 - **TT-17 (optimistic locking on stock)**, **TT-18 (idempotency)** — ⬜ Pending, in that order.
+
+**TT-22 — Soft delete** (new, not part of the original eight): a finding from TT-20 — no `DELETE` is planned on any API endpoint, and 13 of 17 models have neither `status` nor `deletedAt`. Strategy not decided yet (a generalized `deletedAt` field vs. extending the existing `status` pattern case by case), nor when it gets scheduled. See the Trello card for full detail.
 
 ### Technical tasks, in detail
 
@@ -186,4 +190,4 @@ Consistent base format across all 30 (role/action/benefit). ~10 still lack a ver
 
 ## Trello board
 
-https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario — 43 cards, every card in `Current iteration` (TT-02 through TT-10) now has a step checklist, not just a one-line description.
+https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario — includes TT-14 through TT-22 in the `Current iteration` list (TT-14/15/16/19/20/21 already moved to `Done`, with evidence in their description), plus the original TT-02 through TT-10 cards.
