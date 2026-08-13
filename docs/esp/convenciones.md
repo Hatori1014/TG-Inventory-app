@@ -58,6 +58,10 @@ Qué loguear:
 - **Operaciones de escritura críticas**: movimientos de inventario, aprobaciones de solicitudes, cambios de rol — usar `new Logger(NombreDelModulo)` (el mismo patrón que ya usan `main.ts`/`GlobalExceptionFilter`), no `console.log`
 - **No hace falta loguear explícitamente** cada request/response — eso ya lo cubre `pino-http` automáticamente (método, ruta, status, tiempo de respuesta)
 
+## Concurrencia (TT-17)
+
+Todo update a `LocationStock` (columna `version`, locking optimista, ADR-20) debe pasar por `withOptimisticLock()` (`backend/src/common/utils/optimistic-lock.util.ts`): la función que se le pasa hace el `updateMany({ where: { id, version }, ... })` y devuelve `null` si no afectó filas (conflicto detectado); `withOptimisticLock` reintenta hasta 3 veces y lanza `ConflictException` (409) si se agotan. Nunca actualizar `LocationStock` con un `update()` simple sin filtrar por `version`. Detalle en `TRD.md` sección 3.
+
 ## Tests
 
 | Tipo | Cuándo | Herramienta | Ubicación |

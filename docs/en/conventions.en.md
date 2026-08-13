@@ -58,6 +58,10 @@ What to log:
 - **Critical write operations**: inventory movements, request approvals, role changes — use `new Logger(ModuleName)` (the same pattern already used by `main.ts`/`GlobalExceptionFilter`), not `console.log`
 - **No need to explicitly log** every request/response — `pino-http` already covers that automatically (method, route, status, response time)
 
+## Concurrency (TT-17)
+
+Every update to `LocationStock` (`version` column, optimistic locking, ADR-20) must go through `withOptimisticLock()` (`backend/src/common/utils/optimistic-lock.util.ts`): the function passed to it runs the `updateMany({ where: { id, version }, ... })` and returns `null` if it affected zero rows (conflict detected); `withOptimisticLock` retries up to 3 times and throws `ConflictException` (409) once exhausted. Never update `LocationStock` with a plain `update()` that doesn't filter by `version`. Detail in `TRD.en.md` section 3.
+
 ## Tests
 
 | Type | When | Tool | Location |

@@ -40,6 +40,10 @@ Unlike MySQL, PostgreSQL **doesn't automatically index FK columns** — verified
 - **Composite indexes where the query pattern is composite**: `Purchase[supplierId, purchasedAt]` (purchase history by supplier, HU-05), `AuditEvent[entity, entityId]` (history for a specific entity).
 - **No duplicating an index already covered** by an existing `@@unique` unless the query pattern doesn't match its leftmost prefix — e.g. `LocationStock` already has `@@unique([productId, locationId, batchId])`, but querying "all stock at a location, any product" doesn't use that index (not the leftmost prefix) — added `@@index([locationId])` separately.
 
+### Concurrency on `LocationStock` (TT-17, ADR-20)
+
+`LocationStock` has a `version Int @default(0)` column for optimistic locking: two concurrent requests updating the same row (a lost update) get caught because the second `UPDATE` doesn't find the version it expected. Pattern for the use-case that updates stock (not implemented yet): `updateMany({ where: { id, version }, data: { ..., version: { increment: 1 } } })`; if it affects zero rows, re-read and retry up to 3 times (`withOptimisticLock()` in `backend/src/common/utils/optimistic-lock.util.ts`) before returning `409 Conflict`. See ADR-20 for the discarded alternatives (`SELECT FOR UPDATE`, 409 with no retry).
+
 ## 4. API
 
 Full spec of 10 REST modules (Auth, Users/Roles, Suppliers, Locations, Products, Inventory, Alerts, Purchases, Requests, Audit) in the plan, section 7.4 — includes method, route, action, minimum required role, and associated story.
