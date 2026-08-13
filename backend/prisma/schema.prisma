@@ -337,3 +337,18 @@ model AuditEvent {
   @@index([occurredAt])
   @@map("audit_event")
 }
+
+// ---------- Idempotency (TT-18) ----------
+
+// Backs the @Idempotent() decorator / IdempotencyInterceptor pattern
+// (backend/src/common/): a duplicate request with the same key returns the
+// already-stored response instead of re-executing the handler. See ADR-21.
+model IdempotencyKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  endpoint  String
+  response  Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("idempotency_key")
+}

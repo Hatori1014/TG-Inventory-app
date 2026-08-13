@@ -62,6 +62,10 @@ What to log:
 
 Every update to `LocationStock` (`version` column, optimistic locking, ADR-20) must go through `withOptimisticLock()` (`backend/src/common/utils/optimistic-lock.util.ts`): the function passed to it runs the `updateMany({ where: { id, version }, ... })` and returns `null` if it affected zero rows (conflict detected); `withOptimisticLock` retries up to 3 times and throws `ConflictException` (409) once exhausted. Never update `LocationStock` with a plain `update()` that doesn't filter by `version`. Detail in `TRD.en.md` section 3.
 
+## Idempotency (TT-18)
+
+Every critical write endpoint (movements, purchases, requests, role changes) is marked with `@Idempotent()` + `@UseInterceptors(IdempotencyInterceptor)` (`backend/src/common/`). The client sends an `Idempotency-Key` header (UUID) per logical operation; if the key was already processed, the interceptor returns the stored response without re-running the use-case. The module using the interceptor must provide `PrismaService` and `IdempotencyInterceptor` in its `*.module.ts` (same pattern `HealthModule` already uses for `PrismaService`). Detail in `TRD.en.md` section 4, decision in ADR-21.
+
 ## Tests
 
 | Type | When | Tool | Location |
