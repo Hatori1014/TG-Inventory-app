@@ -141,6 +141,9 @@ model LocationStock {
   batchId     String?   @map("batch_id")
   batch       Batch?    @relation(fields: [batchId], references: [id])
   quantity    Decimal   @default(0) @db.Decimal(14, 4)
+  // optimistic locking (TT-17, ADR-20) — incremented on every successful
+  // update; concurrent writers detect a lost update via a version mismatch
+  version     Int       @default(0)
 
   @@unique([productId, locationId, batchId])
   // the unique index above covers productId and productId+locationId

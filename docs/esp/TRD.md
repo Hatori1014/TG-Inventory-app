@@ -40,6 +40,10 @@ PostgreSQL, a diferencia de MySQL, **no indexa automáticamente las columnas FK*
 - **Compuestos donde el patrón de consulta es compuesto**: `Purchase[supplierId, purchasedAt]` (historial de compras por proveedor, HU-05), `AuditEvent[entity, entityId]` (historial de una entidad específica).
 - **No se duplica un índice ya cubierto** por un `@@unique` existente salvo que el patrón de consulta no calce con el prefijo izquierdo — ej. `LocationStock` ya tiene `@@unique([productId, locationId, batchId])`, pero consultar "todo el stock de una ubicación, cualquier producto" no usa ese índice (no es el prefijo izquierdo) — se agregó `@@index([locationId])` aparte.
 
+### Concurrencia en `LocationStock` (TT-17, ADR-20)
+
+`LocationStock` tiene columna `version Int @default(0)` para locking optimista: dos requests concurrentes actualizando el mismo registro (lost update) se detectan porque el segundo `UPDATE` no encuentra la versión que esperaba. Patrón para el use-case que actualiza stock (aún no implementado): `updateMany({ where: { id, version }, data: { ..., version: { increment: 1 } } })`; si no afecta filas, releer y reintentar hasta 3 veces (`withOptimisticLock()` en `backend/src/common/utils/optimistic-lock.util.ts`) antes de devolver `409 Conflict`. Ver ADR-20 para las alternativas descartadas (`SELECT FOR UPDATE`, 409 sin reintento).
+
 ## 4. API
 
 Especificación completa de 10 módulos REST (Auth, Users/Roles, Suppliers, Locations, Products, Inventory, Alerts, Purchases, Requests, Audit) en el plan, sección 7.4 — incluye método, ruta, acción, rol mínimo requerido y HU asociada.
