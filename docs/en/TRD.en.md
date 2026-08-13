@@ -31,6 +31,15 @@ Key decisions:
 - `InventoryMovement` is the source of truth (immutable ledger); `LocationStock` is a derived table updated in the same transaction
 - `ApprovalFlow` is configurable (supports 1 or several levels) without needing a schema migration
 
+### Indexes (TT-20)
+
+Unlike MySQL, PostgreSQL **doesn't automatically index FK columns** — verified empirically against the initial migration (`20260803001328_init`): none of the 27 FK columns had an index, only the ones already covered by `@unique`/`@@unique`. Criteria applied in migration `20260813043614_add_indexes` (17 new indexes, no data touched):
+
+- **Every FK used for filtering or joining** — except on very small config tables where the write cost isn't justified (`ApprovalFlow`, `RolePermission`: dozens of rows, not hundreds of thousands).
+- **`InventoryMovement`** (the ledger, the biggest and most-queried table) got the most deliberate indexing: a composite `[productId, locationId]` (history for a product at a location, HU-08/HU-10), `occurredAt` (date-range reports), and each remaining FK indexed separately (`batchId`, `userId`, `purchaseId`, `requestId`) since each answers a distinct, real query (movements for a batch, for a user, tied to a purchase or a request).
+- **Composite indexes where the query pattern is composite**: `Purchase[supplierId, purchasedAt]` (purchase history by supplier, HU-05), `AuditEvent[entity, entityId]` (history for a specific entity).
+- **No duplicating an index already covered** by an existing `@@unique` unless the query pattern doesn't match its leftmost prefix — e.g. `LocationStock` already has `@@unique([productId, locationId, batchId])`, but querying "all stock at a location, any product" doesn't use that index (not the leftmost prefix) — added `@@index([locationId])` separately.
+
 ## 4. API
 
 Full spec of 10 REST modules (Auth, Users/Roles, Suppliers, Locations, Products, Inventory, Alerts, Purchases, Requests, Audit) in the plan, section 7.4 — includes method, route, action, minimum required role, and associated story.
