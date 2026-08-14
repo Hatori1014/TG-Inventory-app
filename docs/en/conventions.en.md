@@ -66,6 +66,14 @@ Every update to `LocationStock` (`version` column, optimistic locking, ADR-20) m
 
 Every critical write endpoint (movements, purchases, requests, role changes) is marked with `@Idempotent()` + `@UseInterceptors(IdempotencyInterceptor)` (`backend/src/common/`). The client sends an `Idempotency-Key` header (UUID) per logical operation; if the key was already processed, the interceptor returns the stored response without re-running the use-case. The module using the interceptor must provide `PrismaService` and `IdempotencyInterceptor` in its `*.module.ts` (same pattern `HealthModule` already uses for `PrismaService`). Detail in `TRD.en.md` section 4, decision in ADR-21.
 
+## Administrable catalogs (TT-23)
+
+Rule for deciding how to model a reference value (category, unit of measure, and any similar one in the future):
+- **Table** (`Category`/`Unit` pattern, ADR-23) if an admin needs to create/edit/deactivate values from the frontend without depending on a deploy, and the backend gives the value no special meaning (only displays/filters by it).
+- **Prisma enum** if the backend does depend on the exact value for its logic (e.g. `MovementType` drives stock calculation) — opening it up as a catalog would leave the backend not knowing what to do with a new value someone adds from the UI.
+- **Never free text** (`String` with no table or enum) for a value that repeats across records — that allows duplicates/typos with no control at all.
+Every catalog table gets a unique `name` and a `status` (`active`/`inactive`) to deactivate without deleting (no physical deletes, see ADR-22).
+
 ## Tests
 
 | Type | When | Tool | Location |

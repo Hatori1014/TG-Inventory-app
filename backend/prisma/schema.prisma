@@ -92,6 +92,37 @@ model Location {
 
 // ---------- Catalog and inventory ----------
 
+// Administrable catalogs (TT-23, ADR-23) — Category/Unit are real tables,
+// not free text on Product, so an Inventory Admin can manage them (add,
+// rename, deactivate) without a Product being tied to a typo-prone string.
+enum CategoryStatus {
+  active
+  inactive
+}
+
+model Category {
+  id       String         @id @default(uuid())
+  name     String         @unique
+  status   CategoryStatus @default(active)
+  products Product[]
+
+  @@map("category")
+}
+
+enum UnitStatus {
+  active
+  inactive
+}
+
+model Unit {
+  id       String     @id @default(uuid())
+  name     String     @unique
+  status   UnitStatus @default(active)
+  products Product[]
+
+  @@map("unit")
+}
+
 enum ProductStatus {
   active
   discontinued
@@ -101,8 +132,10 @@ model Product {
   id            String              @id @default(uuid())
   name          String
   description   String?
-  unit          String              @map("unit")
-  category      String?
+  unitId        String              @map("unit_id")
+  unit          Unit                @relation(fields: [unitId], references: [id])
+  categoryId    String?             @map("category_id")
+  category      Category?           @relation(fields: [categoryId], references: [id])
   requiresBatch Boolean             @default(false) @map("requires_batch")
   imageUrl      String?             @map("image_url") // HU-26, post-MVP
   status        ProductStatus       @default(active)
@@ -113,6 +146,8 @@ model Product {
   purchaseItems PurchaseItem[]
   requestItems  RequestItem[]
 
+  @@index([unitId])
+  @@index([categoryId])
   @@map("product")
 }
 

@@ -25,7 +25,7 @@ Full detail and rationale for each choice: plan, section 4.
 
 ## 3. Data model
 
-17 entities — see the full Entity-Relationship model in the plan, section 7, and `schema.prisma` in `backend/prisma/`. Diagram: `mer_sistema_inventario_en.png`.
+19 entities (17 original + `Category`/`Unit`, TT-23) — see the full Entity-Relationship model in the plan, section 7, and `schema.prisma` in `backend/prisma/`. Diagram: `mer_sistema_inventario_en.png` (still needs updating with the two new entities).
 
 Key decisions:
 - `InventoryMovement` is the source of truth (immutable ledger); `LocationStock` is a derived table updated in the same transaction
@@ -47,6 +47,10 @@ Unlike MySQL, PostgreSQL **doesn't automatically index FK columns** — verified
 ### Soft delete (TT-22, ADR-22)
 
 No physical `DELETE` is planned for any endpoint. Once a real story defines a "delete" action on a model without `status` (`User`/`Location`/`Product`/`Supplier` already have it and stay unchanged), that specific model gets a `deletedAt DateTime?` field, with reads filtered via a Prisma Client extension — never added preemptively across all 17 models. Never applied to `InventoryMovement`/`AuditEvent` (historical record) nor to link/config tables or derived rows with no lifecycle of their own. See ADR-22 for full detail and the discarded alternatives.
+
+### Administrable catalogs (TT-23, ADR-23)
+
+`Category` and `Unit` are their own tables (not free text, not an enum) — `Product.categoryId`/`Product.unitId` reference `Category`/`Unit` instead of `Product.category`/`Product.unit` as `String` (HU-28's original design). Each catalog has a unique `name` and a `status` (`active`/`inactive`) to deactivate without deleting. The same role that administers products (Inventory Admin, HU-28) administers these catalogs — no change needed to the permission model, already generic (`Permission.module`/`action`). General rule: table when an admin needs to create/edit values without a deploy and the backend doesn't depend on the exact value; enum when it does (`MovementType`, `PurchaseStatus`, etc.). See ADR-23 for full detail.
 
 ## 4. API
 

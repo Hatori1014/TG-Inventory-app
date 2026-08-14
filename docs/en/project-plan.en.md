@@ -80,6 +80,7 @@
 ### Epic 4 — Catalog and inventory
 - **HU-28** (Must) As an inventory admin, I want to create and edit catalog products (name, description, unit of measure, category), so that I can manage inventory, purchases, and requests for them.
   - *Validation note: this story was missing from the original backlog — every other inventory, purchase, and request story depends on the product existing first.*
+  - *TT-23 note: unit of measure and category are picked from administrable catalogs (CATEGORY, UNIT — see section 7.2), not typed as free text. Requires the inventory admin to be able to add new catalog values before or while creating a product.*
 - **HU-08** (Must) As an inventory admin, I want to record stock in and out by location, so that inventory stays up to date.
 - **HU-09** (Must) As an inventory admin, I want to mark a product as "requires batch/expiration", so that perishable products are tracked differently from ones that aren't.
   - *Reclassified from Should to Must: you confirmed "it depends on the product" — that's a real business need, not an extra.*
@@ -446,14 +447,28 @@ erDiagram
 | parent_id | uuid FK → LOCATION, nullable | optional hierarchy (site → room) |
 | status | enum | active / inactive |
 
+**CATEGORY** (administrable catalog — TT-23, ADR-23)
+| Field | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| name | string, unique | |
+| status | enum | active / inactive |
+
+**UNIT** (administrable catalog — TT-23, ADR-23)
+| Field | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| name | string, unique | e.g. unit, kg, liter |
+| status | enum | active / inactive |
+
 **PRODUCT**
 | Field | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
 | name | string | |
 | description | string | |
-| unit | string | e.g. unit, kg, liter |
-| category | string | |
+| unit_id | uuid FK → UNIT | selected from the catalog, not free text (TT-23) |
+| category_id | uuid FK → CATEGORY, nullable | selected from the catalog, not free text (TT-23) |
 | requires_batch | boolean | defines whether BATCH applies — HU-09 |
 | image_url | string, nullable | Cloudflare R2 URL — HU-26 (post-MVP) |
 | status | enum | active / discontinued |
@@ -621,6 +636,12 @@ The ER model covers **data**; this section covers **behavior** — what each rol
 | POST | `/products` | Create a product | Inventory Admin | HU-28 |
 | PATCH | `/products/:id` | Edit a product | Inventory Admin | HU-28 |
 | POST | `/products/:id/image` | Upload an image to Cloudflare R2 | Inventory Admin | HU-26, HU-27 *(post-MVP)* |
+| GET | `/categories` | List categories | Any authenticated user | HU-28 (TT-23) |
+| POST | `/categories` | Create a category | Inventory Admin | HU-28 (TT-23) |
+| PATCH | `/categories/:id` | Edit/(de)activate a category | Inventory Admin | HU-28 (TT-23) |
+| GET | `/units` | List units of measure | Any authenticated user | HU-28 (TT-23) |
+| POST | `/units` | Create a unit of measure | Inventory Admin | HU-28 (TT-23) |
+| PATCH | `/units/:id` | Edit/(de)activate a unit of measure | Inventory Admin | HU-28 (TT-23) |
 
 **Module: Inventory**
 | Method | Endpoint | Action | Minimum role | Story |

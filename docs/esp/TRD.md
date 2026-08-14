@@ -25,7 +25,7 @@ Detalle completo y justificación de cada elección: plan, sección 4.
 
 ## 3. Modelo de datos
 
-17 entidades — ver Modelo Entidad-Relación completo en el plan, sección 7, y `schema.prisma` en `backend/prisma/`. Diagrama: `mer_sistema_inventario_en.png`.
+19 entidades (17 originales + `Category`/`Unit`, TT-23) — ver Modelo Entidad-Relación completo en el plan, sección 7, y `schema.prisma` en `backend/prisma/`. Diagrama: `mer_sistema_inventario_en.png` (pendiente de actualizar con las dos entidades nuevas).
 
 Decisiones clave:
 - `InventoryMovement` es la fuente de verdad (bitácora inmutable); `LocationStock` es una tabla derivada actualizada en la misma transacción
@@ -47,6 +47,10 @@ PostgreSQL, a diferencia de MySQL, **no indexa automáticamente las columnas FK*
 ### Borrado lógico (TT-22, ADR-22)
 
 No hay `DELETE` físico planeado para ningún endpoint. Cuando una HU real defina una acción de "eliminar" sobre un modelo sin `status` (`User`/`Location`/`Product`/`Supplier` ya lo tienen y no cambian), se le agrega `deletedAt DateTime?` a ese modelo puntual, con lectura filtrada vía extensión de Prisma Client — nunca de forma preventiva en los 17 modelos. Nunca aplica a `InventoryMovement`/`AuditEvent` (registro histórico) ni a tablas de enlace/config o filas derivadas sin ciclo de vida propio. Ver ADR-22 para el detalle completo y las alternativas descartadas.
+
+### Catálogos administrables (TT-23, ADR-23)
+
+`Category` y `Unit` son tablas propias (no texto libre, no enum) — `Product.categoryId`/`Product.unitId` referencian `Category`/`Unit` en vez de `Product.category`/`Product.unit` como `String` (diseño original de HU-28). Cada catálogo tiene `name` único y `status` (`active`/`inactive`) para desactivar sin borrar. El mismo rol que administra productos (Admin Inventario, HU-28) los administra — sin cambios en el modelo de permisos, ya genérico (`Permission.module`/`action`). Regla general: tabla cuando un admin necesita crear/editar valores sin deploy y el backend no depende del valor exacto; enum cuando sí depende (`MovementType`, `PurchaseStatus`, etc.). Ver ADR-23 para el detalle completo.
 
 ## 4. API
 
