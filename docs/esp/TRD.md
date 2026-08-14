@@ -25,15 +25,48 @@ Detalle completo y justificación de cada elección: plan, sección 4.
 
 ## 3. Modelo de datos
 
-17 entidades — ver Modelo Entidad-Relación completo en el plan, sección 7, y `schema.prisma` en `backend/prisma/`. Diagrama: `mer_sistema_inventario_en.png`.
+19 entidades (17 originales + `Category`/`Unit`, TT-23) — ver Modelo Entidad-Relación completo en el plan, sección 7, y `schema.prisma` en `backend/prisma/`. Diagrama: `mer_sistema_inventario_en.png` (pendiente de actualizar con las dos entidades nuevas).
 
 Decisiones clave:
 - `InventoryMovement` es la fuente de verdad (bitácora inmutable); `LocationStock` es una tabla derivada actualizada en la misma transacción
 - `ApprovalFlow` es configurable (soporta 1 o varios niveles) sin necesidad de migrar el esquema
 
+### Índices (TT-20)
+
+PostgreSQL, a diferencia de MySQL, **no indexa automáticamente las columnas FK** — verificado empíricamente en la migración inicial (`20260803001328_init`): ninguna de las 27 columnas FK tenía índice, solo las cubiertas por `@unique`/`@@unique`. Criterio aplicado en la migración `20260813043614_add_indexes` (17 índices nuevos, sin tocar datos):
+
+- **Toda FK usada como filtro o join** — salvo en tablas de configuración muy pequeñas donde el costo de escritura no se justifica (`ApprovalFlow`, `RolePermission`: decenas de filas, no cientos de miles).
+- **`InventoryMovement`** (la bitácora, la tabla más grande y más consultada) recibió la indexación más deliberada: `[productId, locationId]` compuesto (historial de un producto en una ubicación, HU-08/HU-10), `occurredAt` (reportes por rango de fecha), y cada FK restante por separado (`batchId`, `userId`, `purchaseId`, `requestId`) porque cada una responde una consulta distinta y real (movimientos de un lote, de un usuario, ligados a una compra o a una solicitud).
+- **Compuestos donde el patrón de consulta es compuesto**: `Purchase[supplierId, purchasedAt]` (historial de compras por proveedor, HU-05), `AuditEvent[entity, entityId]` (historial de una entidad específica).
+- **No se duplica un índice ya cubierto** por un `@@unique` existente salvo que el patrón de consulta no calce con el prefijo izquierdo — ej. `LocationStock` ya tiene `@@unique([productId, locationId, batchId])`, pero consultar "todo el stock de una ubicación, cualquier producto" no usa ese índice (no es el prefijo izquierdo) — se agregó `@@index([locationId])` aparte.
+
+### Concurrencia en `LocationStock` (TT-17, ADR-20)
+
+`LocationStock` tiene columna `version Int @default(0)` para locking optimista: dos requests concurrentes actualizando el mismo registro (lost update) se detectan porque el segundo `UPDATE` no encuentra la versión que esperaba. Patrón para el use-case que actualiza stock (aún no implementado): `updateMany({ where: { id, version }, data: { ..., version: { increment: 1 } } })`; si no afecta filas, releer y reintentar hasta 3 veces (`withOptimisticLock()` en `backend/src/common/utils/optimistic-lock.util.ts`) antes de devolver `409 Conflict`. Ver ADR-20 para las alternativas descartadas (`SELECT FOR UPDATE`, 409 sin reintento).
+
+### Borrado lógico (TT-22, ADR-22)
+
+No hay `DELETE` físico planeado para ningún endpoint. Cuando una HU real defina una acción de "eliminar" sobre un modelo sin `status` (`User`/`Location`/`Product`/`Supplier` ya lo tienen y no cambian), se le agrega `deletedAt DateTime?` a ese modelo puntual, con lectura filtrada vía extensión de Prisma Client — nunca de forma preventiva en los 17 modelos. Nunca aplica a `InventoryMovement`/`AuditEvent` (registro histórico) ni a tablas de enlace/config o filas derivadas sin ciclo de vida propio. Ver ADR-22 para el detalle completo y las alternativas descartadas.
+
+### Catálogos administrables (TT-23, ADR-23)
+
+`Category` y `Unit` son tablas propias (no texto libre, no enum) — `Product.categoryId`/`Product.unitId` referencian `Category`/`Unit` en vez de `Product.category`/`Product.unit` como `String` (diseño original de HU-28). Cada catálogo tiene `name` único y `status` (`active`/`inactive`) para desactivar sin borrar. El mismo rol que administra productos (Admin Inventario, HU-28) los administra — sin cambios en el modelo de permisos, ya genérico (`Permission.module`/`action`). Regla general: tabla cuando un admin necesita crear/editar valores sin deploy y el backend no depende del valor exacto; enum cuando sí depende (`MovementType`, `PurchaseStatus`, etc.). Ver ADR-23 para el detalle completo.
+
 ## 4. API
 
 Especificación completa de 10 módulos REST (Auth, Users/Roles, Suppliers, Locations, Products, Inventory, Alerts, Purchases, Requests, Audit) en el plan, sección 7.4 — incluye método, ruta, acción, rol mínimo requerido y HU asociada.
+
+### Idempotencia en escrituras críticas (TT-18, ADR-21)
+
+Endpoints que crean movimientos de inventario, compras, solicitudes o cambios de rol (HU-08, HU-13, HU-15, HU-16) deben marcarse con `@Idempotent()` (`backend/src/common/decorators/idempotent.decorator.ts`) y `@UseInterceptors(IdempotencyInterceptor)` (`backend/src/common/interceptors/`). El cliente genera un `Idempotency-Key` (UUID) por operación lógica y lo manda como header; el interceptor lo exige, devuelve la respuesta ya guardada en `IdempotencyKey` (tabla con `key` único) si la key se repite, sin re-ejecutar el handler, y resuelve la carrera entre dos requests concurrentes con la misma key vía el constraint único de Postgres. Ver ADR-21 para las alternativas descartadas (deshabilitar el botón en frontend, Redis).
+
+### Paginación (TT-19)
+
+Convención estándar para todo endpoint de listado (HU-05 histórico de compras, HU-08 movimientos, HU-10 stock, y cualquier otro futuro): offset/limit, no cursor — más simple y suficiente a esta escala (decenas/cientos de usuarios, sin necesidad de paginar sobre datos que cambian en tiempo real).
+
+- **Query params**: `page` (default `1`, mínimo `1`) y `pageSize` (default `20`, máximo `100` — el tope evita que un cliente pida un `pageSize` enorme y convierta un listado en el "noisy neighbor" que TT-16 buscaba prevenir).
+- **Respuesta**: `{ items: T[], total: number, page: number, pageSize: number }`.
+- **Implementación compartida** en `backend/src/common/`: `dto/pagination-query.dto.ts` (query DTO validado con `class-validator`/`class-transformer`), `dto/paginated-response.dto.ts` (shape de la respuesta), `utils/pagination.util.ts` (`toPrismaSkipTake()` convierte `page`/`pageSize` a `skip`/`take` de Prisma; `buildPaginatedResponse()` arma la respuesta). Cada módulo de listado los reutiliza — no se repite la lógica de paginación en cada use-case.
 
 ## 5. Requerimientos no funcionales
 

@@ -63,6 +63,7 @@ model User {
   requestsApproved  Request[]             @relation("approver")
   auditEvents       AuditEvent[]
 
+  @@index([roleId])
   @@map("user")
 }
 
@@ -85,10 +86,42 @@ model Location {
   movements      InventoryMovement[]
   requestItems   RequestItem[]
 
+  @@index([parentId])
   @@map("location")
 }
 
 // ---------- Catalog and inventory ----------
+
+// Administrable catalogs (TT-23, ADR-23) — Category/Unit are real tables,
+// not free text on Product, so an Inventory Admin can manage them (add,
+// rename, deactivate) without a Product being tied to a typo-prone string.
+enum CategoryStatus {
+  active
+  inactive
+}
+
+model Category {
+  id       String         @id @default(uuid())
+  name     String         @unique
+  status   CategoryStatus @default(active)
+  products Product[]
+
+  @@map("category")
+}
+
+enum UnitStatus {
+  active
+  inactive
+}
+
+model Unit {
+  id       String     @id @default(uuid())
+  name     String     @unique
+  status   UnitStatus @default(active)
+  products Product[]
+
+  @@map("unit")
+}
 
 enum ProductStatus {
   active
@@ -99,8 +132,10 @@ model Product {
   id            String              @id @default(uuid())
   name          String
   description   String?
-  unit          String              @map("unit")
-  category      String?
+  unitId        String              @map("unit_id")
+  unit          Unit                @relation(fields: [unitId], references: [id])
+  categoryId    String?             @map("category_id")
+  category      Category?           @relation(fields: [categoryId], references: [id])
   requiresBatch Boolean             @default(false) @map("requires_batch")
   imageUrl      String?             @map("image_url") // HU-26, post-MVP
   status        ProductStatus       @default(active)
@@ -111,6 +146,8 @@ model Product {
   purchaseItems PurchaseItem[]
   requestItems  RequestItem[]
 
+  @@index([unitId])
+  @@index([categoryId])
   @@map("product")
 }
 
@@ -124,6 +161,7 @@ model Batch {
   stock        LocationStock[]
   movements    InventoryMovement[]
 
+  @@index([productId])
   @@map("batch")
 }
 
@@ -138,8 +176,15 @@ model LocationStock {
   batchId     String?   @map("batch_id")
   batch       Batch?    @relation(fields: [batchId], references: [id])
   quantity    Decimal   @default(0) @db.Decimal(14, 4)
+  // optimistic locking (TT-17, ADR-20) — incremented on every successful
+  // update; concurrent writers detect a lost update via a version mismatch
+  version     Int       @default(0)
 
   @@unique([productId, locationId, batchId])
+  // the unique index above covers productId and productId+locationId
+  // lookups (leftmost prefix); this covers "all stock at this location,
+  // any product" (HU-10), which it doesn't
+  @@index([locationId])
   @@map("location_stock")
 }
 
@@ -183,6 +228,17 @@ model InventoryMovement {
   occurredAt  DateTime      @default(now()) @map("occurred_at")
   notes       String?
 
+  // the ledger — biggest table, most-queried, so it gets the most
+  // deliberate indexing (TT-20): history for a product at a location
+  // (HU-08/HU-10) is the main access pattern, then date-range reports,
+  // then each remaining FK for its own lookup (by batch, by user who
+  // registered it, by the purchase/request that triggered it)
+  @@index([productId, locationId])
+  @@index([occurredAt])
+  @@index([batchId])
+  @@index([userId])
+  @@index([purchaseId])
+  @@index([requestId])
   @@map("inventory_movement")
 }
 
@@ -222,6 +278,8 @@ model Purchase {
   items       PurchaseItem[]
   movements   InventoryMovement[]
 
+  @@index([supplierId, purchasedAt])
+  @@index([userId])
   @@map("purchase")
 }
 
@@ -234,6 +292,8 @@ model PurchaseItem {
   quantity   Decimal   @db.Decimal(14, 4)
   unitPrice  Decimal   @map("unit_price") @db.Decimal(14, 2) // input for HU-14
 
+  @@index([purchaseId])
+  @@index([productId])
   @@map("purchase_item")
 }
 
@@ -265,6 +325,8 @@ model Request {
   items        RequestItem[]
   movements    InventoryMovement[]
 
+  @@index([requesterId])
+  @@index([approverId])
   @@map("request")
 }
 
@@ -279,6 +341,7 @@ model RequestItem {
   quantity         Decimal   @db.Decimal(14, 4)
   estimatedPrice   Decimal?  @map("estimated_price") @db.Decimal(14, 2)
 
+  @@index([requestId])
   @@map("request_item")
 }
 
@@ -304,5 +367,23 @@ model AuditEvent {
   entityId   String   @map("entity_id")
   occurredAt DateTime @default(now()) @map("occurred_at")
 
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([occurredAt])
   @@map("audit_event")
+}
+
+// ---------- Idempotency (TT-18) ----------
+
+// Backs the @Idempotent() decorator / IdempotencyInterceptor pattern
+// (backend/src/common/): a duplicate request with the same key returns the
+// already-stored response instead of re-executing the handler. See ADR-21.
+model IdempotencyKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  endpoint  String
+  response  Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("idempotency_key")
 }

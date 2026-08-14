@@ -31,6 +31,7 @@ By file type, inside each module (kebab-case + suffix, in English):
 - Hexagonal architecture per backend module (domain → application → infrastructure) — **only in modules with real business logic** (inventory, requests). Trivial CRUDs (e.g. locations) can start without the 4 layers.
 - DDD tactical patterns inside `domain/` (ADR-17): Entities with behavior, Value Objects, Domain Services. The use-case orchestrates, it doesn't decide — the business rule lives in `domain/`.
 - Module boundaries enforced with lint, not just convention (ADR-18): a module never imports `domain/` or `infrastructure/` from another module — only the services exported by its `*.module.ts`. `eslint-plugin-boundaries` fails the build (`backend/.eslintrc.js`, runs in `ci-backend.yml` via `npm run lint`).
+- Standard pagination on every listing endpoint (TT-19): offset/limit via `PaginationQueryDto`/`PaginatedResponseDto`/`pagination.util.ts` in `backend/src/common/` — never hand-roll `skip`/`take` inside a use-case. Detail in `TRD.en.md` section 4.
 - DTOs validated with `class-validator` on every write endpoint (HU-21)
 - RBAC via Guards + the `@Roles()` decorator, always enforced in the backend, never just hiding UI
 - Inventory movements: `LocationStock` is never updated directly — always through a record in `InventoryMovement` in the same transaction
@@ -47,6 +48,31 @@ By file type, inside each module (kebab-case + suffix, in English):
 - Relying on the frontend as the only access-control layer
 
 [PENDING: exact `tsconfig` settings (strict mode, no-implicit-any) — not fully specified, only that the language is typed TypeScript]
+
+## Logging (TT-21)
+
+`nestjs-pino` — structured JSON to stdout in `staging`/`production` (Render captures it automatically, no extra infra), readable pretty-print in `development`. Every request carries a correlation id (`X-Request-Id`, generated or propagated if the client already sends one) present in every log line it produces, so a single request can be traced. `req.headers.authorization`, cookies, and `password`/`token` in the body are always redacted (`backend/src/config/logger.config.ts`) — they never show up in plaintext in a log, not even by accident.
+
+What to log:
+- **Always**: unhandled errors and 5xx responses (already done by `GlobalExceptionFilter`, TT-15, with the real logger, not `console.log`)
+- **Critical write operations**: inventory movements, request approvals, role changes — use `new Logger(ModuleName)` (the same pattern already used by `main.ts`/`GlobalExceptionFilter`), not `console.log`
+- **No need to explicitly log** every request/response — `pino-http` already covers that automatically (method, route, status, response time)
+
+## Concurrency (TT-17)
+
+Every update to `LocationStock` (`version` column, optimistic locking, ADR-20) must go through `withOptimisticLock()` (`backend/src/common/utils/optimistic-lock.util.ts`): the function passed to it runs the `updateMany({ where: { id, version }, ... })` and returns `null` if it affected zero rows (conflict detected); `withOptimisticLock` retries up to 3 times and throws `ConflictException` (409) once exhausted. Never update `LocationStock` with a plain `update()` that doesn't filter by `version`. Detail in `TRD.en.md` section 3.
+
+## Idempotency (TT-18)
+
+Every critical write endpoint (movements, purchases, requests, role changes) is marked with `@Idempotent()` + `@UseInterceptors(IdempotencyInterceptor)` (`backend/src/common/`). The client sends an `Idempotency-Key` header (UUID) per logical operation; if the key was already processed, the interceptor returns the stored response without re-running the use-case. The module using the interceptor must provide `PrismaService` and `IdempotencyInterceptor` in its `*.module.ts` (same pattern `HealthModule` already uses for `PrismaService`). Detail in `TRD.en.md` section 4, decision in ADR-21.
+
+## Administrable catalogs (TT-23)
+
+Rule for deciding how to model a reference value (category, unit of measure, and any similar one in the future):
+- **Table** (`Category`/`Unit` pattern, ADR-23) if an admin needs to create/edit/deactivate values from the frontend without depending on a deploy, and the backend gives the value no special meaning (only displays/filters by it).
+- **Prisma enum** if the backend does depend on the exact value for its logic (e.g. `MovementType` drives stock calculation) — opening it up as a catalog would leave the backend not knowing what to do with a new value someone adds from the UI.
+- **Never free text** (`String` with no table or enum) for a value that repeats across records — that allows duplicates/typos with no control at all.
+Every catalog table gets a unique `name` and a `status` (`active`/`inactive`) to deactivate without deleting (no physical deletes, see ADR-22).
 
 ## Tests
 

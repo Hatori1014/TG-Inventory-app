@@ -78,6 +78,7 @@
 ### Epic 4 — Catálogo e inventario
 - **HU-28** (Must) Como administrador de inventario, quiero crear y editar productos del catálogo (nombre, descripción, unidad de medida, categoría), para poder gestionar inventario, compras y solicitudes sobre ellos.
   - *Nota de validación: esta HU faltaba en el backlog original — las demás HU de inventario, compras y solicitudes dependen de que el producto exista primero.*
+  - *Nota TT-23: unidad de medida y categoría se seleccionan desde catálogos administrables (CATEGORIA, UNIDAD_MEDIDA — ver sección 7.2), no se escriben como texto libre. Requiere que el administrador de inventario pueda dar de alta valores nuevos en esos catálogos antes o durante la creación de un producto.*
 - **HU-08** (Must) Como administrador de inventario, quiero registrar entradas y salidas de stock por ubicación, para mantener el inventario actualizado.
 - **HU-09** (Must) Como administrador de inventario, quiero marcar un producto como "requiere lote/vencimiento", para trazar productos perecederos de forma distinta a los que no lo son.
   - *Reclasificada de Should a Must: confirmaste que "depende del producto" — es una necesidad real de negocio, no un extra.*
@@ -444,14 +445,28 @@ erDiagram
 | ubicacion_padre_id | uuid FK → UBICACION, nullable | jerarquía opcional (sede → sala) |
 | estado | enum | activa / inactiva |
 
+**CATEGORIA** (catálogo administrable — TT-23, ADR-23)
+| Campo | Tipo | Notas |
+|---|---|---|
+| id | uuid PK | |
+| nombre | string, único | |
+| estado | enum | activa / inactiva |
+
+**UNIDAD_MEDIDA** (catálogo administrable — TT-23, ADR-23)
+| Campo | Tipo | Notas |
+|---|---|---|
+| id | uuid PK | |
+| nombre | string, único | ej. unidad, kg, litro |
+| estado | enum | activa / inactiva |
+
 **PRODUCTO**
 | Campo | Tipo | Notas |
 |---|---|---|
 | id | uuid PK | |
 | nombre | string | |
 | descripcion | string | |
-| unidad_medida | string | ej. unidad, kg, litro |
-| categoria | string | |
+| unidad_medida_id | uuid FK → UNIDAD_MEDIDA | selección desde catálogo, no texto libre (TT-23) |
+| categoria_id | uuid FK → CATEGORIA, nullable | selección desde catálogo, no texto libre (TT-23) |
 | requiere_lote | boolean | define si aplica LOTE — HU-09 |
 | imagen_url | string, nullable | URL en Cloudflare R2 — HU-26 (post-MVP) |
 | estado | enum | activo / descontinuado |
@@ -619,6 +634,12 @@ El MER cubre **datos**; esta sección cubre **comportamiento** — qué puede ha
 | POST | `/products` | Crear producto | Admin Inventario | HU-28 |
 | PATCH | `/products/:id` | Editar producto | Admin Inventario | HU-28 |
 | POST | `/products/:id/image` | Subir imagen a Cloudflare R2 | Admin Inventario | HU-26, HU-27 *(post-MVP)* |
+| GET | `/categories` | Listar categorías | Cualquier autenticado | HU-28 (TT-23) |
+| POST | `/categories` | Crear categoría | Admin Inventario | HU-28 (TT-23) |
+| PATCH | `/categories/:id` | Editar/(des)activar categoría | Admin Inventario | HU-28 (TT-23) |
+| GET | `/units` | Listar unidades de medida | Cualquier autenticado | HU-28 (TT-23) |
+| POST | `/units` | Crear unidad de medida | Admin Inventario | HU-28 (TT-23) |
+| PATCH | `/units/:id` | Editar/(des)activar unidad de medida | Admin Inventario | HU-28 (TT-23) |
 
 **Módulo: Inventario**
 | Método | Endpoint | Acción | Rol mínimo | HU |
