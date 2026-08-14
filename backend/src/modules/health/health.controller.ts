@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { PrismaService } from '../../database/prisma.service';
+import { Public } from '../../common/decorators/public.decorator';
 
 // TT-11 — used to verify a deploy succeeded and for basic uptime monitoring
 // (checked by Render/Fly.io and by the CD pipeline).
@@ -9,6 +10,9 @@ import { PrismaService } from '../../database/prisma.service';
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Public (ADR-24) — JwtAuthGuard is global as of HU-01; Render/CD must be
+  // able to hit this with no token.
+  @Public()
   @Get()
   async check() {
     let db: 'ok' | 'error' = 'ok';
