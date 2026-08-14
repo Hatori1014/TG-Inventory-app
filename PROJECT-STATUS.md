@@ -1,6 +1,6 @@
 # Estado del proyecto — leer esto primero
 
-> Última actualización: **TT-08, TT-09 y TT-10 cerradas** (2026-08-14) — los últimos 3 ítems que solo eran visibles en dashboards (Vercel Production Branch, rama de auto-deploy en Render, toggles de Dependabot alerts/security updates en GitHub) fueron confirmados/activados directamente por el usuario tras pedírselo. De las 10 tareas técnicas originales solo queda **TT-06 (Cloudflare)** pendiente (el usuario está creando la cuenta ahora). Se creó además **TT-23 — Catálogos parametrizables (Category, Unit)**, a partir de una validación pedida por el usuario sobre si el schema soporta que un rol administre tablas catálogo desde el front — hallazgo: parcialmente sí (`Role`/`ApprovalFlow`), parcialmente no (`Product.category`/`unit` son texto libre); queda pendiente de refinar el alcance antes de HU-28. Actualízalo tú mismo al cerrar cada iteración. English version below.
+> Última actualización: **TT-23 cerrada** (2026-08-14) — `Category` y `Unit` agregadas como tablas catálogo administrables (mismo patrón que `Role`), `Product.category`/`unit` (texto libre) pasan a `Product.categoryId`/`unitId` (FK). Migración `20260814045501_add_category_unit_catalogs` aplicada en local, decisión documentada en **ADR-23**. Implementación de endpoints diferida a cuando se implemente HU-28 (ya ajustada en el plan y en Trello para reflejar el nuevo diseño). De las 10 tareas técnicas originales solo queda **TT-06 (Cloudflare)**, que el usuario está resolviendo en paralelo. Actualízalo tú mismo al cerrar cada iteración. English version below.
 
 ## Nota de estructura
 
@@ -14,11 +14,11 @@ Sistema de control de inventario: proveedores, inventario por ubicaciones, alert
 
 **Fase**: Iteración 0 (setup), en curso. **No se ha escrito ninguna HU de negocio todavía.**
 
-### Próximo paso inmediato: resolver TT-23, luego empezar la primera HU de negocio real
+### Próximo paso inmediato: empezar la primera HU de negocio real
 
 TT-02 a TT-05 ya están cerradas (ver tabla abajo). Las nueve tareas técnicas de la revisión de arquitectura (ver "Gaps de arquitectura" abajo) están todas cerradas — mergeadas a `staging` y, donde aplica (TT-17/TT-18), con su migración ya aplicada en Neon staging.
 
-**TT-23 — Catálogos parametrizables (Category, Unit)** (nueva, 2026-08-14): a pedido del usuario, se validó si el schema permite que un rol administre "tablas catálogo" desde el front. Hallazgo: `Role`/`Permission` (HU-02) y `ApprovalFlow` (ADR-08) sí son tablas reales parametrizables; `Product.category`/`Product.unit` son `String` libre sin tabla propia (nunca se diseñaron como catálogo — confirmado contra el texto original de HU-28); los enums de estado/tipo no deben volverse catálogo abierto porque el backend depende del valor exacto para su lógica. Queda pendiente de refinar el alcance (ver tarjeta en Trello) antes de empezar HU-28 — el usuario está resolviendo esto en paralelo a TT-06.
+**TT-23 — Catálogos parametrizables (Category, Unit)** — ✅ Cerrada (2026-08-14). A pedido del usuario, se validó si el schema permite que un rol administre "tablas catálogo" desde el front. Hallazgo: `Role`/`Permission` (HU-02) y `ApprovalFlow` (ADR-08) ya eran tablas reales parametrizables; `Product.category`/`Product.unit` eran `String` libre sin tabla propia. Solución: `Category`/`Unit` agregadas como tablas (mismo patrón que `Role`), `Product.categoryId`/`unitId` como FK — ver **ADR-23**. Migración `20260814045501_add_category_unit_catalogs` aplicada en local (sin datos que migrar, Iteración 0). Endpoints (`/categories`, `/units`) documentados en el plan; implementación de controllers/services diferida a cuando se implemente HU-28, cuyo texto ya se ajustó para reflejar el nuevo diseño (selects contra catálogo, no texto libre).
 
 Pendiente de menor prioridad, sin bloquear lo anterior:
 - TT-06 (Cloudflare): no bloquea el MVP, requiere una cuenta real (fuera de lo que puedo hacer desde este entorno) — el usuario la está creando ahora — se puede dejar para MVP 5 si no se completa antes
@@ -81,7 +81,7 @@ Verificado con `npm run lint`, `npm run build` y `npm run test` localmente en am
 Formato base consistente en las 30 (rol/acción/beneficio). ~10 todavía no tienen un criterio de aceptación verificable, solo notas de contexto — **no es bloqueante**: se completa cuando cada una entra a Definition of Ready, justo antes de moverla a "En progreso" (ver `docs/esp/flujo-de-trabajo.md`). No hace falta resolverlo ahora.
 
 **Lo que ya existe en código, ya subido a GitHub**:
-- Backend NestJS: estructura hexagonal, `schema.prisma` completo (17 entidades, en inglés), guards/decoradores de RBAC, health-check
+- Backend NestJS: estructura hexagonal, `schema.prisma` completo (19 entidades, en inglés), guards/decoradores de RBAC, health-check
 - Frontend Angular: estructura por features (todas en inglés), feature `suppliers` como plantilla de referencia, ahora con lint y un spec base funcionando
 - `docker-compose.yml`, workflows de CI (verificados y en verde), `dependabot.yml` (agrupado por ecosistema)
 - `frontend/public/logo-placeholder.png` — logo temporal
@@ -102,7 +102,7 @@ https://trello.com/b/BS5tzENy/sistema-de-control-de-inventario — incluye TT-14
 
 # Project status — read this first
 
-> Last updated: **TT-08, TT-09, and TT-10 closed** (2026-08-14) — the last 3 items that were only visible in dashboards (Vercel Production Branch, Render's auto-deploy branch, GitHub's Dependabot alerts/security-updates toggles) were confirmed/enabled directly by the user after being asked. Of the 10 original technical tasks only **TT-06 (Cloudflare)** remains pending (the user is creating the account now). Also created **TT-23 — Parametrized catalogs (Category, Unit)**, from a validation the user asked for on whether the schema lets a role administer catalog tables from the frontend — finding: partially yes (`Role`/`ApprovalFlow`), partially no (`Product.category`/`unit` are free text); scope still needs refining before HU-28. Keep this updated yourself as each iteration closes.
+> Last updated: **TT-23 closed** (2026-08-14) — `Category` and `Unit` added as administrable catalog tables (same pattern as `Role`), `Product.category`/`unit` (free text) become `Product.categoryId`/`unitId` (FK). Migration `20260814045501_add_category_unit_catalogs` applied locally, decision documented in **ADR-23**. Endpoint implementation deferred to whenever HU-28 gets implemented (already adjusted in the plan and in Trello to reflect the new design). Of the 10 original technical tasks only **TT-06 (Cloudflare)** remains, which the user is resolving in parallel. Keep this updated yourself as each iteration closes.
 
 ## Structure note
 
@@ -116,11 +116,11 @@ Inventory control system: suppliers, inventory by location, stock alerts, purcha
 
 **Phase**: Iteration 0 (setup), in progress. **No business story has been implemented yet.**
 
-### Immediate next step: resolve TT-23, then start the first real business story
+### Immediate next step: start the first real business story
 
 TT-02 through TT-05 are now closed (see table below). All nine technical tasks from the architecture review (see "Architecture gaps" below) are closed — merged into `staging` and, where applicable (TT-17/TT-18), with their migration already applied to Neon staging.
 
-**TT-23 — Parametrized catalogs (Category, Unit)** (new, 2026-08-14): at the user's request, validated whether the schema lets a role administer "catalog tables" from the frontend. Finding: `Role`/`Permission` (HU-02) and `ApprovalFlow` (ADR-08) are real parametrized tables; `Product.category`/`Product.unit` are free `String` fields with no dedicated table (never designed as a catalog — confirmed against HU-28's original text); status/type enums shouldn't become an open catalog since the backend depends on the exact value for its logic. Scope still needs refining (see the Trello card) before starting HU-28 — the user is working this out in parallel with TT-06.
+**TT-23 — Parametrized catalogs (Category, Unit)** — ✅ Closed (2026-08-14). At the user's request, validated whether the schema lets a role administer "catalog tables" from the frontend. Finding: `Role`/`Permission` (HU-02) and `ApprovalFlow` (ADR-08) were already real parametrized tables; `Product.category`/`Product.unit` were free `String` fields with no dedicated table. Solution: `Category`/`Unit` added as tables (same pattern as `Role`), `Product.categoryId`/`unitId` as FKs — see **ADR-23**. Migration `20260814045501_add_category_unit_catalogs` applied locally (no data to migrate, Iteration 0). Endpoints (`/categories`, `/units`) documented in the plan; controller/service implementation deferred to whenever HU-28 gets implemented, whose text was already adjusted to reflect the new design (catalog selects, not free text).
 
 Lower-priority, not blocking the above:
 - TT-06 (Cloudflare): doesn't block the MVP, needs a real account (outside what I can do from this environment) — the user is creating it now — can wait for MVP 5 if not finished before then
@@ -183,7 +183,7 @@ Verified with `npm run lint`, `npm run build`, and `npm run test` locally in bot
 Consistent base format across all 30 (role/action/benefit). ~10 still lack a verifiable acceptance criterion, only context notes — **not blocking**: gets completed when each one hits Definition of Ready, right before moving to "In progress" (see `docs/en/workflow.en.md`). No need to resolve this now.
 
 **What already exists in code, already pushed to GitHub**:
-- NestJS backend: hexagonal structure, full `schema.prisma` (17 entities, in English), RBAC guards/decorators, health-check
+- NestJS backend: hexagonal structure, full `schema.prisma` (19 entities, in English), RBAC guards/decorators, health-check
 - Angular frontend: feature-based structure (all in English), `suppliers` feature as the reference template, now with working lint and a baseline spec
 - `docker-compose.yml`, CI workflows (verified and green), `dependabot.yml` (grouped by ecosystem)
 - `frontend/public/logo-placeholder.png` — temporary logo
