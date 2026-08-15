@@ -9,8 +9,9 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { RolesModule } from './modules/roles/roles.module';
+import { UsersModule } from './modules/users/users.module';
 // As iterations progress (plan section 6), each new business module
-// (users, suppliers, locations, products, inventory, purchases,
+// (suppliers, locations, products, inventory, purchases,
 // requests, audit) gets imported here.
 
 @Module({
@@ -32,6 +33,7 @@ import { RolesModule } from './modules/roles/roles.module';
     HealthModule,
     AuthModule,
     RolesModule,
+    UsersModule,
   ],
   providers: [
     // TT-15 — one process shared by every module; an uncaught error in one

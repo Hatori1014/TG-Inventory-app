@@ -4,12 +4,12 @@ import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import * as request from 'supertest';
 import { AuthModule } from '../../src/modules/auth/auth.module';
-import { AUTH_USER_REPOSITORY } from '../../src/modules/auth/domain/auth-user.repository.interface';
+import { USER_REPOSITORY } from '../../src/modules/users/domain/user.repository.interface';
 import { RolesModule } from '../../src/modules/roles/roles.module';
 import { ROLE_REPOSITORY } from '../../src/modules/roles/domain/role.repository.interface';
 import { PERMISSION_REPOSITORY } from '../../src/modules/roles/domain/permission.repository.interface';
 import { PrismaService } from '../../src/database/prisma.service';
-import { FakeAuthUserRepository } from './support/fake-auth-user.repository';
+import { FakeUserRepository } from './support/fake-user.repository';
 import { FakePermissionRepository } from './support/fake-permission.repository';
 import { FakeRoleRepository } from './support/fake-role.repository';
 
@@ -24,7 +24,7 @@ interface RolePermissionWhere {
 
 defineFeature(feature, (test) => {
   let app: INestApplication;
-  let fakeAuthRepository: FakeAuthUserRepository;
+  let fakeUserRepository: FakeUserRepository;
   let fakePermissionRepository: FakePermissionRepository;
   let fakeRoleRepository: FakeRoleRepository;
   let grantedPermissions: Set<string>;
@@ -37,7 +37,7 @@ defineFeature(feature, (test) => {
     process.env.JWT_SECRET = 'bdd-test-secret-at-least-16-chars';
     process.env.JWT_EXPIRES_IN = '1h';
 
-    fakeAuthRepository = new FakeAuthUserRepository();
+    fakeUserRepository = new FakeUserRepository();
     fakePermissionRepository = new FakePermissionRepository();
     fakeRoleRepository = new FakeRoleRepository(fakePermissionRepository);
     grantedPermissions = new Set();
@@ -50,8 +50,8 @@ defineFeature(feature, (test) => {
     const moduleRef = await Test.createTestingModule({
       imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, RolesModule],
     })
-      .overrideProvider(AUTH_USER_REPOSITORY)
-      .useValue(fakeAuthRepository)
+      .overrideProvider(USER_REPOSITORY)
+      .useValue(fakeUserRepository)
       .overrideProvider(ROLE_REPOSITORY)
       .useValue(fakeRoleRepository)
       .overrideProvider(PERMISSION_REPOSITORY)
@@ -72,7 +72,7 @@ defineFeature(feature, (test) => {
     given(
       /^a user "(.*)" with password "(.*)" and role "(.*)"$/,
       (email: string, password: string, role: string) => {
-        fakeAuthRepository.seed(email, password, role);
+        fakeUserRepository.seed(email, password, role);
       },
     );
 
@@ -113,7 +113,7 @@ defineFeature(feature, (test) => {
     given(
       /^a user "(.*)" with password "(.*)" and role "(.*)"$/,
       (email: string, password: string, role: string) => {
-        fakeAuthRepository.seed(email, password, role);
+        fakeUserRepository.seed(email, password, role);
       },
     );
 
@@ -161,7 +161,7 @@ defineFeature(feature, (test) => {
     given(
       /^a user "(.*)" with password "(.*)" and role "(.*)"$/,
       (email: string, password: string, role: string) => {
-        fakeAuthRepository.seed(email, password, role);
+        fakeUserRepository.seed(email, password, role);
       },
     );
 

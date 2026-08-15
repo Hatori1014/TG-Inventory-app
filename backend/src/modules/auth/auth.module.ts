@@ -5,10 +5,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { LoginUseCase } from './application/use-cases/login.use-case';
-import { AUTH_USER_REPOSITORY } from './domain/auth-user.repository.interface';
-import { UserPrismaRepository } from './infrastructure/user.prisma.repository';
 import { JwtStrategy } from './infrastructure/jwt.strategy';
-import { PrismaService } from '../../database/prisma.service';
+import { UsersModule } from '../users/users.module';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 
@@ -23,13 +21,14 @@ import { RolesGuard } from '../../common/guards/roles.guard';
         signOptions: { expiresIn: config.get<string>('JWT_EXPIRES_IN') },
       }),
     }),
+    // HU-03/ADR-26 — auth no longer owns a User repository; it consumes
+    // UsersModule's exported ValidateUserCredentialsUseCase.
+    UsersModule,
   ],
   controllers: [AuthController],
   providers: [
-    PrismaService,
     LoginUseCase,
     JwtStrategy,
-    { provide: AUTH_USER_REPOSITORY, useClass: UserPrismaRepository },
     // ADR-24 — global by default: any new endpoint requires a valid JWT
     // (and the role it declares via @Roles()) unless marked @Public().
     { provide: APP_GUARD, useClass: JwtAuthGuard },

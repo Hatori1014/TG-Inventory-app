@@ -1,9 +1,4 @@
-export interface AuthenticatedUserDto {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import { AuthenticatedUserDto } from '../../users/dto/authenticated-user.dto';
 
 export interface LoginResponseDto {
   accessToken: string;

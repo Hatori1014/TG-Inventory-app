@@ -27,7 +27,14 @@ export const routes: Routes = [
     canActivate: [roleGuard],
     data: { roles: ['Administrador'] },
     loadChildren: () =>
-      import('./features/users-roles/users-roles.routes').then((m) => m.USERS_ROLES_ROUTES),
+      import('./features/users-roles/users-roles.routes').then((m) => m.ROLES_ROUTES),
+  },
+  {
+    path: 'users',
+    canActivate: [roleGuard],
+    data: { roles: ['Administrador'] },
+    loadChildren: () =>
+      import('./features/users-roles/users-roles.routes').then((m) => m.USERS_ROUTES),
   },
   // [PENDING: locations, products, inventory, alerts, purchases, requests —
   // added in their corresponding iterations]
