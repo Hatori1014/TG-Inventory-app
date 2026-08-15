@@ -14,7 +14,12 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:migrate:staging": "dotenv -e .env.staging -- prisma migrate deploy"
+    "prisma:migrate:staging": "dotenv -e .env.staging -- prisma migrate deploy",
+    "prisma:seed": "prisma db seed",
+    "prisma:seed:staging": "dotenv -e .env.staging -- prisma db seed"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",
@@ -45,6 +50,7 @@
     "@types/jest": "^29.5.13",
     "@types/node": "^20.16.5",
     "@types/passport-jwt": "^4.0.1",
+    "@types/supertest": "^7.2.1",
     "@typescript-eslint/eslint-plugin": "^8.5.0",
     "@typescript-eslint/parser": "^8.5.0",
     "dotenv-cli": "^11.0.0",
