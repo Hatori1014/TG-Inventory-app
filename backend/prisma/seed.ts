@@ -16,6 +16,9 @@ const ADMIN_ROLE_NAME = 'Administrador';
 // for modules that don't exist yet.
 // HU-03 — same criterion as HU-02: only the permissions this iteration
 // needs (users:read/create/update).
+// HU-28 — products/categories/units GETs are "any authenticated user"
+// (plan section 7.4), so no :read permission is seeded for them — it would
+// be inert, PermissionsGuard only checks endpoints marked @RequirePermission().
 const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'roles', action: 'read' },
   { module: 'roles', action: 'create' },
@@ -23,6 +26,12 @@ const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'users', action: 'read' },
   { module: 'users', action: 'create' },
   { module: 'users', action: 'update' },
+  { module: 'products', action: 'create' },
+  { module: 'products', action: 'update' },
+  { module: 'categories', action: 'create' },
+  { module: 'categories', action: 'update' },
+  { module: 'units', action: 'create' },
+  { module: 'units', action: 'update' },
 ];
 
 async function upsertAdminRole() {

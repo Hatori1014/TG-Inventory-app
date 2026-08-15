@@ -1,0 +1,37 @@
+<h1>Unidades de medida</h1>
+
+<form (ngSubmit)="addUnit()">
+  <input type="text" [(ngModel)]="newName" name="newName" placeholder="Nueva unidad" />
+  <button type="submit" [disabled]="!newName.trim()">Agregar</button>
+</form>
+
+@if (errorMessage) {
+  <p role="alert">{{ errorMessage }}</p>
+}
+
+@if (loading()) {
+  <p>Cargando...</p>
+} @else {
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (unit of units(); track unit.id) {
+        <tr>
+          <td>{{ unit.name }}</td>
+          <td>{{ unit.status === 'active' ? 'Activa' : 'Inactiva' }}</td>
+          <td>
+            <button type="button" (click)="toggleStatus(unit)">
+              {{ unit.status === 'active' ? 'Desactivar' : 'Activar' }}
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

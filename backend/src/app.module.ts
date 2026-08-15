@@ -10,8 +10,9 @@ import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { UsersModule } from './modules/users/users.module';
+import { ProductsModule } from './modules/products/products.module';
 // As iterations progress (plan section 6), each new business module
-// (suppliers, locations, products, inventory, purchases,
+// (suppliers, locations, inventory, purchases,
 // requests, audit) gets imported here.
 
 @Module({
@@ -34,6 +35,7 @@ import { UsersModule } from './modules/users/users.module';
     AuthModule,
     RolesModule,
     UsersModule,
+    ProductsModule,
   ],
   providers: [
     // TT-15 — one process shared by every module; an uncaught error in one

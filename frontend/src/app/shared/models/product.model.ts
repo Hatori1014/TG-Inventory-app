@@ -6,10 +6,25 @@ import { Unit } from './unit.model';
 export interface Product {
   id: string;
   name: string;
-  description?: string;
+  description: string | null;
   unit: Unit; // selected from the Unit catalog, not free text (TT-23)
-  category?: Category; // selected from the Category catalog, not free text (TT-23)
+  category: Category | null; // selected from the Category catalog, not free text (TT-23)
   requiresBatch: boolean;
-  imageUrl?: string; // HU-26, post-MVP
+  imageUrl: string | null; // HU-26, post-MVP
   status: 'active' | 'discontinued';
+}
+
+export interface CreateProductRequest {
+  name: string;
+  description?: string;
+  unitId: string;
+  categoryId?: string;
+}
+
+export interface UpdateProductRequest {
+  name?: string;
+  description?: string;
+  unitId?: string;
+  categoryId?: string;
+  status?: 'active' | 'discontinued';
 }

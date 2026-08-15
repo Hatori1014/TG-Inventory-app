@@ -5,3 +5,12 @@ export interface Category {
   name: string;
   status: 'active' | 'inactive';
 }
+
+export interface CreateCategoryRequest {
+  name: string;
+}
+
+export interface UpdateCategoryRequest {
+  name?: string;
+  status?: 'active' | 'inactive';
+}
