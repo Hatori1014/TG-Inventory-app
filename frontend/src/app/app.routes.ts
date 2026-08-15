@@ -56,7 +56,16 @@ export const routes: Routes = [
     canActivate: [roleGuard],
     loadChildren: () => import('./features/products/products.routes').then((m) => m.UNITS_ROUTES),
   },
-  // [PENDING: locations, inventory, alerts, purchases, requests — added in
-  // their corresponding iterations]
+  {
+    // Unlike products/categories/units, the master plan (section 7.4) marks
+    // all three /locations endpoints "Admin Inventario" — GET included —
+    // same reasoning as roles/users: gate the route itself with data.roles.
+    path: 'locations',
+    canActivate: [roleGuard],
+    data: { roles: ['Administrador'] },
+    loadChildren: () => import('./features/locations/locations.routes').then((m) => m.LOCATIONS_ROUTES),
+  },
+  // [PENDING: inventory, alerts, purchases, requests — added in their
+  // corresponding iterations]
   { path: '', redirectTo: 'login', pathMatch: 'full' },
 ];

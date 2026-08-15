@@ -1,0 +1,45 @@
+<h1>Ubicaciones</h1>
+
+<form (ngSubmit)="addLocation()">
+  <input type="text" [(ngModel)]="newName" name="newName" placeholder="Nueva ubicación" />
+  <select [(ngModel)]="newParentId" name="newParentId">
+    <option value="">Sin ubicación padre</option>
+    @for (location of locations(); track location.id) {
+      <option [value]="location.id">{{ location.name }}</option>
+    }
+  </select>
+  <button type="submit" [disabled]="!newName.trim()">Agregar</button>
+</form>
+
+@if (errorMessage) {
+  <p role="alert">{{ errorMessage }}</p>
+}
+
+@if (loading()) {
+  <p>Cargando...</p>
+} @else {
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Ubicación padre</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (location of locations(); track location.id) {
+        <tr>
+          <td>{{ location.name }}</td>
+          <td>{{ parentName(location.parentId) }}</td>
+          <td>{{ location.status === 'active' ? 'Activa' : 'Inactiva' }}</td>
+          <td>
+            <button type="button" (click)="toggleStatus(location)">
+              {{ location.status === 'active' ? 'Desactivar' : 'Activar' }}
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
