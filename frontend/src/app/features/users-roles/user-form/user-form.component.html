@@ -1,0 +1,35 @@
+<h1>{{ isEditMode ? 'Editar usuario' : 'Nuevo usuario' }}</h1>
+
+@if (loading()) {
+  <p>Cargando...</p>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <input type="text" formControlName="name" placeholder="Nombre" />
+    <input type="email" formControlName="email" placeholder="Correo" />
+
+    @if (!isEditMode) {
+      <input type="password" formControlName="password" placeholder="Contraseña" />
+    }
+
+    <select formControlName="roleId">
+      <option value="" disabled>Seleccioná un rol</option>
+      @for (role of roles(); track role.id) {
+        <option [value]="role.id">{{ role.name }}</option>
+      }
+    </select>
+
+    @if (isEditMode) {
+      <select formControlName="status">
+        <option value="active">Activo</option>
+        <option value="blocked">Bloqueado</option>
+      </select>
+    }
+
+    @if (errorMessage) {
+      <p role="alert">{{ errorMessage }}</p>
+    }
+
+    <button type="submit" [disabled]="form.invalid || isSubmitting">Guardar</button>
+    <a routerLink="/users">Cancelar</a>
+  </form>
+}

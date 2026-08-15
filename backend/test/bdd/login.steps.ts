@@ -4,26 +4,26 @@ import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import * as request from 'supertest';
 import { AuthModule } from '../../src/modules/auth/auth.module';
-import { AUTH_USER_REPOSITORY } from '../../src/modules/auth/domain/auth-user.repository.interface';
+import { USER_REPOSITORY } from '../../src/modules/users/domain/user.repository.interface';
 import { PrismaService } from '../../src/database/prisma.service';
-import { FakeAuthUserRepository } from './support/fake-auth-user.repository';
+import { FakeUserRepository } from './support/fake-user.repository';
 
 const feature = loadFeature('./test/bdd/login.feature');
 
 defineFeature(feature, (test) => {
   let app: INestApplication;
-  let fakeRepository: FakeAuthUserRepository;
+  let fakeRepository: FakeUserRepository;
   let response: request.Response;
 
   beforeEach(async () => {
     process.env.JWT_SECRET = 'bdd-test-secret-at-least-16-chars';
     process.env.JWT_EXPIRES_IN = '1h';
-    fakeRepository = new FakeAuthUserRepository();
+    fakeRepository = new FakeUserRepository();
 
     const moduleRef = await Test.createTestingModule({
       imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule],
     })
-      .overrideProvider(AUTH_USER_REPOSITORY)
+      .overrideProvider(USER_REPOSITORY)
       .useValue(fakeRepository)
       .overrideProvider(PrismaService)
       .useValue({})
@@ -89,7 +89,7 @@ defineFeature(feature, (test) => {
 
   test('User does not exist', ({ given, when, then, and }) => {
     given(/^no user is registered with email "(.*)"$/, () => {
-      // FakeAuthUserRepository starts empty — nothing to seed.
+      // FakeUserRepository starts empty — nothing to seed.
     });
 
     when(

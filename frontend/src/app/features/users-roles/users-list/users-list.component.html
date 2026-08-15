@@ -1,0 +1,29 @@
+<h1>Usuarios</h1>
+<a routerLink="new">Nuevo usuario</a>
+
+@if (loading()) {
+  <p>Cargando...</p>
+} @else {
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Correo</th>
+        <th>Rol</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (user of users(); track user.id) {
+        <tr>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.role.name }}</td>
+          <td>{{ user.status === 'active' ? 'Activo' : 'Bloqueado' }}</td>
+          <td><a [routerLink]="[user.id, 'edit']">Editar</a></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

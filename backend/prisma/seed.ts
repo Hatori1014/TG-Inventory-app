@@ -14,10 +14,15 @@ const ADMIN_ROLE_NAME = 'Administrador';
 // permissions granted, the seeded admin couldn't even create the first role.
 // Only the permissions this iteration actually needs — nothing speculative
 // for modules that don't exist yet.
+// HU-03 — same criterion as HU-02: only the permissions this iteration
+// needs (users:read/create/update).
 const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'roles', action: 'read' },
   { module: 'roles', action: 'create' },
   { module: 'roles', action: 'update' },
+  { module: 'users', action: 'read' },
+  { module: 'users', action: 'create' },
+  { module: 'users', action: 'update' },
 ];
 
 async function upsertAdminRole() {
