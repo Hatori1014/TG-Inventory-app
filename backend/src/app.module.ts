@@ -8,6 +8,7 @@ import { loggerConfig } from './config/logger.config';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { RolesModule } from './modules/roles/roles.module';
 // As iterations progress (plan section 6), each new business module
 // (users, suppliers, locations, products, inventory, purchases,
 // requests, audit) gets imported here.
@@ -30,6 +31,7 @@ import { AuthModule } from './modules/auth/auth.module';
     ]),
     HealthModule,
     AuthModule,
+    RolesModule,
   ],
   providers: [
     // TT-15 — one process shared by every module; an uncaught error in one

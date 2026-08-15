@@ -1,0 +1,193 @@
+import { defineFeature, loadFeature } from 'jest-cucumber';
+import { INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { ConfigModule } from '@nestjs/config';
+import * as request from 'supertest';
+import { AuthModule } from '../../src/modules/auth/auth.module';
+import { AUTH_USER_REPOSITORY } from '../../src/modules/auth/domain/auth-user.repository.interface';
+import { RolesModule } from '../../src/modules/roles/roles.module';
+import { ROLE_REPOSITORY } from '../../src/modules/roles/domain/role.repository.interface';
+import { PERMISSION_REPOSITORY } from '../../src/modules/roles/domain/permission.repository.interface';
+import { PrismaService } from '../../src/database/prisma.service';
+import { FakeAuthUserRepository } from './support/fake-auth-user.repository';
+import { FakePermissionRepository } from './support/fake-permission.repository';
+import { FakeRoleRepository } from './support/fake-role.repository';
+
+const feature = loadFeature('./test/bdd/manage-roles.feature');
+
+interface RolePermissionWhere {
+  where: {
+    role: { name: string };
+    permission: { module: string; action: string };
+  };
+}
+
+defineFeature(feature, (test) => {
+  let app: INestApplication;
+  let fakeAuthRepository: FakeAuthUserRepository;
+  let fakePermissionRepository: FakePermissionRepository;
+  let fakeRoleRepository: FakeRoleRepository;
+  let grantedPermissions: Set<string>;
+  let accessToken: string;
+  let response: request.Response;
+  let seededRoleId: string;
+  let seededPermissionId: string;
+
+  beforeEach(async () => {
+    process.env.JWT_SECRET = 'bdd-test-secret-at-least-16-chars';
+    process.env.JWT_EXPIRES_IN = '1h';
+
+    fakeAuthRepository = new FakeAuthUserRepository();
+    fakePermissionRepository = new FakePermissionRepository();
+    fakeRoleRepository = new FakeRoleRepository(fakePermissionRepository);
+    grantedPermissions = new Set();
+
+    const findFirst = jest.fn(async ({ where }: RolePermissionWhere) => {
+      const key = `${where.role.name}:${where.permission.module}:${where.permission.action}`;
+      return grantedPermissions.has(key) ? { roleId: 'fake-role-id', permissionId: 'fake-permission-id' } : null;
+    });
+
+    const moduleRef = await Test.createTestingModule({
+      imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, RolesModule],
+    })
+      .overrideProvider(AUTH_USER_REPOSITORY)
+      .useValue(fakeAuthRepository)
+      .overrideProvider(ROLE_REPOSITORY)
+      .useValue(fakeRoleRepository)
+      .overrideProvider(PERMISSION_REPOSITORY)
+      .useValue(fakePermissionRepository)
+      .overrideProvider(PrismaService)
+      .useValue({ rolePermission: { findFirst } })
+      .compile();
+
+    app = moduleRef.createNestApplication();
+    await app.init();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  test('Administrator creates a role successfully', ({ given, when, then, and }) => {
+    given(
+      /^a user "(.*)" with password "(.*)" and role "(.*)"$/,
+      (email: string, password: string, role: string) => {
+        fakeAuthRepository.seed(email, password, role);
+      },
+    );
+
+    and(/^the role "(.*)" has permission "(.*)" "(.*)"$/, (role: string, module: string, action: string) => {
+      grantedPermissions.add(`${role}:${module}:${action}`);
+    });
+
+    when(
+      /^they log in with email "(.*)" and password "(.*)"$/,
+      async (email: string, password: string) => {
+        const loginResponse = await request(app.getHttpServer())
+          .post('/auth/login')
+          .send({ email, password });
+        accessToken = loginResponse.body.accessToken;
+      },
+    );
+
+    and(
+      /^they create a role named "(.*)" with description "(.*)"$/,
+      async (name: string, description: string) => {
+        response = await request(app.getHttpServer())
+          .post('/roles')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send({ name, description });
+      },
+    );
+
+    then('the role is created successfully', () => {
+      expect(response.status).toBe(201);
+    });
+
+    and(/^the response includes the role name "(.*)"$/, (name: string) => {
+      expect(response.body.name).toBe(name);
+    });
+  });
+
+  test('Administrator assigns permissions to a role', ({ given, when, then, and }) => {
+    given(
+      /^a user "(.*)" with password "(.*)" and role "(.*)"$/,
+      (email: string, password: string, role: string) => {
+        fakeAuthRepository.seed(email, password, role);
+      },
+    );
+
+    and(/^the role "(.*)" has permission "(.*)" "(.*)"$/, (role: string, module: string, action: string) => {
+      grantedPermissions.add(`${role}:${module}:${action}`);
+    });
+
+    and(/^an existing role "(.*)" with no permissions$/, (name: string) => {
+      seededRoleId = fakeRoleRepository.seed(name, []).getId();
+    });
+
+    and(/^an existing permission "(.*)" "(.*)"$/, (module: string, action: string) => {
+      seededPermissionId = fakePermissionRepository.seed(module, action).getId() as string;
+    });
+
+    when(
+      /^they log in with email "(.*)" and password "(.*)"$/,
+      async (email: string, password: string) => {
+        const loginResponse = await request(app.getHttpServer())
+          .post('/auth/login')
+          .send({ email, password });
+        accessToken = loginResponse.body.accessToken;
+      },
+    );
+
+    and(
+      /^they assign permission "(.*)" "(.*)" to the role "(.*)"$/,
+      async () => {
+        response = await request(app.getHttpServer())
+          .patch(`/roles/${seededRoleId}`)
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send({ permissionIds: [seededPermissionId] });
+      },
+    );
+
+    then(/^the role "(.*)" has permission "(.*)" "(.*)"$/, (_roleName: string, module: string, action: string) => {
+      expect(response.status).toBe(200);
+      expect(response.body.permissions).toContainEqual(
+        expect.objectContaining({ module, action }),
+      );
+    });
+  });
+
+  test('A user without the roles:create permission cannot create a role', ({ given, when, then, and }) => {
+    given(
+      /^a user "(.*)" with password "(.*)" and role "(.*)"$/,
+      (email: string, password: string, role: string) => {
+        fakeAuthRepository.seed(email, password, role);
+      },
+    );
+
+    and(/^the role "(.*)" does not have permission "(.*)" "(.*)"$/, () => {
+      // grantedPermissions starts empty — nothing to grant.
+    });
+
+    when(
+      /^they log in with email "(.*)" and password "(.*)"$/,
+      async (email: string, password: string) => {
+        const loginResponse = await request(app.getHttpServer())
+          .post('/auth/login')
+          .send({ email, password });
+        accessToken = loginResponse.body.accessToken;
+      },
+    );
+
+    and(/^they create a role named "(.*)"$/, async (name: string) => {
+      response = await request(app.getHttpServer())
+        .post('/roles')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name });
+    });
+
+    then('they receive a forbidden error', () => {
+      expect(response.status).toBe(403);
+    });
+  });
+});

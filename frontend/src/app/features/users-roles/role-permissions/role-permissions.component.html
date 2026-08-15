@@ -1,0 +1,24 @@
+<h1>Permisos de {{ roleName() }}</h1>
+
+@if (loading()) {
+  <p>Cargando...</p>
+} @else {
+  <ul>
+    @for (permission of permissions(); track permission.id) {
+      <li>
+        <label>
+          <input
+            type="checkbox"
+            [checked]="isSelected(permission.id)"
+            (change)="toggle(permission.id)"
+          />
+          {{ permission.module }}:{{ permission.action }}
+        </label>
+      </li>
+    }
+  </ul>
+  @if (errorMessage) {
+    <p role="alert">{{ errorMessage }}</p>
+  }
+  <button type="button" [disabled]="isSubmitting" (click)="onSubmit()">Guardar</button>
+}
