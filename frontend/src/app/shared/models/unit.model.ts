@@ -5,3 +5,12 @@ export interface Unit {
   name: string;
   status: 'active' | 'inactive';
 }
+
+export interface CreateUnitRequest {
+  name: string;
+}
+
+export interface UpdateUnitRequest {
+  name?: string;
+  status?: 'active' | 'inactive';
+}
