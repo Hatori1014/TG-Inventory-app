@@ -3,32 +3,12 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import * as request from 'supertest';
-import * as bcrypt from 'bcrypt';
 import { AuthModule } from '../../src/modules/auth/auth.module';
-import {
-  AUTH_USER_REPOSITORY,
-  AuthUserRepository,
-} from '../../src/modules/auth/domain/auth-user.repository.interface';
-import { AuthUser, AuthUserStatus } from '../../src/modules/auth/domain/auth-user.entity';
+import { AUTH_USER_REPOSITORY } from '../../src/modules/auth/domain/auth-user.repository.interface';
 import { PrismaService } from '../../src/database/prisma.service';
+import { FakeAuthUserRepository } from './support/fake-auth-user.repository';
 
 const feature = loadFeature('./test/bdd/login.feature');
-
-// In-memory stand-in for UserPrismaRepository — the BDD suite exercises the
-// full AuthModule (controller, guards, JWT issuance) through HTTP, but never
-// touches a real Postgres instance (CI has no database service).
-class FakeAuthUserRepository implements AuthUserRepository {
-  private readonly users = new Map<string, AuthUser>();
-
-  seed(email: string, password: string, role: string, status: AuthUserStatus = 'active'): void {
-    const passwordHash = bcrypt.hashSync(password, 4);
-    this.users.set(email, new AuthUser('fake-id', 'Test User', email, passwordHash, role, status));
-  }
-
-  async findByEmail(email: string): Promise<AuthUser | null> {
-    return this.users.get(email) ?? null;
-  }
-}
 
 defineFeature(feature, (test) => {
   let app: INestApplication;

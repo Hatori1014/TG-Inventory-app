@@ -10,14 +10,43 @@ const prisma = new PrismaClient();
 // .env/.env.staging, it is never generated or logged by this script.
 const ADMIN_ROLE_NAME = 'Administrador';
 
+// HU-02 — PermissionsGuard is global by default (ADR-25): with zero
+// permissions granted, the seeded admin couldn't even create the first role.
+// Only the permissions this iteration actually needs — nothing speculative
+// for modules that don't exist yet.
+const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
+  { module: 'roles', action: 'read' },
+  { module: 'roles', action: 'create' },
+  { module: 'roles', action: 'update' },
+];
+
 async function upsertAdminRole() {
-  const existing = await prisma.role.findFirst({ where: { name: ADMIN_ROLE_NAME } });
+  const existing = await prisma.role.findUnique({ where: { name: ADMIN_ROLE_NAME } });
   if (existing) {
     return existing;
   }
   return prisma.role.create({
     data: { name: ADMIN_ROLE_NAME, description: 'Acceso total al sistema' },
   });
+}
+
+async function upsertPermission(module: string, action: string) {
+  const existing = await prisma.permission.findUnique({ where: { module_action: { module, action } } });
+  if (existing) {
+    return existing;
+  }
+  return prisma.permission.create({ data: { module, action } });
+}
+
+async function grantBootstrapPermissions(roleId: string) {
+  for (const { module, action } of ADMIN_BOOTSTRAP_PERMISSIONS) {
+    const permission = await upsertPermission(module, action);
+    await prisma.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId, permissionId: permission.id } },
+      update: {},
+      create: { roleId, permissionId: permission.id },
+    });
+  }
 }
 
 async function main() {
@@ -31,6 +60,7 @@ async function main() {
   }
 
   const adminRole = await upsertAdminRole();
+  await grantBootstrapPermissions(adminRole.id);
   const passwordHash = await bcrypt.hash(password, 10);
 
   await prisma.user.upsert({

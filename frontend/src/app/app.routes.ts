@@ -22,7 +22,14 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/suppliers/suppliers.routes').then((m) => m.SUPPLIERS_ROUTES),
   },
-  // [PENDING: locations, products, inventory, alerts, purchases, requests,
-  // users-roles — added in their corresponding iterations]
+  {
+    path: 'roles',
+    canActivate: [roleGuard],
+    data: { roles: ['Administrador'] },
+    loadChildren: () =>
+      import('./features/users-roles/users-roles.routes').then((m) => m.USERS_ROLES_ROUTES),
+  },
+  // [PENDING: locations, products, inventory, alerts, purchases, requests —
+  // added in their corresponding iterations]
   { path: '', redirectTo: 'login', pathMatch: 'full' },
 ];
