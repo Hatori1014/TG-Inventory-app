@@ -19,6 +19,8 @@ const ADMIN_ROLE_NAME = 'Administrador';
 // HU-28 — products/categories/units GETs are "any authenticated user"
 // (plan section 7.4), so no :read permission is seeded for them — it would
 // be inert, PermissionsGuard only checks endpoints marked @RequirePermission().
+// HU-06 — unlike HU-28's catalogs, the master plan (section 7.4) marks all
+// three /locations endpoints "Admin Inventario", so :read is seeded here too.
 const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'roles', action: 'read' },
   { module: 'roles', action: 'create' },
@@ -32,6 +34,9 @@ const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'categories', action: 'update' },
   { module: 'units', action: 'create' },
   { module: 'units', action: 'update' },
+  { module: 'locations', action: 'read' },
+  { module: 'locations', action: 'create' },
+  { module: 'locations', action: 'update' },
 ];
 
 async function upsertAdminRole() {

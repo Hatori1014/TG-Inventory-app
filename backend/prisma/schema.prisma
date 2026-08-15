@@ -87,6 +87,11 @@ model Location {
   movements      InventoryMovement[]
   requestItems   RequestItem[]
 
+  // HU-06: unique name per parent. Postgres treats each NULL parent_id as
+  // distinct, so this does NOT dedupe root-level (parentId null) names on
+  // its own — CreateLocationUseCase/UpdateLocationUseCase additionally
+  // check for a root-level name collision before insert/update.
+  @@unique([parentId, name])
   @@index([parentId])
   @@map("location")
 }
