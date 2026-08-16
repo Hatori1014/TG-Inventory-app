@@ -21,6 +21,9 @@ const ADMIN_ROLE_NAME = 'Administrador';
 // be inert, PermissionsGuard only checks endpoints marked @RequirePermission().
 // HU-06 — unlike HU-28's catalogs, the master plan (section 7.4) marks all
 // three /locations endpoints "Admin Inventario", so :read is seeded here too.
+// HU-07 — POST /inventory/movements is "Admin Inventario" (create only, no
+// :read: GET /inventory/stock is "cualquier autenticado", same criterion as
+// HU-28's products GET).
 const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'roles', action: 'read' },
   { module: 'roles', action: 'create' },
@@ -37,6 +40,7 @@ const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'locations', action: 'read' },
   { module: 'locations', action: 'create' },
   { module: 'locations', action: 'update' },
+  { module: 'inventory', action: 'create' },
 ];
 
 async function upsertAdminRole() {
