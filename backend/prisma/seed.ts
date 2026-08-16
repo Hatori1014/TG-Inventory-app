@@ -24,6 +24,9 @@ const ADMIN_ROLE_NAME = 'Administrador';
 // HU-07 — POST /inventory/movements is "Admin Inventario" (create only, no
 // :read: GET /inventory/stock is "cualquier autenticado", same criterion as
 // HU-28's products GET).
+// HU-09 — unlike GET /inventory/stock, both /inventory/batches endpoints
+// (plan section 7.4) are "Admin Inventario" — GET included — so
+// inventory:read is seeded here, its first use.
 const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'roles', action: 'read' },
   { module: 'roles', action: 'create' },
@@ -41,6 +44,7 @@ const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'locations', action: 'create' },
   { module: 'locations', action: 'update' },
   { module: 'inventory', action: 'create' },
+  { module: 'inventory', action: 'read' },
 ];
 
 async function upsertAdminRole() {

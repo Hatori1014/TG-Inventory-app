@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class CreateProductDto {
   @IsString()
@@ -17,4 +17,9 @@ export class CreateProductDto {
   @IsOptional()
   @IsUUID('4')
   categoryId?: string;
+
+  // HU-09 — defaults to false at the DB level (schema.prisma) when omitted.
+  @IsOptional()
+  @IsBoolean()
+  requiresBatch?: boolean;
 }

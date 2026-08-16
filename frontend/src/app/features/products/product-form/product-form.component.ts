@@ -47,6 +47,7 @@ export class ProductFormComponent {
     unitId: ['', [Validators.required]],
     categoryId: [''],
     status: ['active' as 'active' | 'discontinued'],
+    requiresBatch: [false], // HU-09 — deferred by HU-28, added here
   });
 
   constructor() {
@@ -66,6 +67,7 @@ export class ProductFormComponent {
               unitId: product.unit.id,
               categoryId: product.category?.id ?? '',
               status: product.status,
+              requiresBatch: product.requiresBatch,
             });
           }
           this.loading.set(false);
@@ -110,7 +112,7 @@ export class ProductFormComponent {
 
     this.errorMessage = null;
     this.isSubmitting = true;
-    const { name, description, unitId, categoryId, status } = this.form.getRawValue();
+    const { name, description, unitId, categoryId, status, requiresBatch } = this.form.getRawValue();
 
     const request$ = this.isEditMode
       ? this.productsService.updateProduct(this.productId as string, {
@@ -119,12 +121,14 @@ export class ProductFormComponent {
           unitId,
           categoryId: categoryId || undefined,
           status,
+          requiresBatch,
         })
       : this.productsService.createProduct({
           name,
           description: description || undefined,
           unitId,
           categoryId: categoryId || undefined,
+          requiresBatch,
         });
 
     request$.subscribe({

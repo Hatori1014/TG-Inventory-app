@@ -19,6 +19,7 @@ export interface CreateProductRequest {
   description?: string;
   unitId: string;
   categoryId?: string;
+  requiresBatch?: boolean;
 }
 
 export interface UpdateProductRequest {
@@ -27,4 +28,5 @@ export interface UpdateProductRequest {
   unitId?: string;
   categoryId?: string;
   status?: 'active' | 'discontinued';
+  requiresBatch?: boolean;
 }

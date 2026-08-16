@@ -8,6 +8,7 @@ export interface CreateProductData {
   description?: string;
   unitId: string;
   categoryId?: string;
+  requiresBatch?: boolean;
 }
 
 export interface UpdateProductData {
@@ -16,6 +17,7 @@ export interface UpdateProductData {
   unitId?: string;
   categoryId?: string;
   status?: ProductStatus;
+  requiresBatch?: boolean;
 }
 
 // No domain/ layer — trivial CRUD (convenciones.md). Injected directly by
@@ -48,6 +50,7 @@ export class ProductPrismaRepository {
         description: data.description,
         unitId: data.unitId,
         categoryId: data.categoryId,
+        requiresBatch: data.requiresBatch,
       },
       include: this.include,
     });

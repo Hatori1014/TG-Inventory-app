@@ -14,7 +14,8 @@ import {
 // (HU-08), and the movement+stock pairing (including transfers).
 export class FakeInventoryRepository {
   private readonly locationStatuses = new Map<string, LocationStatus>();
-  private readonly validProductIds = new Set<string>();
+  private readonly products = new Map<string, { requiresBatch: boolean }>();
+  private readonly batches = new Map<string, { productId: string }>();
   private readonly stock = new Map<string, { id: string; productId: string; locationId: string; batchId: string | null; quantity: number }>();
   private readonly movements: any[] = [];
 
@@ -22,8 +23,12 @@ export class FakeInventoryRepository {
     this.locationStatuses.set(id, status);
   }
 
-  seedProduct(id: string): void {
-    this.validProductIds.add(id);
+  seedProduct(id: string, requiresBatch = false): void {
+    this.products.set(id, { requiresBatch });
+  }
+
+  seedBatch(id: string, productId: string): void {
+    this.batches.set(id, { productId });
   }
 
   seedStock(productId: string, locationId: string, quantity: number, batchId?: string): void {
@@ -33,6 +38,14 @@ export class FakeInventoryRepository {
 
   async findLocationStatus(locationId: string): Promise<LocationStatus | null> {
     return this.locationStatuses.get(locationId) ?? null;
+  }
+
+  async findProductRequiresBatch(productId: string): Promise<boolean | null> {
+    return this.products.get(productId)?.requiresBatch ?? null;
+  }
+
+  async findBatchProductId(batchId: string): Promise<string | null> {
+    return this.batches.get(batchId)?.productId ?? null;
   }
 
   private applyDelta(productId: string, locationId: string, batchId: string | undefined, delta: number) {
@@ -58,7 +71,7 @@ export class FakeInventoryRepository {
   }
 
   async registerMovement(input: RegisterMovementInput) {
-    if (!this.validProductIds.has(input.productId)) {
+    if (!this.products.has(input.productId)) {
       throw { code: 'P2003' };
     }
 
@@ -80,7 +93,7 @@ export class FakeInventoryRepository {
   }
 
   async registerTransfer(input: RegisterTransferInput) {
-    if (!this.validProductIds.has(input.productId)) {
+    if (!this.products.has(input.productId)) {
       throw { code: 'P2003' };
     }
 

@@ -1,7 +1,8 @@
 <h1>Registrar movimiento de inventario</h1>
+<a routerLink="/inventory/batches">Gestionar lotes</a>
 
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <select formControlName="productId">
+  <select formControlName="productId" (change)="onProductChange()">
     <option value="" disabled>Seleccioná un producto</option>
     @for (product of products(); track product.id) {
       <option [value]="product.id">{{ product.name }}</option>
@@ -38,6 +39,18 @@
       <option value="increase">Aumentar stock</option>
       <option value="decrease">Disminuir stock</option>
     </select>
+  }
+
+  @if (selectedProductRequiresBatch()) {
+    <select formControlName="batchId">
+      <option value="" disabled>Seleccioná un lote (este producto lo requiere)</option>
+      @for (batch of batches(); track batch.id) {
+        <option [value]="batch.id">{{ batch.batchNumber }}</option>
+      }
+    </select>
+    @if (batches().length === 0) {
+      <p>Este producto no tiene lotes cargados todavía — <a routerLink="/inventory/batches">creá uno primero</a>.</p>
+    }
   }
 
   <input type="number" formControlName="quantity" placeholder="Cantidad" min="0.0001" step="any" />

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PaginatedResponse } from '../../shared/models/paginated-response.model';
 import { CreateMovementRequest, Movement, StockItem, TransferResult } from '../../shared/models/inventory.model';
+import { Batch, CreateBatchRequest } from '../../shared/models/batch.model';
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
@@ -21,6 +22,19 @@ export class InventoryService {
 
   listStock(page = 1, pageSize = 100): Observable<PaginatedResponse<StockItem>> {
     return this.http.get<PaginatedResponse<StockItem>>(`${environment.apiUrl}/inventory/stock`, {
+      params: { page, pageSize },
+    });
+  }
+
+  // HU-09 — /inventory/batches is not @Idempotent() (only movements are,
+  // per convenciones.md's "escritura crítica" list — creating a batch
+  // doesn't move stock by itself).
+  createBatch(request: CreateBatchRequest): Observable<Batch> {
+    return this.http.post<Batch>(`${environment.apiUrl}/inventory/batches`, request);
+  }
+
+  listBatches(productId: string, page = 1, pageSize = 100): Observable<PaginatedResponse<Batch>> {
+    return this.http.get<PaginatedResponse<Batch>>(`${environment.apiUrl}/inventory/batches/${productId}`, {
       params: { page, pageSize },
     });
   }

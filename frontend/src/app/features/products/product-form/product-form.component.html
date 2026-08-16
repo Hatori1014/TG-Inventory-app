@@ -46,6 +46,11 @@
       </select>
     }
 
+    <label>
+      <input type="checkbox" formControlName="requiresBatch" />
+      Requiere lote/vencimiento (producto perecedero)
+    </label>
+
     @if (errorMessage) {
       <p role="alert">{{ errorMessage }}</p>
     }

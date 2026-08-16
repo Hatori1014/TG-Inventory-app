@@ -48,6 +48,28 @@ export class InventoryPrismaRepository {
     return location?.status ?? null;
   }
 
+  // HU-09 — null means productId doesn't exist; the boolean drives whether
+  // a movement against this product must carry a batchId.
+  async findProductRequiresBatch(productId: string): Promise<boolean | null> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: { requiresBatch: true },
+    });
+    return product?.requiresBatch ?? null;
+  }
+
+  // HU-09 — a client-supplied batchId must both exist and belong to the
+  // same product the movement is for; nothing at the DB level stops a
+  // mismatched combination (Batch.productId and InventoryMovement.batchId
+  // are independent FKs).
+  async findBatchProductId(batchId: string): Promise<string | null> {
+    const batch = await this.prisma.batch.findUnique({
+      where: { id: batchId },
+      select: { productId: true },
+    });
+    return batch?.productId ?? null;
+  }
+
   // Shared by registerMovement and registerTransfer — the actual
   // find-or-create + optimistic-locked update, including the insufficient-
   // stock floor. Checking `existingStock.quantity` up front (rather than

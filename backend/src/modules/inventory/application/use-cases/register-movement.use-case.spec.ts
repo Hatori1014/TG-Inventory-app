@@ -11,7 +11,10 @@ describe('RegisterMovementUseCase', () => {
   beforeEach(() => {
     repository = {
       findLocationStatus: jest.fn(),
+      findProductRequiresBatch: jest.fn().mockResolvedValue(false),
+      findBatchProductId: jest.fn(),
       registerMovement: jest.fn(),
+      registerTransfer: jest.fn(),
       findStockPaginated: jest.fn(),
     } as unknown as jest.Mocked<InventoryPrismaRepository>;
     useCase = new RegisterMovementUseCase(repository);
@@ -111,11 +114,52 @@ describe('RegisterMovementUseCase', () => {
     expect(repository.registerMovement).not.toHaveBeenCalled();
   });
 
-  it('throws BadRequestException when productId does not exist (P2003)', async () => {
+  it('throws BadRequestException when productId does not exist', async () => {
     repository.findLocationStatus.mockResolvedValue('active');
-    repository.registerMovement.mockRejectedValue({ code: 'P2003' });
+    repository.findProductRequiresBatch.mockResolvedValue(null);
 
     await expect(useCase.execute(baseDto, 'u1')).rejects.toThrow(BadRequestException);
+    expect(repository.registerMovement).not.toHaveBeenCalled();
+  });
+
+  it('throws BadRequestException when the product requires a batch and none was supplied', async () => {
+    repository.findLocationStatus.mockResolvedValue('active');
+    repository.findProductRequiresBatch.mockResolvedValue(true);
+
+    await expect(useCase.execute(baseDto, 'u1')).rejects.toThrow(BadRequestException);
+    expect(repository.registerMovement).not.toHaveBeenCalled();
+  });
+
+  it('throws BadRequestException when the supplied batchId does not exist', async () => {
+    repository.findLocationStatus.mockResolvedValue('active');
+    repository.findProductRequiresBatch.mockResolvedValue(true);
+    repository.findBatchProductId.mockResolvedValue(null);
+
+    await expect(useCase.execute({ ...baseDto, batchId: 'b1' }, 'u1')).rejects.toThrow(BadRequestException);
+    expect(repository.registerMovement).not.toHaveBeenCalled();
+  });
+
+  it('throws BadRequestException when the supplied batchId belongs to a different product', async () => {
+    repository.findLocationStatus.mockResolvedValue('active');
+    repository.findProductRequiresBatch.mockResolvedValue(true);
+    repository.findBatchProductId.mockResolvedValue('other-product');
+
+    await expect(useCase.execute({ ...baseDto, batchId: 'b1' }, 'u1')).rejects.toThrow(BadRequestException);
+    expect(repository.registerMovement).not.toHaveBeenCalled();
+  });
+
+  it('registers the movement when the product requires a batch and a matching batchId is supplied', async () => {
+    repository.findLocationStatus.mockResolvedValue('active');
+    repository.findProductRequiresBatch.mockResolvedValue(true);
+    repository.findBatchProductId.mockResolvedValue('p1');
+    repository.registerMovement.mockResolvedValue({
+      movement: { id: 'mv-5', quantity: 10 } as any,
+      stock: { id: 'stock-1', quantity: 10 } as any,
+    });
+
+    await useCase.execute({ ...baseDto, batchId: 'b1' }, 'u1');
+
+    expect(repository.registerMovement).toHaveBeenCalledWith(expect.objectContaining({ batchId: 'b1' }));
   });
 
   it('rejects a non-positive quantity before touching the repository', async () => {

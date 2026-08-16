@@ -52,6 +52,26 @@ describe('CreateProductUseCase', () => {
     });
   });
 
+  it('passes requiresBatch through to the repository when provided', async () => {
+    repository.create.mockResolvedValue({
+      id: '2',
+      name: 'Yogur',
+      description: null,
+      unitId: 'unit-1',
+      unit,
+      categoryId: null,
+      category: null,
+      requiresBatch: true,
+      imageUrl: null,
+      status: 'active',
+    });
+
+    const result = await useCase.execute({ name: 'Yogur', unitId: 'unit-1', requiresBatch: true });
+
+    expect(repository.create).toHaveBeenCalledWith(expect.objectContaining({ requiresBatch: true }));
+    expect(result.requiresBatch).toBe(true);
+  });
+
   it('throws BadRequestException when unitId or categoryId does not exist (P2003)', async () => {
     repository.create.mockRejectedValue({ code: 'P2003' });
 
