@@ -1,7 +1,9 @@
-Feature: Associate inventory to a location
+Feature: Register stock movements
   As an inventory administrator
-  I want to register stock movements against a location
-  So that a product's stock only ever exists tied to a valid, active location
+  I want to register stock movements against a location — including
+  decreases, adjustments, and transfers between locations
+  So that a product's stock only ever exists tied to a valid, active
+  location and never goes negative
 
   Scenario: Administrator associates stock to a product at a valid, active location
     Given a user "admin@tg-group.local" with password "correct-password" and role "Administrador"
@@ -57,3 +59,72 @@ Feature: Associate inventory to a location
     And they register an "in" movement of 10 units for product "p1" at location "l1" with idempotency key "key-5"
     And they register the same movement again with idempotency key "key-5"
     Then the stock for product "p1" at location "l1" is 10
+
+  Scenario: Administrator registers an "out" movement that decreases available stock
+    Given a user "admin@tg-group.local" with password "correct-password" and role "Administrador"
+    And the role "Administrador" has permission "inventory" "create"
+    And an existing product "p1"
+    And an existing active location "l1"
+    And an existing stock of 20 units for product "p1" at location "l1"
+    When they log in with email "admin@tg-group.local" and password "correct-password"
+    And they register an "out" movement of 5 units for product "p1" at location "l1" with idempotency key "key-6"
+    Then the movement is registered successfully
+    And the stock for product "p1" at location "l1" is 15
+
+  Scenario: Registering an "out" movement larger than the available stock is rejected
+    Given a user "admin@tg-group.local" with password "correct-password" and role "Administrador"
+    And the role "Administrador" has permission "inventory" "create"
+    And an existing product "p1"
+    And an existing active location "l1"
+    And an existing stock of 5 units for product "p1" at location "l1"
+    When they log in with email "admin@tg-group.local" and password "correct-password"
+    And they register an "out" movement of 10 units for product "p1" at location "l1" with idempotency key "key-7"
+    Then they receive a conflict error
+    And the stock for product "p1" at location "l1" is 5
+
+  Scenario: Administrator registers an "adjustment" that increases stock
+    Given a user "admin@tg-group.local" with password "correct-password" and role "Administrador"
+    And the role "Administrador" has permission "inventory" "create"
+    And an existing product "p1"
+    And an existing active location "l1"
+    And an existing stock of 10 units for product "p1" at location "l1"
+    When they log in with email "admin@tg-group.local" and password "correct-password"
+    And they register an "adjustment" with direction "increase" of 3 units for product "p1" at location "l1" with idempotency key "key-8"
+    Then the movement is registered successfully
+    And the stock for product "p1" at location "l1" is 13
+
+  Scenario: Administrator registers an "adjustment" that decreases stock
+    Given a user "admin@tg-group.local" with password "correct-password" and role "Administrador"
+    And the role "Administrador" has permission "inventory" "create"
+    And an existing product "p1"
+    And an existing active location "l1"
+    And an existing stock of 10 units for product "p1" at location "l1"
+    When they log in with email "admin@tg-group.local" and password "correct-password"
+    And they register an "adjustment" with direction "decrease" of 3 units for product "p1" at location "l1" with idempotency key "key-9"
+    Then the movement is registered successfully
+    And the stock for product "p1" at location "l1" is 7
+
+  Scenario: Administrator transfers stock between two active locations atomically
+    Given a user "admin@tg-group.local" with password "correct-password" and role "Administrador"
+    And the role "Administrador" has permission "inventory" "create"
+    And an existing product "p1"
+    And an existing active location "l1"
+    And an existing active location "l2"
+    And an existing stock of 20 units for product "p1" at location "l1"
+    When they log in with email "admin@tg-group.local" and password "correct-password"
+    And they transfer 8 units of product "p1" from location "l1" to location "l2" with idempotency key "key-10"
+    Then the transfer is registered successfully
+    And the stock for product "p1" at location "l1" is 12
+    And the stock for product "p1" at location "l2" is 8
+
+  Scenario: Transferring more than the source has available is rejected and neither location changes
+    Given a user "admin@tg-group.local" with password "correct-password" and role "Administrador"
+    And the role "Administrador" has permission "inventory" "create"
+    And an existing product "p1"
+    And an existing active location "l1"
+    And an existing active location "l2"
+    And an existing stock of 5 units for product "p1" at location "l1"
+    When they log in with email "admin@tg-group.local" and password "correct-password"
+    And they transfer 10 units of product "p1" from location "l1" to location "l2" with idempotency key "key-11"
+    Then they receive a conflict error
+    And the stock for product "p1" at location "l1" is 5

@@ -1,0 +1,55 @@
+<h1>Registrar movimiento de inventario</h1>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <select formControlName="productId">
+    <option value="" disabled>Seleccioná un producto</option>
+    @for (product of products(); track product.id) {
+      <option [value]="product.id">{{ product.name }}</option>
+    }
+  </select>
+
+  <select formControlName="type">
+    <option value="in">Entrada</option>
+    <option value="out">Salida</option>
+    <option value="adjustment">Ajuste</option>
+    <option value="transfer">Traslado</option>
+  </select>
+
+  <select formControlName="locationId">
+    <option value="" disabled>
+      {{ form.value.type === 'transfer' ? 'Ubicación de origen' : 'Ubicación' }}
+    </option>
+    @for (location of locations(); track location.id) {
+      <option [value]="location.id">{{ location.name }}</option>
+    }
+  </select>
+
+  @if (form.value.type === 'transfer') {
+    <select formControlName="destinationLocationId">
+      <option value="" disabled>Ubicación de destino</option>
+      @for (location of locations(); track location.id) {
+        <option [value]="location.id">{{ location.name }}</option>
+      }
+    </select>
+  }
+
+  @if (form.value.type === 'adjustment') {
+    <select formControlName="direction">
+      <option value="increase">Aumentar stock</option>
+      <option value="decrease">Disminuir stock</option>
+    </select>
+  }
+
+  <input type="number" formControlName="quantity" placeholder="Cantidad" min="0.0001" step="any" />
+  <textarea formControlName="notes" placeholder="Notas (opcional)"></textarea>
+
+  @if (errorMessage) {
+    <p role="alert">{{ errorMessage }}</p>
+  }
+  @if (successMessage) {
+    <p>{{ successMessage }}</p>
+  }
+
+  <button type="submit" [disabled]="form.invalid || isSubmitting">Registrar</button>
+  <a routerLink="/dashboard">Volver</a>
+</form>

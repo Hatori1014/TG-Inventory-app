@@ -65,7 +65,18 @@ export const routes: Routes = [
     data: { roles: ['Administrador'] },
     loadChildren: () => import('./features/locations/locations.routes').then((m) => m.LOCATIONS_ROUTES),
   },
-  // [PENDING: inventory, alerts, purchases, requests — added in their
-  // corresponding iterations]
+  {
+    // HU-08 — the only screen here is the movement-registration form
+    // (POST /inventory/movements needs inventory:create, "Admin
+    // Inventario"), so the route is gated same as locations/roles/users.
+    // HU-10 adds the stock-listing screen ("cualquier autenticado") —
+    // revisit this gate then, it may need splitting into sub-routes.
+    path: 'inventory',
+    canActivate: [roleGuard],
+    data: { roles: ['Administrador'] },
+    loadChildren: () => import('./features/inventory/inventory.routes').then((m) => m.INVENTORY_ROUTES),
+  },
+  // [PENDING: alerts, purchases, requests — added in their corresponding
+  // iterations]
   { path: '', redirectTo: 'login', pathMatch: 'full' },
 ];
