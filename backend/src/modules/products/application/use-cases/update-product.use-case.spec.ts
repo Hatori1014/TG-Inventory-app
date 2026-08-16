@@ -60,4 +60,14 @@ describe('UpdateProductUseCase', () => {
     expect(repository.update).toHaveBeenCalledWith('1', { status: 'discontinued' });
     expect(result.status).toBe('discontinued');
   });
+
+  it('updates requiresBatch on its own (HU-09, deferred by HU-28)', async () => {
+    repository.findById.mockResolvedValue(existingProduct);
+    repository.update.mockResolvedValue({ ...existingProduct, requiresBatch: true });
+
+    const result = await useCase.execute('1', { requiresBatch: true });
+
+    expect(repository.update).toHaveBeenCalledWith('1', { requiresBatch: true });
+    expect(result.requiresBatch).toBe(true);
+  });
 });

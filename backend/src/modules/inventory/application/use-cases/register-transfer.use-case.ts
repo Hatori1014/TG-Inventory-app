@@ -3,7 +3,7 @@ import { InventoryPrismaRepository, InsufficientStockError } from '../../infrast
 import { CreateMovementDto } from '../../dto/create-movement.dto';
 import { TransferResponseDto } from '../../dto/transfer-response.dto';
 import { toTransferResponseDto } from '../transfer-response.mapper';
-import { isForeignKeyViolation } from '../../../../common/utils/prisma-error.util';
+import { validateProductAndBatch } from '../validate-product-batch';
 
 // HU-08 (ADR-28) — "traslado" as one atomic operation: creates
 // transfer_out at the source and transfer_in at the destination in a
@@ -37,6 +37,11 @@ export class RegisterTransferUseCase {
       throw new BadRequestException('destinationLocationId refers to an inactive location');
     }
 
+    // HU-09 — validates productId exists and, if it requires batch
+    // tracking, that a matching batchId was supplied (shared across both
+    // legs of the transfer — one batchId, two locations).
+    await validateProductAndBatch(this.inventoryRepository, dto.productId, dto.batchId);
+
     try {
       const { outMovement, inMovement } = await this.inventoryRepository.registerTransfer({
         productId: dto.productId,
@@ -49,9 +54,6 @@ export class RegisterTransferUseCase {
       });
       return toTransferResponseDto(outMovement, inMovement);
     } catch (error) {
-      if (isForeignKeyViolation(error)) {
-        throw new BadRequestException('productId does not exist');
-      }
       if (error instanceof InsufficientStockError) {
         throw new ConflictException('Insufficient stock at the source location for the requested quantity');
       }

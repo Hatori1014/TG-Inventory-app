@@ -1,10 +1,10 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, BadRequestException } from '@nestjs/common';
 import { InventoryPrismaRepository, InsufficientStockError } from '../../infrastructure/inventory.prisma.repository';
 import { CreateMovementDto } from '../../dto/create-movement.dto';
 import { MovementResponseDto } from '../../dto/movement-response.dto';
 import { toMovementResponseDto } from '../movement-response.mapper';
 import { MovementRequest } from '../../domain/movement-request.entity';
-import { isForeignKeyViolation } from '../../../../common/utils/prisma-error.util';
+import { validateProductAndBatch } from '../validate-product-batch';
 
 // Handles "in"/"out"/"adjustment" — single location, single movement.
 // "transfer" is routed to RegisterTransferUseCase by the controller
@@ -27,6 +27,10 @@ export class RegisterMovementUseCase {
       throw new BadRequestException('locationId refers to an inactive location');
     }
 
+    // HU-09 — validates productId exists and, if it requires batch
+    // tracking, that a matching batchId was supplied.
+    await validateProductAndBatch(this.inventoryRepository, dto.productId, dto.batchId);
+
     try {
       const { movement } = await this.inventoryRepository.registerMovement({
         productId: dto.productId,
@@ -40,9 +44,6 @@ export class RegisterMovementUseCase {
       });
       return toMovementResponseDto(movement);
     } catch (error) {
-      if (isForeignKeyViolation(error)) {
-        throw new BadRequestException('productId does not exist');
-      }
       if (error instanceof InsufficientStockError) {
         throw new ConflictException('Insufficient stock at this location for the requested quantity');
       }

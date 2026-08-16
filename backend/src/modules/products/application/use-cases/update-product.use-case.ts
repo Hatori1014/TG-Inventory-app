@@ -15,7 +15,8 @@ export class UpdateProductUseCase {
       dto.description === undefined &&
       dto.unitId === undefined &&
       dto.categoryId === undefined &&
-      dto.status === undefined
+      dto.status === undefined &&
+      dto.requiresBatch === undefined
     ) {
       throw new BadRequestException('At least one field must be provided');
     }

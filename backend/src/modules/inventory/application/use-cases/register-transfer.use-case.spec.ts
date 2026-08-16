@@ -17,6 +17,8 @@ describe('RegisterTransferUseCase', () => {
   beforeEach(() => {
     repository = {
       findLocationStatus: jest.fn(),
+      findProductRequiresBatch: jest.fn().mockResolvedValue(false),
+      findBatchProductId: jest.fn(),
       registerMovement: jest.fn(),
       registerTransfer: jest.fn(),
       findStockPaginated: jest.fn(),
@@ -85,10 +87,19 @@ describe('RegisterTransferUseCase', () => {
     await expect(useCase.execute(baseDto, 'u1')).rejects.toThrow(ConflictException);
   });
 
-  it('throws BadRequestException when productId does not exist (P2003)', async () => {
+  it('throws BadRequestException when productId does not exist', async () => {
     repository.findLocationStatus.mockResolvedValue('active');
-    repository.registerTransfer.mockRejectedValue({ code: 'P2003' });
+    repository.findProductRequiresBatch.mockResolvedValue(null);
 
     await expect(useCase.execute(baseDto, 'u1')).rejects.toThrow(BadRequestException);
+    expect(repository.registerTransfer).not.toHaveBeenCalled();
+  });
+
+  it('throws BadRequestException when the product requires a batch and none was supplied', async () => {
+    repository.findLocationStatus.mockResolvedValue('active');
+    repository.findProductRequiresBatch.mockResolvedValue(true);
+
+    await expect(useCase.execute(baseDto, 'u1')).rejects.toThrow(BadRequestException);
+    expect(repository.registerTransfer).not.toHaveBeenCalled();
   });
 });

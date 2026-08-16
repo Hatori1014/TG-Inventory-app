@@ -1,0 +1,48 @@
+<h1>Lotes de productos</h1>
+<a routerLink="/inventory">Volver a movimientos</a>
+
+<select [(ngModel)]="selectedProductId" (ngModelChange)="onProductChange()">
+  <option value="" disabled>Seleccioná un producto que requiera lote</option>
+  @for (product of products(); track product.id) {
+    <option [value]="product.id">{{ product.name }}</option>
+  }
+</select>
+
+@if (products().length === 0) {
+  <p>No hay productos marcados como "requiere lote". Marcalo desde la edición del producto.</p>
+}
+
+@if (errorMessage) {
+  <p role="alert">{{ errorMessage }}</p>
+}
+
+@if (selectedProductId) {
+  <form (ngSubmit)="addBatch()">
+    <input type="text" [(ngModel)]="newBatchNumber" name="newBatchNumber" placeholder="Número de lote" />
+    <input type="date" [(ngModel)]="newExpiresAt" name="newExpiresAt" placeholder="Fecha de vencimiento (opcional)" />
+    <button type="submit" [disabled]="!newBatchNumber.trim()">Agregar lote</button>
+  </form>
+
+  @if (loading()) {
+    <p>Cargando...</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Número de lote</th>
+          <th>Vencimiento</th>
+          <th>Ingreso</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (batch of batches(); track batch.id) {
+          <tr>
+            <td>{{ batch.batchNumber }}</td>
+            <td>{{ batch.expiresAt ?? '—' }}</td>
+            <td>{{ batch.receivedAt }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+}

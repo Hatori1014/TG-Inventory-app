@@ -16,6 +16,7 @@ export class CreateProductUseCase {
         description: dto.description,
         unitId: dto.unitId,
         categoryId: dto.categoryId,
+        requiresBatch: dto.requiresBatch,
       });
       return toProductResponseDto(product);
     } catch (error) {
