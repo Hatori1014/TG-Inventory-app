@@ -1,6 +1,6 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { RegisterMovementUseCase } from './register-movement.use-case';
-import { InventoryPrismaRepository } from '../../infrastructure/inventory.prisma.repository';
+import { InventoryPrismaRepository, InsufficientStockError } from '../../infrastructure/inventory.prisma.repository';
 
 describe('RegisterMovementUseCase', () => {
   let useCase: RegisterMovementUseCase;
@@ -50,6 +50,51 @@ describe('RegisterMovementUseCase', () => {
     });
     expect(result.id).toBe('mv-1');
     expect(result.quantity).toBe(10);
+  });
+
+  it('registers an "out" movement with a negative delta', async () => {
+    repository.findLocationStatus.mockResolvedValue('active');
+    repository.registerMovement.mockResolvedValue({
+      movement: { id: 'mv-2', type: 'out', quantity: 10 } as any,
+      stock: { id: 'stock-1', quantity: 5 } as any,
+    });
+
+    await useCase.execute({ ...baseDto, type: 'out' }, 'u1');
+
+    expect(repository.registerMovement).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'out', delta: -10 }),
+    );
+  });
+
+  it('registers an "adjustment" with direction "increase" as a positive delta', async () => {
+    repository.findLocationStatus.mockResolvedValue('active');
+    repository.registerMovement.mockResolvedValue({
+      movement: { id: 'mv-3', type: 'adjustment', quantity: 5 } as any,
+      stock: { id: 'stock-1', quantity: 15 } as any,
+    });
+
+    await useCase.execute({ ...baseDto, type: 'adjustment', quantity: 5, direction: 'increase' }, 'u1');
+
+    expect(repository.registerMovement).toHaveBeenCalledWith(expect.objectContaining({ delta: 5 }));
+  });
+
+  it('registers an "adjustment" with direction "decrease" as a negative delta', async () => {
+    repository.findLocationStatus.mockResolvedValue('active');
+    repository.registerMovement.mockResolvedValue({
+      movement: { id: 'mv-4', type: 'adjustment', quantity: 5 } as any,
+      stock: { id: 'stock-1', quantity: 5 } as any,
+    });
+
+    await useCase.execute({ ...baseDto, type: 'adjustment', quantity: 5, direction: 'decrease' }, 'u1');
+
+    expect(repository.registerMovement).toHaveBeenCalledWith(expect.objectContaining({ delta: -5 }));
+  });
+
+  it('throws ConflictException when there is insufficient stock for a decrease', async () => {
+    repository.findLocationStatus.mockResolvedValue('active');
+    repository.registerMovement.mockRejectedValue(new InsufficientStockError());
+
+    await expect(useCase.execute({ ...baseDto, type: 'out' }, 'u1')).rejects.toThrow(ConflictException);
   });
 
   it('throws BadRequestException when the location does not exist', async () => {

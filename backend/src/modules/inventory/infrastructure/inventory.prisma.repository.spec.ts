@@ -1,5 +1,5 @@
 import { ConflictException } from '@nestjs/common';
-import { InventoryPrismaRepository } from './inventory.prisma.repository';
+import { InventoryPrismaRepository, InsufficientStockError } from './inventory.prisma.repository';
 
 describe('InventoryPrismaRepository', () => {
   let prisma: any;
@@ -110,6 +110,120 @@ describe('InventoryPrismaRepository', () => {
       });
 
       await expect(repository.registerMovement(baseInput)).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('throws InsufficientStockError, without attempting the update, when a decrease would go negative', async () => {
+      const tx = {
+        inventoryMovement: { create: jest.fn().mockResolvedValue({ id: 'mv' }) },
+        locationStock: {
+          findFirst: jest.fn().mockResolvedValue({ id: 'stock-1', version: 1, quantity: 5 }),
+          updateMany: jest.fn(),
+        },
+      };
+      prisma.$transaction.mockImplementation((cb: any) => cb(tx));
+
+      await expect(
+        repository.registerMovement({ ...baseInput, type: 'out', delta: -10 }),
+      ).rejects.toBeInstanceOf(InsufficientStockError);
+      expect(tx.locationStock.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('throws InsufficientStockError when decreasing stock that has no LocationStock row yet', async () => {
+      const tx = {
+        inventoryMovement: { create: jest.fn().mockResolvedValue({ id: 'mv' }) },
+        locationStock: {
+          findFirst: jest.fn().mockResolvedValue(null),
+          create: jest.fn(),
+        },
+      };
+      prisma.$transaction.mockImplementation((cb: any) => cb(tx));
+
+      await expect(
+        repository.registerMovement({ ...baseInput, type: 'out', delta: -10 }),
+      ).rejects.toBeInstanceOf(InsufficientStockError);
+      expect(tx.locationStock.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('registerTransfer', () => {
+    const baseTransferInput = {
+      productId: 'p1',
+      sourceLocationId: 'l1',
+      destinationLocationId: 'l2',
+      quantity: 10,
+      userId: 'u1',
+    };
+
+    it('creates transfer_out at the source and transfer_in at the destination in one transaction', async () => {
+      const tx = {
+        inventoryMovement: {
+          create: jest
+            .fn()
+            .mockResolvedValueOnce({ id: 'mv-out', type: 'transfer_out', locationId: 'l1' })
+            .mockResolvedValueOnce({ id: 'mv-in', type: 'transfer_in', locationId: 'l2' }),
+        },
+        locationStock: {
+          findFirst: jest
+            .fn()
+            .mockResolvedValueOnce({ id: 's1', version: 0, quantity: 20 }) // source read
+            .mockResolvedValueOnce(null), // destination read (no row yet)
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 's1', version: 1, quantity: 10 }),
+          create: jest.fn().mockResolvedValue({ id: 's2', quantity: 10 }),
+        },
+      };
+      prisma.$transaction.mockImplementation((cb: any) => cb(tx));
+
+      const result = await repository.registerTransfer(baseTransferInput);
+
+      expect(tx.inventoryMovement.create).toHaveBeenNthCalledWith(1, {
+        data: {
+          productId: 'p1',
+          locationId: 'l1',
+          batchId: undefined,
+          type: 'transfer_out',
+          quantity: 10,
+          userId: 'u1',
+          notes: undefined,
+        },
+      });
+      expect(tx.inventoryMovement.create).toHaveBeenNthCalledWith(2, {
+        data: {
+          productId: 'p1',
+          locationId: 'l2',
+          batchId: undefined,
+          type: 'transfer_in',
+          quantity: 10,
+          userId: 'u1',
+          notes: undefined,
+        },
+      });
+      expect(result.outMovement.id).toBe('mv-out');
+      expect(result.inMovement.id).toBe('mv-in');
+      expect(result.sourceStock.quantity).toBe(10);
+      expect(result.destinationStock.quantity).toBe(10);
+    });
+
+    it('rolls back both legs when the source has insufficient stock', async () => {
+      const tx = {
+        inventoryMovement: { create: jest.fn().mockResolvedValue({ id: 'mv-out' }) },
+        locationStock: {
+          findFirst: jest.fn().mockResolvedValueOnce({ id: 's1', version: 0, quantity: 5 }),
+          updateMany: jest.fn(),
+          create: jest.fn(),
+        },
+      };
+      prisma.$transaction.mockImplementation((cb: any) => cb(tx));
+
+      await expect(repository.registerTransfer({ ...baseTransferInput, quantity: 10 })).rejects.toBeInstanceOf(
+        InsufficientStockError,
+      );
+      // Only the source leg was attempted — the destination create/update
+      // was never reached because the source check threw first, and
+      // Prisma's real $transaction would roll back the outMovement insert
+      // too (verified structurally here since our mock re-invokes the same
+      // callback; the real rollback guarantee itself is Prisma's).
+      expect(tx.locationStock.create).not.toHaveBeenCalled();
     });
   });
 });

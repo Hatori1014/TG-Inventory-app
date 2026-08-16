@@ -306,4 +306,263 @@ defineFeature(feature, (test) => {
       expect(row?.quantity).toBe(Number(quantity));
     });
   });
+
+  const assertStockStep = (and: any) => {
+    and(/^the stock for product "(.*)" at location "(.*)" is (\d+)$/, async (productId: string, locationId: string, quantity: string) => {
+      const stockResponse = await request(app.getHttpServer())
+        .get('/inventory/stock')
+        .query({ page: 1, pageSize: 100 })
+        .set('Authorization', `Bearer ${accessToken}`);
+      const row = stockResponse.body.items.find(
+        (item: any) => item.productId === productId && item.locationId === locationId,
+      );
+      expect(row?.quantity).toBe(Number(quantity));
+    });
+  };
+
+  const seedStockStep = (and: any) => {
+    and(/^an existing stock of (\d+) units for product "(.*)" at location "(.*)"$/, (quantity: string, productId: string, locationId: string) => {
+      fakeInventoryRepository.seedStock(productId, locationId, Number(quantity));
+    });
+  };
+
+  test('Administrator registers an "out" movement that decreases available stock', ({ given, and, when, then }) => {
+    givenUser(given);
+
+    and(/^the role "(.*)" has permission "(.*)" "(.*)"$/, (role: string, module: string, action: string) => {
+      grantedPermissions.add(`${role}:${module}:${action}`);
+    });
+
+    and(/^an existing product "(.*)"$/, (productId: string) => {
+      fakeInventoryRepository.seedProduct(productId);
+    });
+
+    and(/^an existing active location "(.*)"$/, (locationId: string) => {
+      fakeInventoryRepository.seedLocation(locationId, 'active');
+    });
+
+    seedStockStep(and);
+    login(when);
+
+    and(
+      /^they register an "out" movement of (\d+) units for product "(.*)" at location "(.*)" with idempotency key "(.*)"$/,
+      async (quantity: string, productId: string, locationId: string, idempotencyKeyHeader: string) => {
+        response = await request(app.getHttpServer())
+          .post('/inventory/movements')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .set('Idempotency-Key', idempotencyKeyHeader)
+          .send({ productId, locationId, type: 'out', quantity: Number(quantity) });
+      },
+    );
+
+    then('the movement is registered successfully', () => {
+      expect(response.status).toBe(201);
+    });
+
+    assertStockStep(and);
+  });
+
+  test('Registering an "out" movement larger than the available stock is rejected', ({ given, and, when, then }) => {
+    givenUser(given);
+
+    and(/^the role "(.*)" has permission "(.*)" "(.*)"$/, (role: string, module: string, action: string) => {
+      grantedPermissions.add(`${role}:${module}:${action}`);
+    });
+
+    and(/^an existing product "(.*)"$/, (productId: string) => {
+      fakeInventoryRepository.seedProduct(productId);
+    });
+
+    and(/^an existing active location "(.*)"$/, (locationId: string) => {
+      fakeInventoryRepository.seedLocation(locationId, 'active');
+    });
+
+    seedStockStep(and);
+    login(when);
+
+    and(
+      /^they register an "out" movement of (\d+) units for product "(.*)" at location "(.*)" with idempotency key "(.*)"$/,
+      async (quantity: string, productId: string, locationId: string, idempotencyKeyHeader: string) => {
+        response = await request(app.getHttpServer())
+          .post('/inventory/movements')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .set('Idempotency-Key', idempotencyKeyHeader)
+          .send({ productId, locationId, type: 'out', quantity: Number(quantity) });
+      },
+    );
+
+    then('they receive a conflict error', () => {
+      expect(response.status).toBe(409);
+    });
+
+    assertStockStep(and);
+  });
+
+  test('Administrator registers an "adjustment" that increases stock', ({ given, and, when, then }) => {
+    givenUser(given);
+
+    and(/^the role "(.*)" has permission "(.*)" "(.*)"$/, (role: string, module: string, action: string) => {
+      grantedPermissions.add(`${role}:${module}:${action}`);
+    });
+
+    and(/^an existing product "(.*)"$/, (productId: string) => {
+      fakeInventoryRepository.seedProduct(productId);
+    });
+
+    and(/^an existing active location "(.*)"$/, (locationId: string) => {
+      fakeInventoryRepository.seedLocation(locationId, 'active');
+    });
+
+    seedStockStep(and);
+    login(when);
+
+    and(
+      /^they register an "adjustment" with direction "(.*)" of (\d+) units for product "(.*)" at location "(.*)" with idempotency key "(.*)"$/,
+      async (direction: string, quantity: string, productId: string, locationId: string, idempotencyKeyHeader: string) => {
+        response = await request(app.getHttpServer())
+          .post('/inventory/movements')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .set('Idempotency-Key', idempotencyKeyHeader)
+          .send({ productId, locationId, type: 'adjustment', direction, quantity: Number(quantity) });
+      },
+    );
+
+    then('the movement is registered successfully', () => {
+      expect(response.status).toBe(201);
+    });
+
+    assertStockStep(and);
+  });
+
+  test('Administrator registers an "adjustment" that decreases stock', ({ given, and, when, then }) => {
+    givenUser(given);
+
+    and(/^the role "(.*)" has permission "(.*)" "(.*)"$/, (role: string, module: string, action: string) => {
+      grantedPermissions.add(`${role}:${module}:${action}`);
+    });
+
+    and(/^an existing product "(.*)"$/, (productId: string) => {
+      fakeInventoryRepository.seedProduct(productId);
+    });
+
+    and(/^an existing active location "(.*)"$/, (locationId: string) => {
+      fakeInventoryRepository.seedLocation(locationId, 'active');
+    });
+
+    seedStockStep(and);
+    login(when);
+
+    and(
+      /^they register an "adjustment" with direction "(.*)" of (\d+) units for product "(.*)" at location "(.*)" with idempotency key "(.*)"$/,
+      async (direction: string, quantity: string, productId: string, locationId: string, idempotencyKeyHeader: string) => {
+        response = await request(app.getHttpServer())
+          .post('/inventory/movements')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .set('Idempotency-Key', idempotencyKeyHeader)
+          .send({ productId, locationId, type: 'adjustment', direction, quantity: Number(quantity) });
+      },
+    );
+
+    then('the movement is registered successfully', () => {
+      expect(response.status).toBe(201);
+    });
+
+    assertStockStep(and);
+  });
+
+  test('Administrator transfers stock between two active locations atomically', ({ given, and, when, then }) => {
+    givenUser(given);
+
+    and(/^the role "(.*)" has permission "(.*)" "(.*)"$/, (role: string, module: string, action: string) => {
+      grantedPermissions.add(`${role}:${module}:${action}`);
+    });
+
+    and(/^an existing product "(.*)"$/, (productId: string) => {
+      fakeInventoryRepository.seedProduct(productId);
+    });
+
+    and(/^an existing active location "(.*)"$/, (locationId: string) => {
+      fakeInventoryRepository.seedLocation(locationId, 'active');
+    });
+    and(/^an existing active location "(.*)"$/, (locationId: string) => {
+      fakeInventoryRepository.seedLocation(locationId, 'active');
+    });
+
+    seedStockStep(and);
+    login(when);
+
+    and(
+      /^they transfer (\d+) units of product "(.*)" from location "(.*)" to location "(.*)" with idempotency key "(.*)"$/,
+      async (quantity: string, productId: string, sourceLocationId: string, destinationLocationId: string, idempotencyKeyHeader: string) => {
+        response = await request(app.getHttpServer())
+          .post('/inventory/movements')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .set('Idempotency-Key', idempotencyKeyHeader)
+          .send({
+            productId,
+            locationId: sourceLocationId,
+            destinationLocationId,
+            type: 'transfer',
+            quantity: Number(quantity),
+          });
+      },
+    );
+
+    then('the transfer is registered successfully', () => {
+      expect(response.status).toBe(201);
+    });
+
+    assertStockStep(and);
+    assertStockStep(and);
+  });
+
+  test('Transferring more than the source has available is rejected and neither location changes', ({
+    given,
+    and,
+    when,
+    then,
+  }) => {
+    givenUser(given);
+
+    and(/^the role "(.*)" has permission "(.*)" "(.*)"$/, (role: string, module: string, action: string) => {
+      grantedPermissions.add(`${role}:${module}:${action}`);
+    });
+
+    and(/^an existing product "(.*)"$/, (productId: string) => {
+      fakeInventoryRepository.seedProduct(productId);
+    });
+
+    and(/^an existing active location "(.*)"$/, (locationId: string) => {
+      fakeInventoryRepository.seedLocation(locationId, 'active');
+    });
+    and(/^an existing active location "(.*)"$/, (locationId: string) => {
+      fakeInventoryRepository.seedLocation(locationId, 'active');
+    });
+
+    seedStockStep(and);
+    login(when);
+
+    and(
+      /^they transfer (\d+) units of product "(.*)" from location "(.*)" to location "(.*)" with idempotency key "(.*)"$/,
+      async (quantity: string, productId: string, sourceLocationId: string, destinationLocationId: string, idempotencyKeyHeader: string) => {
+        response = await request(app.getHttpServer())
+          .post('/inventory/movements')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .set('Idempotency-Key', idempotencyKeyHeader)
+          .send({
+            productId,
+            locationId: sourceLocationId,
+            destinationLocationId,
+            type: 'transfer',
+            quantity: Number(quantity),
+          });
+      },
+    );
+
+    then('they receive a conflict error', () => {
+      expect(response.status).toBe(409);
+    });
+
+    assertStockStep(and);
+  });
 });

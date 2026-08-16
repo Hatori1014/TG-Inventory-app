@@ -7,9 +7,11 @@ import { CurrentUser, AuthenticatedRequestUser } from '../../common/decorators/c
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
 import { RegisterMovementUseCase } from './application/use-cases/register-movement.use-case';
+import { RegisterTransferUseCase } from './application/use-cases/register-transfer.use-case';
 import { ListStockUseCase } from './application/use-cases/list-stock.use-case';
 import { CreateMovementDto } from './dto/create-movement.dto';
 import { MovementResponseDto } from './dto/movement-response.dto';
+import { TransferResponseDto } from './dto/transfer-response.dto';
 import { StockResponseDto } from './dto/stock-response.dto';
 
 // Master plan section 7.4: POST /inventory/movements is "Admin Inventario"
@@ -20,9 +22,14 @@ import { StockResponseDto } from './dto/stock-response.dto';
 export class InventoryController {
   constructor(
     private readonly registerMovementUseCase: RegisterMovementUseCase,
+    private readonly registerTransferUseCase: RegisterTransferUseCase,
     private readonly listStockUseCase: ListStockUseCase,
   ) {}
 
+  // "transfer" is one endpoint per the master plan ("entrada/salida/
+  // traslado/ajuste" all through POST /inventory/movements) but a distinct
+  // dual-location operation under the hood (ADR-28) — routed to its own
+  // use-case rather than branching inside RegisterMovementUseCase.
   @RequirePermission('inventory', 'create')
   @Idempotent()
   @UseInterceptors(IdempotencyInterceptor)
@@ -30,7 +37,10 @@ export class InventoryController {
   create(
     @Body() dto: CreateMovementDto,
     @CurrentUser() user: AuthenticatedRequestUser,
-  ): Promise<MovementResponseDto> {
+  ): Promise<MovementResponseDto | TransferResponseDto> {
+    if (dto.type === 'transfer') {
+      return this.registerTransferUseCase.execute(dto, user.id);
+    }
     return this.registerMovementUseCase.execute(dto, user.id);
   }
 

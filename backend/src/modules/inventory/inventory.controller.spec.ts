@@ -1,5 +1,6 @@
 import { InventoryController } from './inventory.controller';
 import { RegisterMovementUseCase } from './application/use-cases/register-movement.use-case';
+import { RegisterTransferUseCase } from './application/use-cases/register-transfer.use-case';
 import { ListStockUseCase } from './application/use-cases/list-stock.use-case';
 
 // Plain instantiation, not Test.createTestingModule: NestJS resolves
@@ -13,16 +14,18 @@ import { ListStockUseCase } from './application/use-cases/list-stock.use-case';
 describe('InventoryController', () => {
   let controller: InventoryController;
   let registerMovementUseCase: jest.Mocked<RegisterMovementUseCase>;
+  let registerTransferUseCase: jest.Mocked<RegisterTransferUseCase>;
   let listStockUseCase: jest.Mocked<ListStockUseCase>;
 
   beforeEach(() => {
     registerMovementUseCase = { execute: jest.fn() } as unknown as jest.Mocked<RegisterMovementUseCase>;
+    registerTransferUseCase = { execute: jest.fn() } as unknown as jest.Mocked<RegisterTransferUseCase>;
     listStockUseCase = { execute: jest.fn() } as unknown as jest.Mocked<ListStockUseCase>;
 
-    controller = new InventoryController(registerMovementUseCase, listStockUseCase);
+    controller = new InventoryController(registerMovementUseCase, registerTransferUseCase, listStockUseCase);
   });
 
-  it('create() delegates to RegisterMovementUseCase with the DTO and the current user id', async () => {
+  it('create() delegates to RegisterMovementUseCase for "in"/"out"/"adjustment"', async () => {
     const expected = {
       id: 'mv-1',
       productId: 'p1',
@@ -40,6 +43,28 @@ describe('InventoryController', () => {
     const result = await controller.create(dto, { id: 'u1', email: 'a@b.com', name: 'A', role: 'Administrador' });
 
     expect(registerMovementUseCase.execute).toHaveBeenCalledWith(dto, 'u1');
+    expect(registerTransferUseCase.execute).not.toHaveBeenCalled();
+    expect(result).toBe(expected);
+  });
+
+  it('create() delegates to RegisterTransferUseCase when type is "transfer"', async () => {
+    const expected = {
+      out: { id: 'mv-out' } as any,
+      in: { id: 'mv-in' } as any,
+    };
+    registerTransferUseCase.execute.mockResolvedValue(expected);
+
+    const dto = {
+      productId: 'p1',
+      locationId: 'l1',
+      destinationLocationId: 'l2',
+      type: 'transfer' as const,
+      quantity: 10,
+    };
+    const result = await controller.create(dto, { id: 'u1', email: 'a@b.com', name: 'A', role: 'Administrador' });
+
+    expect(registerTransferUseCase.execute).toHaveBeenCalledWith(dto, 'u1');
+    expect(registerMovementUseCase.execute).not.toHaveBeenCalled();
     expect(result).toBe(expected);
   });
 
