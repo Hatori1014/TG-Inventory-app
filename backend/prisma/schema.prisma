@@ -15,7 +15,7 @@ datasource db {
 
 model Role {
   id             String          @id @default(uuid())
-  name           String
+  name           String          @unique
   description    String?
   users          User[]
   permissions    RolePermission[]
@@ -30,6 +30,7 @@ model Permission {
   action  String
   roles   RolePermission[]
 
+  @@unique([module, action])
   @@map("permission")
 }
 
@@ -86,6 +87,11 @@ model Location {
   movements      InventoryMovement[]
   requestItems   RequestItem[]
 
+  // HU-06: unique name per parent. Postgres treats each NULL parent_id as
+  // distinct, so this does NOT dedupe root-level (parentId null) names on
+  // its own — CreateLocationUseCase/UpdateLocationUseCase additionally
+  // check for a root-level name collision before insert/update.
+  @@unique([parentId, name])
   @@index([parentId])
   @@map("location")
 }

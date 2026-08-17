@@ -7,9 +7,14 @@ import { validateEnv } from './config/env.validation';
 import { loggerConfig } from './config/logger.config';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { HealthModule } from './modules/health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { UsersModule } from './modules/users/users.module';
+import { ProductsModule } from './modules/products/products.module';
+import { LocationsModule } from './modules/locations/locations.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
 // As iterations progress (plan section 6), each new business module
-// (auth, users, suppliers, locations, products, inventory, purchases,
-// requests, audit) gets imported here.
+// (suppliers, purchases, requests, audit) gets imported here.
 
 @Module({
   imports: [
@@ -28,6 +33,12 @@ import { HealthModule } from './modules/health/health.module';
       },
     ]),
     HealthModule,
+    AuthModule,
+    RolesModule,
+    UsersModule,
+    ProductsModule,
+    LocationsModule,
+    InventoryModule,
   ],
   providers: [
     // TT-15 — one process shared by every module; an uncaught error in one
