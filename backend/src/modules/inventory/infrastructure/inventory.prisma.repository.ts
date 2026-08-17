@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InventoryMovement, LocationStatus, LocationStock, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../database/prisma.service';
 import { withOptimisticLock } from '../../../common/utils/optimistic-lock.util';
+import { StockWithNames } from '../application/stock-response.mapper';
 
 export interface RegisterMovementInput {
   productId: string;
@@ -228,10 +229,31 @@ export class InventoryPrismaRepository {
     });
   }
 
-  async findStockPaginated(skip: number, take: number): Promise<{ items: LocationStock[]; total: number }> {
+  // HU-10 — filters are optional (plan section 7.4: "filtrable por
+  // producto/ubicación"); include product/location names so the frontend
+  // stock screen doesn't need a second round-trip per row (ADR-27 deferred
+  // this enrichment to HU-10).
+  async findStockPaginated(
+    skip: number,
+    take: number,
+    filters?: { productId?: string; locationId?: string },
+  ): Promise<{ items: StockWithNames[]; total: number }> {
+    const where = {
+      ...(filters?.productId && { productId: filters.productId }),
+      ...(filters?.locationId && { locationId: filters.locationId }),
+    };
     const [items, total] = await this.prisma.$transaction([
-      this.prisma.locationStock.findMany({ skip, take, orderBy: { id: 'asc' } }),
-      this.prisma.locationStock.count(),
+      this.prisma.locationStock.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { id: 'asc' },
+        include: {
+          product: { select: { id: true, name: true } },
+          location: { select: { id: true, name: true } },
+        },
+      }),
+      this.prisma.locationStock.count({ where }),
     ]);
     return { items, total };
   }

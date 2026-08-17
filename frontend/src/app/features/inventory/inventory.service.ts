@@ -20,10 +20,17 @@ export class InventoryService {
     });
   }
 
-  listStock(page = 1, pageSize = 100): Observable<PaginatedResponse<StockItem>> {
-    return this.http.get<PaginatedResponse<StockItem>>(`${environment.apiUrl}/inventory/stock`, {
-      params: { page, pageSize },
-    });
+  // HU-10 — "filtrable por producto/ubicación" (plan section 7.4).
+  listStock(
+    page = 1,
+    pageSize = 100,
+    productId?: string,
+    locationId?: string,
+  ): Observable<PaginatedResponse<StockItem>> {
+    const params: Record<string, string | number> = { page, pageSize };
+    if (productId) params['productId'] = productId;
+    if (locationId) params['locationId'] = locationId;
+    return this.http.get<PaginatedResponse<StockItem>>(`${environment.apiUrl}/inventory/stock`, { params });
   }
 
   // HU-09 — /inventory/batches is not @Idempotent() (only movements are,

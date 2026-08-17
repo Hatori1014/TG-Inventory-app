@@ -32,10 +32,12 @@ export interface TransferResult {
   in: Movement;
 }
 
+// HU-10 — enriched over HU-07's "básico" version (ADR-27): nested
+// product/location names instead of flat ids.
 export interface StockItem {
   id: string;
-  productId: string;
-  locationId: string;
+  product: { id: string; name: string };
+  location: { id: string; name: string };
   batchId: string | null;
   quantity: number;
 }

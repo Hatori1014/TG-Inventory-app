@@ -1,10 +1,10 @@
-// HU-07 scope: flat ids only ("GET /inventory/stock básico" — deliberately
-// deferred, see PROJECT-STATUS.md). HU-10 owns enriching this with nested
-// product/location details, filters, and its own frontend screen.
+// HU-10 — enriched over HU-07's "básico" version (ADR-27): nested
+// product/location names instead of flat ids, so the frontend stock
+// screen doesn't need a second round-trip per row.
 export interface StockResponseDto {
   id: string;
-  productId: string;
-  locationId: string;
+  product: { id: string; name: string };
+  location: { id: string; name: string };
   batchId: string | null;
   quantity: number;
 }

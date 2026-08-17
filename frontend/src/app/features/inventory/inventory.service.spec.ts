@@ -52,6 +52,19 @@ describe('InventoryService', () => {
     );
     expect(req.request.params.get('page')).toBe('1');
     expect(req.request.params.get('pageSize')).toBe('100');
+    expect(req.request.params.has('productId')).toBe(false);
+    expect(req.request.params.has('locationId')).toBe(false);
+    req.flush({ items: [], total: 0, page: 1, pageSize: 100 });
+  });
+
+  it('listStock() includes productId/locationId params when provided', () => {
+    service.listStock(1, 100, 'p1', 'l1').subscribe();
+
+    const req = httpMock.expectOne(
+      (r) => r.url === `${environment.apiUrl}/inventory/stock` && r.method === 'GET',
+    );
+    expect(req.request.params.get('productId')).toBe('p1');
+    expect(req.request.params.get('locationId')).toBe('l1');
     req.flush({ items: [], total: 0, page: 1, pageSize: 100 });
   });
 

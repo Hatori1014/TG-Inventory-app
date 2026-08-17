@@ -128,3 +128,16 @@ Feature: Register stock movements
     And they transfer 10 units of product "p1" from location "l1" to location "l2" with idempotency key "key-11"
     Then they receive a conflict error
     And the stock for product "p1" at location "l1" is 5
+
+  Scenario: Consulting stock filtered by location only returns matching rows
+    Given a user "admin@tg-group.local" with password "correct-password" and role "Administrador"
+    And the role "Administrador" has permission "inventory" "create"
+    And an existing product "p1"
+    And an existing active location "l1"
+    And an existing active location "l2"
+    And an existing stock of 10 units for product "p1" at location "l1"
+    And an existing stock of 5 units for product "p1" at location "l2"
+    When they log in with email "admin@tg-group.local" and password "correct-password"
+    And they consult stock filtered by location "l1"
+    Then the stock list has 1 row
+    And the stock list includes location "l1" but not location "l2"
