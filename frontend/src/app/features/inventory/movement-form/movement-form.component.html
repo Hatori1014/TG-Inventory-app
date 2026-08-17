@@ -1,5 +1,6 @@
 <h1>Registrar movimiento de inventario</h1>
 <a routerLink="/inventory/batches">Gestionar lotes</a>
+<a routerLink="/inventory/stock">Consultar stock actual</a>
 
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
   <select formControlName="productId" (change)="onProductChange()">

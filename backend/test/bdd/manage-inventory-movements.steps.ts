@@ -126,7 +126,7 @@ defineFeature(feature, (test) => {
         .query({ page: 1, pageSize: 100 })
         .set('Authorization', `Bearer ${accessToken}`);
       const row = stockResponse.body.items.find(
-        (item: any) => item.productId === productId && item.locationId === locationId,
+        (item: any) => item.product.id === productId && item.location.id === locationId,
       );
       expect(row?.quantity).toBe(Number(quantity));
     });
@@ -301,7 +301,7 @@ defineFeature(feature, (test) => {
         .query({ page: 1, pageSize: 100 })
         .set('Authorization', `Bearer ${accessToken}`);
       const row = stockResponse.body.items.find(
-        (item: any) => item.productId === productId && item.locationId === locationId,
+        (item: any) => item.product.id === productId && item.location.id === locationId,
       );
       expect(row?.quantity).toBe(Number(quantity));
     });
@@ -314,7 +314,7 @@ defineFeature(feature, (test) => {
         .query({ page: 1, pageSize: 100 })
         .set('Authorization', `Bearer ${accessToken}`);
       const row = stockResponse.body.items.find(
-        (item: any) => item.productId === productId && item.locationId === locationId,
+        (item: any) => item.product.id === productId && item.location.id === locationId,
       );
       expect(row?.quantity).toBe(Number(quantity));
     });
@@ -564,5 +564,50 @@ defineFeature(feature, (test) => {
     });
 
     assertStockStep(and);
+  });
+
+  test('Consulting stock filtered by location only returns matching rows', ({ given, and, when, then }) => {
+    givenUser(given);
+
+    and(/^the role "(.*)" has permission "(.*)" "(.*)"$/, (role: string, module: string, action: string) => {
+      grantedPermissions.add(`${role}:${module}:${action}`);
+    });
+
+    and(/^an existing product "(.*)"$/, (productId: string) => {
+      fakeInventoryRepository.seedProduct(productId);
+    });
+
+    and(/^an existing active location "(.*)"$/, (locationId: string) => {
+      fakeInventoryRepository.seedLocation(locationId, 'active');
+    });
+    and(/^an existing active location "(.*)"$/, (locationId: string) => {
+      fakeInventoryRepository.seedLocation(locationId, 'active');
+    });
+
+    and(/^an existing stock of (\d+) units for product "(.*)" at location "(.*)"$/, (quantity: string, productId: string, locationId: string) => {
+      fakeInventoryRepository.seedStock(productId, locationId, Number(quantity));
+    });
+    and(/^an existing stock of (\d+) units for product "(.*)" at location "(.*)"$/, (quantity: string, productId: string, locationId: string) => {
+      fakeInventoryRepository.seedStock(productId, locationId, Number(quantity));
+    });
+
+    login(when);
+
+    and(/^they consult stock filtered by location "(.*)"$/, async (locationId: string) => {
+      response = await request(app.getHttpServer())
+        .get('/inventory/stock')
+        .query({ page: 1, pageSize: 100, locationId })
+        .set('Authorization', `Bearer ${accessToken}`);
+    });
+
+    then(/^the stock list has (\d+) row$/, (count: string) => {
+      expect(response.body.items.length).toBe(Number(count));
+    });
+
+    and(/^the stock list includes location "(.*)" but not location "(.*)"$/, (includedId: string, excludedId: string) => {
+      const locationIds = response.body.items.map((item: any) => item.location.id);
+      expect(locationIds).toContain(includedId);
+      expect(locationIds).not.toContain(excludedId);
+    });
   });
 });

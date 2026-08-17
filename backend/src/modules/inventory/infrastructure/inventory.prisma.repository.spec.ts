@@ -8,6 +8,7 @@ describe('InventoryPrismaRepository', () => {
   beforeEach(() => {
     prisma = {
       location: { findUnique: jest.fn() },
+      locationStock: { findMany: jest.fn(), count: jest.fn() },
       $transaction: jest.fn(),
     };
     repository = new InventoryPrismaRepository(prisma);
@@ -224,6 +225,39 @@ describe('InventoryPrismaRepository', () => {
       // too (verified structurally here since our mock re-invokes the same
       // callback; the real rollback guarantee itself is Prisma's).
       expect(tx.locationStock.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('findStockPaginated', () => {
+    it('queries with no where filter when none is provided', async () => {
+      prisma.$transaction.mockResolvedValue([[{ id: 's1' }], 1]);
+
+      const result = await repository.findStockPaginated(0, 20);
+
+      expect(prisma.locationStock.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {},
+          skip: 0,
+          take: 20,
+          include: {
+            product: { select: { id: true, name: true } },
+            location: { select: { id: true, name: true } },
+          },
+        }),
+      );
+      expect(prisma.locationStock.count).toHaveBeenCalledWith({ where: {} });
+      expect(result).toEqual({ items: [{ id: 's1' }], total: 1 });
+    });
+
+    it('applies productId/locationId filters to both findMany and count when provided', async () => {
+      prisma.$transaction.mockResolvedValue([[], 0]);
+
+      await repository.findStockPaginated(0, 20, { productId: 'p1', locationId: 'l1' });
+
+      expect(prisma.locationStock.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { productId: 'p1', locationId: 'l1' } }),
+      );
+      expect(prisma.locationStock.count).toHaveBeenCalledWith({ where: { productId: 'p1', locationId: 'l1' } });
     });
   });
 });

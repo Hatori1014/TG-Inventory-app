@@ -129,8 +129,21 @@ export class FakeInventoryRepository {
     return { outMovement, inMovement, sourceStock, destinationStock };
   }
 
-  async findStockPaginated(skip: number, take: number) {
-    const all = [...this.stock.values()];
-    return { items: all.slice(skip, skip + take), total: all.length };
+  async findStockPaginated(skip: number, take: number, filters?: { productId?: string; locationId?: string }) {
+    let all = [...this.stock.values()];
+    if (filters?.productId) all = all.filter((s) => s.productId === filters.productId);
+    if (filters?.locationId) all = all.filter((s) => s.locationId === filters.locationId);
+
+    // HU-10 — real repository nests product/location {id, name}; the fake
+    // doesn't track names separately, so it mirrors the id (BDD scenarios
+    // only assert on id, never on the display name).
+    const items = all.slice(skip, skip + take).map((s) => ({
+      id: s.id,
+      product: { id: s.productId, name: s.productId },
+      location: { id: s.locationId, name: s.locationId },
+      batchId: s.batchId,
+      quantity: s.quantity,
+    }));
+    return { items, total: all.length };
   }
 }
