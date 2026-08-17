@@ -1,5 +1,8 @@
-// Global styles — Angular Material gets configured here when running
-// `ng add @angular/material` in TT-01, which generates the theming.
+// Global styles. Prebuilt Material theme for now (functional shell,
+// TT-nav-shell) — swapped for the custom blue palette from
+// docs/esp/ui-ux-design-brief.md once the Claude Design mockups land.
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
 html, body {
   height: 100%;
   margin: 0;
