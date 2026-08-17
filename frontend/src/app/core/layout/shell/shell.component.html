@@ -1,0 +1,48 @@
+<mat-sidenav-container class="shell-container">
+  <mat-sidenav
+    #sidenav
+    class="shell-sidenav"
+    [mode]="sidenavMode()"
+    [opened]="sidenavOpened()"
+  >
+    @for (section of sections(); track section.label) {
+      @if (section.label) {
+        <h3 mat-subheader>{{ section.label }}</h3>
+      }
+      <mat-nav-list>
+        @for (item of section.items; track item.path) {
+          <a
+            mat-list-item
+            [routerLink]="item.path"
+            routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{ exact: isExactMatch(item.path) }"
+            (click)="closeIfMobile(sidenav)"
+          >
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            <span matListItemTitle>{{ item.label }}</span>
+          </a>
+        }
+      </mat-nav-list>
+    }
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar color="primary" class="shell-toolbar">
+      @if (sidenavMode() === 'over') {
+        <button mat-icon-button (click)="sidenav.toggle()" aria-label="Abrir menú">
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
+      <span class="shell-title">Control de Inventario</span>
+      <span class="shell-spacer"></span>
+      <span class="shell-user">{{ user()?.name }} · {{ user()?.role }}</span>
+      <button mat-icon-button (click)="logout()" aria-label="Cerrar sesión" title="Cerrar sesión">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </mat-toolbar>
+
+    <main class="shell-main">
+      <router-outlet></router-outlet>
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
