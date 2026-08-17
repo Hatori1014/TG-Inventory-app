@@ -1,0 +1,31 @@
+<h1>Productos</h1>
+<a routerLink="new">Nuevo producto</a>
+<a routerLink="/categories">Categorías</a>
+<a routerLink="/units">Unidades</a>
+
+@if (loading()) {
+  <p>Cargando...</p>
+} @else {
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Unidad</th>
+        <th>Categoría</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (product of products(); track product.id) {
+        <tr>
+          <td>{{ product.name }}</td>
+          <td>{{ product.unit.name }}</td>
+          <td>{{ product.category?.name || '—' }}</td>
+          <td>{{ product.status === 'active' ? 'Activo' : 'Descontinuado' }}</td>
+          <td><a [routerLink]="[product.id, 'edit']">Editar</a></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

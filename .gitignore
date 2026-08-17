@@ -31,6 +31,9 @@ Thumbs.db
 
 # Prisma
 backend/prisma/*.db
+backend/prisma/*.js
+backend/prisma/*.d.ts
+backend/prisma/*.js.map
 
 # Coverage
 coverage/

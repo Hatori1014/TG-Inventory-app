@@ -1,0 +1,61 @@
+<h1>{{ isEditMode ? 'Editar producto' : 'Nuevo producto' }}</h1>
+
+@if (loading()) {
+  <p>Cargando...</p>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <input type="text" formControlName="name" placeholder="Nombre" />
+    <textarea formControlName="description" placeholder="Descripción (opcional)"></textarea>
+
+    <div>
+      <select formControlName="unitId">
+        <option value="" disabled>Seleccioná una unidad</option>
+        @for (unit of units(); track unit.id) {
+          <option [value]="unit.id">{{ unit.name }}</option>
+        }
+      </select>
+      <button type="button" (click)="showNewUnit.set(!showNewUnit())">+ Crear nueva unidad</button>
+      @if (showNewUnit()) {
+        <div>
+          <input type="text" [(ngModel)]="newUnitName" [ngModelOptions]="{ standalone: true }" placeholder="Nombre de la unidad" />
+          <button type="button" (click)="createUnitInline()">Guardar</button>
+        </div>
+      }
+    </div>
+
+    <div>
+      <select formControlName="categoryId">
+        <option value="">Sin categoría</option>
+        @for (category of categories(); track category.id) {
+          <option [value]="category.id">{{ category.name }}</option>
+        }
+      </select>
+      <button type="button" (click)="showNewCategory.set(!showNewCategory())">+ Crear nueva categoría</button>
+      @if (showNewCategory()) {
+        <div>
+          <input type="text" [(ngModel)]="newCategoryName" [ngModelOptions]="{ standalone: true }" placeholder="Nombre de la categoría" />
+          <button type="button" (click)="createCategoryInline()">Guardar</button>
+        </div>
+      }
+    </div>
+
+    @if (isEditMode) {
+      <select formControlName="status">
+        <option value="active">Activo</option>
+        <option value="discontinued">Descontinuado</option>
+      </select>
+    }
+
+    <label>
+      <input type="checkbox" formControlName="requiresBatch" />
+      Requiere lote/vencimiento (producto perecedero)
+    </label>
+
+    @if (errorMessage) {
+      <p role="alert">{{ errorMessage }}</p>
+    }
+
+    <button type="submit" [disabled]="form.invalid || isSubmitting">Guardar</button>
+    <a routerLink="/products">Cancelar</a>
+  </form>
+}

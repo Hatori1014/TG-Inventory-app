@@ -1,0 +1,9 @@
+<h1>Nuevo rol</h1>
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <input type="text" formControlName="name" placeholder="Nombre del rol" />
+  <input type="text" formControlName="description" placeholder="Descripción (opcional)" />
+  @if (errorMessage) {
+    <p role="alert">{{ errorMessage }}</p>
+  }
+  <button type="submit" [disabled]="form.invalid || isSubmitting">Crear rol</button>
+</form>

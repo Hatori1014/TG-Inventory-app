@@ -1,0 +1,27 @@
+<h1>Roles</h1>
+<a routerLink="new">Nuevo rol</a>
+
+@if (loading()) {
+  <p>Cargando...</p>
+} @else {
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Descripción</th>
+        <th>Permisos</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (role of roles(); track role.id) {
+        <tr>
+          <td>{{ role.name }}</td>
+          <td>{{ role.description || '—' }}</td>
+          <td>{{ role.permissions.length }}</td>
+          <td><a [routerLink]="[role.id, 'permissions']">Asignar permisos</a></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

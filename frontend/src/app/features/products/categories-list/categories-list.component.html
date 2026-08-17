@@ -1,0 +1,37 @@
+<h1>Categorías</h1>
+
+<form (ngSubmit)="addCategory()">
+  <input type="text" [(ngModel)]="newName" name="newName" placeholder="Nueva categoría" />
+  <button type="submit" [disabled]="!newName.trim()">Agregar</button>
+</form>
+
+@if (errorMessage) {
+  <p role="alert">{{ errorMessage }}</p>
+}
+
+@if (loading()) {
+  <p>Cargando...</p>
+} @else {
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (category of categories(); track category.id) {
+        <tr>
+          <td>{{ category.name }}</td>
+          <td>{{ category.status === 'active' ? 'Activa' : 'Inactiva' }}</td>
+          <td>
+            <button type="button" (click)="toggleStatus(category)">
+              {{ category.status === 'active' ? 'Desactivar' : 'Activar' }}
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

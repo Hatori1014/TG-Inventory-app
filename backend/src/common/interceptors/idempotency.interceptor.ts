@@ -9,6 +9,7 @@ import { Reflector } from '@nestjs/core';
 import { firstValueFrom, Observable, of } from 'rxjs';
 import { PrismaService } from '../../database/prisma.service';
 import { IDEMPOTENT_KEY } from '../decorators/idempotent.decorator';
+import { isUniqueConstraintViolation } from '../utils/prisma-error.util';
 
 const IDEMPOTENCY_HEADER = 'idempotency-key';
 
@@ -60,13 +61,4 @@ export class IdempotencyInterceptor implements NestInterceptor {
 
     return of(response);
   }
-}
-
-function isUniqueConstraintViolation(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: string }).code === 'P2002'
-  );
 }
