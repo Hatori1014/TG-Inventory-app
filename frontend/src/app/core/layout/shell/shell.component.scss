@@ -6,9 +6,6 @@
 .shell-sidenav {
   width: 248px;
   padding: 18px 0 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
   background: linear-gradient(180deg, var(--color-primary-900), var(--color-primary-700) 60%, #12558e);
   border-right: none;
 }
@@ -53,6 +50,7 @@
   text-transform: uppercase;
   color: #7fafd8;
   padding: 0 18px 8px;
+  margin-top: 24px;
 }
 
 .shell-nav-item {
