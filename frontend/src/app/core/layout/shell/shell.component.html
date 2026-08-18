@@ -5,41 +5,55 @@
     [mode]="sidenavMode()"
     [opened]="sidenavOpened()"
   >
+    <div class="shell-brand">
+      <img src="logo-placeholder.png" alt="TG Inventory" class="shell-brand-logo" />
+      <div>
+        <div class="shell-brand-name">TG Inventory</div>
+        <div class="shell-brand-tag">Control de inventario</div>
+      </div>
+    </div>
+
     @for (section of sections(); track section.label) {
-      @if (section.label) {
-        <h3 mat-subheader>{{ section.label }}</h3>
-      }
-      <mat-nav-list>
+      <div class="shell-nav-section">
+        @if (section.label) {
+          <div class="shell-nav-section-label">{{ section.label }}</div>
+        }
         @for (item of section.items; track item.path) {
           <a
-            mat-list-item
+            class="shell-nav-item"
             [routerLink]="item.path"
-            routerLinkActive="active-link"
+            routerLinkActive="shell-nav-item--active"
             [routerLinkActiveOptions]="{ exact: isExactMatch(item.path) }"
             (click)="closeIfMobile(sidenav)"
           >
-            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-            <span matListItemTitle>{{ item.label }}</span>
+            <i class="ph {{ item.icon }}"></i>
+            <span>{{ item.label }}</span>
           </a>
         }
-      </mat-nav-list>
+      </div>
     }
   </mat-sidenav>
 
   <mat-sidenav-content>
-    <mat-toolbar color="primary" class="shell-toolbar">
+    <header class="shell-header">
       @if (sidenavMode() === 'over') {
-        <button mat-icon-button (click)="sidenav.toggle()" aria-label="Abrir menú">
-          <mat-icon>menu</mat-icon>
+        <button mat-icon-button (click)="sidenav.toggle()" aria-label="Abrir menú" class="shell-menu-btn">
+          <i class="ph ph-list"></i>
         </button>
       }
       <span class="shell-title">Control de Inventario</span>
-      <span class="shell-spacer"></span>
+      <div class="shell-header-spacer"></div>
       <span class="shell-user">{{ user()?.name }} · {{ user()?.role }}</span>
-      <button mat-icon-button (click)="logout()" aria-label="Cerrar sesión" title="Cerrar sesión">
-        <mat-icon>logout</mat-icon>
+      <div class="shell-avatar">{{ initials() }}</div>
+      <button
+        class="shell-logout-btn"
+        (click)="logout()"
+        aria-label="Cerrar sesión"
+        title="Cerrar sesión"
+      >
+        <i class="ph ph-sign-out"></i>
       </button>
-    </mat-toolbar>
+    </header>
 
     <main class="shell-main">
       <router-outlet></router-outlet>

@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+body{margin:0;background:#F5F8FC;color:#1F2A37;font-family:Roboto,"Helvetica Neue",sans-serif;font-size:14px;line-height:1.5}
+h1,h2,h3,h4,h5{font-family:Roboto,"Helvetica Neue",sans-serif;font-weight:500;margin:0}
+a{color:#0F4C81;text-decoration:none}
+a:hover{color:#1E6FB5;text-decoration:underline}
+*,*::before,*::after{box-sizing:border-box}
+i.ph{display:inline-block;line-height:1}
+:focus{outline:none}
+:focus-visible{outline:2px solid #1E6FB5;outline-offset:2px}
+::selection{background:#CFE8FB}
+</style>
+</helmet>
+
+<section style="padding:40px 44px 4px;max-width:1080px">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:16px">
+<span style="font:500 10px ui-monospace,Menlo,monospace;padding:4px 9px;background:#CFE8FB;color:#0B3C6B;border-radius:4px;letter-spacing:.1em">TG INVENTORY</span>
+<span style="font-size:12px;color:#5A7189">Mockups de UI · base: docs/esp/ui-ux-design-brief.md</span>
+</div>
+<h2 style="font-size:30px;color:#0B3C6B;margin-bottom:10px;letter-spacing:-.01em">Control de inventario, proveedores y solicitudes</h2>
+<p style="max-width:68ch;color:#43596E">Las pantallas siguen el design brief del repositorio: paleta de azules (<span style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px">primary-900</span> a <span style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px">primary-100</span> sobre fondo <span style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px">#F5F8FC</span>), Roboto en los pesos de la tabla tipográfica, densidad media-profesional y colores semánticos reservados para stock bajo, aprobado y rechazado.</p>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px">
+<div style="padding:16px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F2F7FD);border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 8px 20px -12px rgba(11,60,107,.18)">
+<div style="font:500 10px/1 Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:7px">Paleta</div>
+<div style="display:flex;gap:5px;margin-bottom:9px">
+<span style="width:26px;height:26px;border-radius:5px;background:#0B3C6B"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#0F4C81"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#1E6FB5"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#6FB1E8"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#CFE8FB"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#FFFFFF;border:1px solid #DCE8F4"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#2E7D32"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#ED6C02"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#D32F2F"></span>
+</div>
+<p style="margin:0;font-size:13px;color:#43596E">Los nueve tokens de la sección 2 del brief, en los roles que ahí se les asigna. El azul oscuro queda para navegación y encabezados; el celeste claro para filas seleccionadas y fondos de sección.</p>
+</div>
+<div style="padding:16px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F2F7FD);border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 8px 20px -12px rgba(11,60,107,.18)">
+<div style="font:500 10px/1 Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:7px">Profundidad</div>
+<p style="margin:0;font-size:13px;color:#43596E">Respuesta al pedido de que no se vea plano: superficies con degradado sutil, sombras de dos capas tintadas en azul, borde de un píxel en cada tarjeta y la barra lateral en degradado <span style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px">900→700</span>. Sin salir de los nueve colores del brief.</p>
+</div>
+<div style="padding:16px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F2F7FD);border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 8px 20px -12px rgba(11,60,107,.18)">
+<div style="font:500 10px/1 Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:7px">Alcance</div>
+<p style="margin:0;font-size:13px;color:#43596E">Once pantallas de escritorio. El menú lateral se recorta según el rol activo (RBAC del repo) y la vista de inventario tiene tres layouts intercambiables desde su propia barra.</p>
+</div>
+</div>
+<p style="margin-top:20px;font-size:12px;color:#7089A0">Datos de ejemplo. Los campos y estados salen de los modelos del repositorio: Product, Location, LocationStock, InventoryMovement, Batch, Request, Role.</p>
+</section>
+
+<section style="padding:26px 44px 60px">
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+<span style="font:500 11px Roboto,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#5A7189">Rol activo</span>
+<div style="display:flex;gap:7px">
+<sc-for list="{{ roles }}" as="r" hint-placeholder-count="4">
+<sc-if value="{{ r.active }}"><button onClick="{{ r.pick }}" style="cursor:pointer;font:500 12.5px Roboto,sans-serif;padding:6px 13px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)">{{ r.name }}</button></sc-if>
+<sc-if value="{{ r.inactive }}"><button onClick="{{ r.pick }}" style="cursor:pointer;font:400 12.5px Roboto,sans-serif;padding:6px 13px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#43596E" style-hover="border-color:#6FB1E8;color:#0F4C81">{{ r.name }}</button></sc-if>
+</sc-for>
+</div>
+</div>
+
+<div style="width:1440px;border-radius:12px;overflow:hidden;border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.06),0 24px 60px -30px rgba(11,60,107,.45);display:grid;grid-template-columns:238px 1fr;background:#F5F8FC">
+
+<nav style="background:linear-gradient(180deg,#0B3C6B,#0F4C81 60%,#12558E);padding:18px 0 22px;display:flex;flex-direction:column;gap:20px;min-height:920px">
+<div style="display:flex;align-items:center;gap:10px;padding:0 18px 6px">
+<div style="width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(150deg,#6FB1E8,#1E6FB5);color:#062A4D;font:700 13px Roboto,sans-serif;box-shadow:0 2px 8px -2px rgba(0,0,0,.5)">TG</div>
+<div>
+<div style="font:500 15px Roboto,sans-serif;color:#fff;line-height:1.15">Inventario</div>
+<div style="font-size:10.5px;color:#9CC6E8">Clínica Los Robles</div>
+</div>
+</div>
+<sc-for list="{{ navGroups }}" as="group" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:#7FAFD8;padding:0 18px 7px">{{ group.name }}</div>
+<sc-for list="{{ group.items }}" as="item" hint-placeholder-count="4">
+<sc-if value="{{ item.active }}">
+<button onClick="{{ item.pick }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:11px;padding:9px 18px;font:500 13px Roboto,sans-serif;color:#fff;background:linear-gradient(90deg,rgba(111,177,232,.32),rgba(111,177,232,.04));box-shadow:inset 3px 0 0 #6FB1E8">
+<i class="ph {{ item.icon }}" style="font-size:16px;color:#CFE8FB"></i>{{ item.label }}
+</button>
+</sc-if>
+<sc-if value="{{ item.inactive }}">
+<button onClick="{{ item.pick }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:11px;padding:9px 18px;font:400 13px Roboto,sans-serif;color:#C6DDF0" style-hover="background:rgba(255,255,255,.08);color:#fff">
+<i class="ph {{ item.icon }}" style="font-size:16px;color:#8FBBE2"></i>{{ item.label }}
+</button>
+</sc-if>
+</sc-for>
+</div>
+</sc-for>
+<div style="margin-top:auto;padding:14px 18px 0;border-top:1px solid rgba(255,255,255,.16);display:flex;align-items:center;gap:10px">
+<div style="width:30px;height:30px;border-radius:50%;background:#1E6FB5;display:grid;place-items:center;font:500 11px Roboto,sans-serif;color:#fff">MC</div>
+<div style="min-width:0">
+<div style="font-size:12.5px;color:#fff;line-height:1.2">María Cabrera</div>
+<div style="font-size:10.5px;color:#9CC6E8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ role }}</div>
+</div>
+</div>
+</nav>
+
+<main style="min-width:0;background:linear-gradient(180deg,#F7FAFD,#F5F8FC 240px)">
+<header style="display:flex;align-items:center;gap:16px;padding:15px 26px;background:#fff;border-bottom:1px solid #DCE8F4;box-shadow:0 1px 3px rgba(11,60,107,.06)">
+<div style="min-width:0">
+<div style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#7089A0">{{ crumb }}</div>
+<div style="font:500 20px Roboto,sans-serif;color:#0B3C6B">{{ title }}</div>
+</div>
+<div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+<div style="position:relative;display:flex;align-items:center">
+<i class="ph ph-magnifying-glass" style="position:absolute;left:10px;font-size:15px;color:#7089A0"></i>
+<input placeholder="Buscar producto, lote o proveedor" style="width:290px;height:36px;padding:0 12px 0 30px;font:400 13.5px Roboto,sans-serif;color:#1F2A37;background:#F5F8FC;border:1px solid #DCE8F4;border-radius:6px">
+</div>
+<button style="cursor:pointer;position:relative;width:36px;height:36px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#0F4C81" style-hover="background:#F2F7FD"><i class="ph ph-bell" style="font-size:17px"></i><span style="position:absolute;top:6px;right:7px;width:7px;height:7px;border-radius:50%;background:#ED6C02;box-shadow:0 0 0 2px #fff"></span></button>
+<button style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)" style-hover="background:linear-gradient(180deg,#2A7EC6,#12558E)"><i class="ph ph-plus" style="font-size:15px"></i>Nuevo movimiento</button>
+</div>
+</header>
+
+<div style="padding:22px 26px 40px">
+
+<sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+<sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+<div style="padding:15px 16px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F4F9FE);border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 10px 24px -16px rgba(11,60,107,.3)">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+<span style="width:26px;height:26px;border-radius:6px;background:#CFE8FB;display:grid;place-items:center"><i class="ph {{ k.icon }}" style="font-size:15px;color:#0F4C81"></i></span>
+<span style="font:500 11px Roboto,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:#5A7189">{{ k.label }}</span>
+</div>
+<div style="font:500 30px Roboto,sans-serif;color:#0B3C6B;letter-spacing:-.02em;line-height:1.1">{{ k.value }}</div>
+<div style="font-size:11.5px;color:#7089A0;margin:3px 0 9px">{{ k.note }}</div>
+<div style="height:4px;border-radius:2px;background:#E7EFF7;overflow:hidden"><div style="height:4px;border-radius:2px;background:linear-gradient(90deg,#6FB1E8,#0F4C81);width:{{ k.bar }}"></div></div>
+</div>
+</sc-for>
+</div>
+
+<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-top:16px;align-items:start">
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 10px 24px -16px rgba(11,60,107,.3);overflow:hidden">
+<div style="display:flex;align-items:baseline;gap:10px;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">
+<h4 style="font-size:16px;color:#0B3C6B">Movimientos recientes</h4>
+<a href="#" style="margin-left:auto;font-size:12.5px">Ver todos</a>
+</div>
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Producto</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Tipo</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Ubicación</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Cant.</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Usuario</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Fecha</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ movimientos }}" as="m" hint-placeholder-count="6">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9">{{ m.producto }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9"><span style="display:inline-flex;align-items:center;font-size:11px;padding:2px 9px;border-radius:11px;background:{{ m.tagBg }};color:{{ m.tagFg }}">{{ m.tipo }}</span></td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ m.ubicacion }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums;color:{{ m.color }}">{{ m.cantidad }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ m.usuario }}</td>
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9;color:#7089A0;white-space:nowrap">{{ m.fecha }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="padding:15px 16px;border-radius:10px;background:linear-gradient(120deg,#FFF6EF,#FFFFFF 60%);border:1px solid #F5D9BF;border-left:3px solid #ED6C02;box-shadow:0 1px 2px rgba(11,60,107,.06),0 10px 24px -16px rgba(11,60,107,.3)">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+<i class="ph ph-warning" style="font-size:17px;color:#ED6C02"></i>
+<h4 style="font-size:16px;color:#0B3C6B">Stock bajo mínimo</h4>
+<span style="margin-left:auto;font-size:11px;padding:2px 9px;border-radius:11px;background:#ED6C02;color:#fff">4 alertas</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:9px">
+<sc-for list="{{ alertas }}" as="a" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:10px;font-size:13px">
+<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.producto }}</span>
+<span style="font-size:11.5px;color:#7089A0">{{ a.ubicacion }}</span>
+<span style="font-variant-numeric:tabular-nums;font-weight:500;color:{{ a.color }}">{{ a.actual }}/{{ a.minimo }}</span>
+</div>
+</sc-for>
+</div>
+<button style="cursor:pointer;width:100%;margin-top:13px;height:34px;border-radius:6px;border:1px solid #ED6C02;background:#fff;color:#B65302;font:500 12.5px Roboto,sans-serif" style-hover="background:#FFF3E8">Generar solicitud de reposición</button>
+</div>
+<div style="padding:15px 16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 10px 24px -16px rgba(11,60,107,.3)">
+<h4 style="font-size:16px;color:#0B3C6B;margin-bottom:6px">Solicitudes por aprobar</h4>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ solicitudes }}" as="s" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #EEF3F9">
+<div style="min-width:0;flex:1">
+<div style="font-size:13px">{{ s.detalle }}</div>
+<div style="font-size:11px;color:#7089A0">{{ s.solicitante }} · {{ s.tipo }}</div>
+</div>
+<button style="cursor:pointer;font:500 12px Roboto,sans-serif;padding:5px 11px;border-radius:6px;border:1px solid #2E7D32;background:#fff;color:#2E7D32" style-hover="background:#EDF6ED">Aprobar</button>
+<button style="cursor:pointer;font:500 12px Roboto,sans-serif;padding:5px 11px;border-radius:6px;border:1px solid #E7C3C3;background:#fff;color:#D32F2F" style-hover="background:#FDEDED">Rechazar</button>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isInventario }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+<div style="display:flex;gap:4px;padding:4px;border:1px solid #DCE8F4;border-radius:8px;background:#fff;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<sc-for list="{{ layouts }}" as="l" hint-placeholder-count="3">
+<sc-if value="{{ l.active }}"><button onClick="{{ l.pick }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;font:500 12.5px Roboto,sans-serif;padding:6px 12px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff"><i class="ph {{ l.icon }}" style="font-size:15px"></i>{{ l.name }}</button></sc-if>
+<sc-if value="{{ l.inactive }}"><button onClick="{{ l.pick }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;font:400 12.5px Roboto,sans-serif;padding:6px 12px;border-radius:6px;border:1px solid transparent;background:transparent;color:#43596E" style-hover="background:#F2F7FD;color:#0F4C81"><i class="ph {{ l.icon }}" style="font-size:15px"></i>{{ l.name }}</button></sc-if>
+</sc-for>
+</div>
+<div style="display:flex;gap:8px;margin-left:auto;align-items:center">
+<select style="height:34px;padding:0 9px;font:400 13px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #DCE8F4;border-radius:6px"><option>Todas las ubicaciones</option><option>Bodega Central</option><option>Farmacia</option></select>
+<select style="height:34px;padding:0 9px;font:400 13px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #DCE8F4;border-radius:6px"><option>Todas las categorías</option><option>Insumos</option><option>Equipos</option></select>
+<button style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;font:500 12.5px Roboto,sans-serif;border-radius:6px;border:1px solid #F5D9BF;background:#FFF6EF;color:#B65302" style-hover="background:#FFEEDD"><i class="ph ph-funnel" style="font-size:15px"></i>Solo stock bajo</button>
+<button style="cursor:pointer;width:34px;height:34px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#0F4C81" style-hover="background:#F2F7FD"><i class="ph ph-download-simple" style="font-size:16px"></i></button>
+</div>
+</div>
+
+<sc-if value="{{ layoutTabla }}" hint-placeholder-val="{{ true }}">
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35);overflow:hidden">
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:linear-gradient(180deg,#F7FBFF,#EFF6FD)">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 16px;border-bottom:1px solid #DCE8F4">Producto</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 10px;border-bottom:1px solid #DCE8F4">Categoría</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 10px;border-bottom:1px solid #DCE8F4">Ubicación</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 10px;border-bottom:1px solid #DCE8F4">Lote</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 10px;border-bottom:1px solid #DCE8F4">Existencia</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 10px;border-bottom:1px solid #DCE8F4">Mínimo</th>
+<th style="text-align:left;width:130px;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 10px;border-bottom:1px solid #DCE8F4">Nivel</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 16px;border-bottom:1px solid #DCE8F4">Estado</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ stock }}" as="s" hint-placeholder-count="9">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:10px 16px;border-bottom:1px solid #EEF3F9">
+<div style="font-size:13.5px;color:#1F2A37">{{ s.producto }}</div>
+<div style="font-size:11px;color:#7089A0">{{ s.sku }} · {{ s.unidad }}</div>
+</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ s.categoria }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ s.ubicacion }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;color:#7089A0;font-variant-numeric:tabular-nums">{{ s.lote }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;text-align:right;font-weight:500;font-variant-numeric:tabular-nums">{{ s.cantidad }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;text-align:right;color:#7089A0;font-variant-numeric:tabular-nums">{{ s.minimo }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9"><div style="height:5px;border-radius:3px;background:#E7EFF7;overflow:hidden"><div style="height:5px;border-radius:3px;background:{{ s.barColor }};width:{{ s.bar }}"></div></div></td>
+<td style="padding:10px 16px;border-bottom:1px solid #EEF3F9"><span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border-radius:11px;background:{{ s.tagBg }};color:{{ s.tagFg }}"><i class="ph {{ s.tagIcon }}" style="font-size:12px"></i>{{ s.estado }}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid #DCE8F4;background:#F7FAFD;font-size:12.5px;color:#5A7189">
+<span>1–9 de 348 registros</span>
+<div style="margin-left:auto;display:flex;gap:7px">
+<button style="cursor:pointer;font:400 12.5px Roboto,sans-serif;padding:5px 11px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#7089A0">Anterior</button>
+<button style="cursor:pointer;font:500 12.5px Roboto,sans-serif;padding:5px 11px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#0F4C81" style-hover="background:#F2F7FD">Siguiente</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ layoutSplit }}">
+<div style="display:grid;grid-template-columns:1fr 366px;gap:16px;align-items:start">
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35);overflow:hidden">
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:linear-gradient(180deg,#F7FBFF,#EFF6FD)">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 16px;border-bottom:1px solid #DCE8F4">Producto</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px;border-bottom:1px solid #DCE8F4">Ubicación</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px;border-bottom:1px solid #DCE8F4">Existencia</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 16px;border-bottom:1px solid #DCE8F4">Estado</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ stock }}" as="s" hint-placeholder-count="9">
+<tr style="background:{{ s.rowBg }}" style-hover="background:#F7FBFF">
+<td style="padding:10px 16px;border-bottom:1px solid #EEF3F9;border-left:3px solid {{ s.rowEdge }}">{{ s.producto }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ s.ubicacion }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums;font-weight:500">{{ s.cantidad }}</td>
+<td style="padding:10px 16px;border-bottom:1px solid #EEF3F9"><span style="display:inline-flex;align-items:center;font-size:11px;padding:3px 9px;border-radius:11px;background:{{ s.tagBg }};color:{{ s.tagFg }}">{{ s.estado }}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="position:sticky;top:16px;padding:16px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F3F8FE);border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.08),0 18px 40px -24px rgba(11,60,107,.45)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5">Seleccionado</div>
+<h4 style="font-size:19px;color:#0B3C6B;margin:5px 0 8px">Guantes de nitrilo M</h4>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<span style="font-size:11px;padding:3px 9px;border-radius:11px;background:#EEF3F9;color:#43596E">INS-0142</span>
+<span style="font-size:11px;padding:3px 9px;border-radius:11px;border:1px solid #6FB1E8;color:#0F4C81">Requiere lote</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+<div style="padding:10px;border-radius:8px;background:#CFE8FB">
+<div style="font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:#0F4C81">Total</div>
+<div style="font:500 22px Roboto,sans-serif;color:#0B3C6B">1.240</div>
+</div>
+<div style="padding:10px;border-radius:8px;background:#F2F7FD;border:1px solid #DCE8F4">
+<div style="font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:#5A7189">Mínimo</div>
+<div style="font:500 22px Roboto,sans-serif;color:#43596E">400</div>
+</div>
+</div>
+<div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+<div style="font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:#5A7189">Por ubicación</div>
+<sc-for list="{{ porUbicacion }}" as="u" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:10px;font-size:13px"><span style="flex:1">{{ u.nombre }}</span><span style="font-variant-numeric:tabular-nums;color:#43596E">{{ u.cantidad }}</span></div>
+</sc-for>
+</div>
+<div style="display:flex;gap:8px;margin-top:16px">
+<button style="cursor:pointer;flex:1;height:36px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif">Mover</button>
+<button style="cursor:pointer;flex:1;height:36px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#0F4C81;font:500 13px Roboto,sans-serif" style-hover="background:#F2F7FD">Ver ficha</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ layoutTarjetas }}">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+<sc-for list="{{ ubicacionesCards }}" as="u" hint-placeholder-count="6">
+<div style="display:flex;flex-direction:column;padding:0;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 12px 26px -18px rgba(11,60,107,.32);overflow:hidden">
+<div style="display:flex;align-items:center;gap:9px;padding:12px 14px;background:linear-gradient(120deg,#0B3C6B,#12558E)">
+<i class="ph ph-map-pin" style="font-size:16px;color:#9CC6E8"></i>
+<h4 style="font-size:15px;color:#fff">{{ u.nombre }}</h4>
+<span style="margin-left:auto;font-size:10.5px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.18);color:#E7F2FB">{{ u.skus }} SKUs</span>
+</div>
+<div style="display:flex;flex-direction:column;padding:6px 14px 10px">
+<sc-for list="{{ u.items }}" as="it" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:9px;font-size:13px;padding:9px 0;border-bottom:1px solid #EEF3F9">
+<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ it.producto }}</span>
+<span style="font-variant-numeric:tabular-nums;font-weight:500">{{ it.cantidad }}</span>
+<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:{{ it.tagBg }};color:{{ it.tagFg }}">{{ it.estado }}</span>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:auto;display:flex;align-items:center;gap:7px;padding:9px 14px;background:#F7FAFD;border-top:1px solid #EEF3F9;font-size:11.5px;color:#7089A0"><i class="ph ph-clock-counter-clockwise" style="font-size:14px"></i>Último movimiento {{ u.ultimo }}</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ isArticulo }}">
+<div style="display:grid;grid-template-columns:1fr 330px;gap:16px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="padding:18px;border-radius:10px;background:linear-gradient(120deg,#FFFFFF,#F1F7FE);border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 12px 26px -18px rgba(11,60,107,.32)">
+<div style="display:flex;align-items:flex-start;gap:16px">
+<div style="width:78px;height:78px;border-radius:8px;flex:none;background:repeating-linear-gradient(45deg,#EAF2FA,#EAF2FA 6px,#F7FAFD 6px,#F7FAFD 12px);border:1px solid #DCE8F4;display:grid;place-items:center"><span style="font:400 9px ui-monospace,Menlo,monospace;color:#7089A0;text-align:center">foto<br>producto</span></div>
+<div style="min-width:0">
+<h3 style="font-size:23px;color:#0B3C6B;margin-bottom:7px">Guantes de nitrilo talla M</h3>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<span style="font-size:11px;padding:3px 9px;border-radius:11px;background:#EEF3F9;color:#43596E">INS-0142</span>
+<span style="font-size:11px;padding:3px 9px;border-radius:11px;background:#CFE8FB;color:#0B3C6B">Insumos</span>
+<span style="font-size:11px;padding:3px 9px;border-radius:11px;border:1px solid #6FB1E8;color:#0F4C81">Requiere lote</span>
+<span style="font-size:11px;padding:3px 9px;border-radius:11px;background:#E6F2E7;color:#2E7D32">Activo</span>
+</div>
+<p style="margin:9px 0 0;font-size:13px;color:#43596E;max-width:56ch">Caja de 100 unidades, sin polvo. Uso en curaciones y procedimientos. Unidad de manejo: caja.</p>
+</div>
+<div style="margin-left:auto;display:flex;gap:8px">
+<button style="cursor:pointer;height:34px;padding:0 13px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#0F4C81;font:500 12.5px Roboto,sans-serif" style-hover="background:#F2F7FD">Editar</button>
+<button style="cursor:pointer;height:34px;padding:0 13px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 12.5px Roboto,sans-serif">Registrar movimiento</button>
+</div>
+</div>
+</div>
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06);overflow:hidden">
+<h4 style="font-size:16px;color:#0B3C6B;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">Existencias por ubicación y lote</h4>
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Ubicación</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Lote</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Vence</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Cantidad</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Estado</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ lotes }}" as="l" hint-placeholder-count="4">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9">{{ l.ubicacion }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;font-variant-numeric:tabular-nums">{{ l.lote }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ l.vence }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ l.cantidad }}</td>
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:{{ l.tagBg }};color:{{ l.tagFg }}">{{ l.estado }}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06);overflow:hidden">
+<h4 style="font-size:16px;color:#0B3C6B;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">Historial de movimientos</h4>
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Fecha</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Tipo</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Ubicación</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Cant.</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Usuario</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ movimientos }}" as="h" hint-placeholder-count="6">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9;color:#43596E;white-space:nowrap">{{ h.fecha }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:2px 9px;border-radius:11px;background:{{ h.tagBg }};color:{{ h.tagFg }}">{{ h.tipo }}</span></td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ h.ubicacion }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums;color:{{ h.color }}">{{ h.cantidad }}</td>
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9;color:#7089A0">{{ h.usuario }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="padding:16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 12px 26px -18px rgba(11,60,107,.32)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5">Comparativa</div>
+<h4 style="font-size:16px;color:#0B3C6B;margin:5px 0 12px">Precio por proveedor</h4>
+<div style="display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ precios }}" as="p" hint-placeholder-count="4">
+<div>
+<div style="display:flex;align-items:baseline;gap:8px;font-size:13px"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.proveedor }}</span><span style="font-variant-numeric:tabular-nums;font-weight:500;color:{{ p.color }}">{{ p.precio }}</span></div>
+<div style="height:5px;border-radius:3px;background:#E7EFF7;margin-top:5px;overflow:hidden"><div style="height:5px;border-radius:3px;background:{{ p.color }};width:{{ p.bar }}"></div></div>
+<div style="font-size:11px;color:#7089A0;margin-top:4px">{{ p.nota }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="padding:16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 12px 26px -18px rgba(11,60,107,.32)">
+<h4 style="font-size:16px;color:#0B3C6B;margin-bottom:12px">Consumo mensual</h4>
+<div style="display:flex;align-items:flex-end;gap:7px;height:100px">
+<sc-for list="{{ consumo }}" as="c" hint-placeholder-count="8">
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+<div style="width:100%;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#6FB1E8,#0F4C81);height:{{ c.h }}"></div>
+<span style="font-size:9.5px;color:#7089A0">{{ c.mes }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSolicitud }}">
+<div style="display:grid;grid-template-columns:1fr 336px;gap:16px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="padding:18px;border-radius:10px;background:linear-gradient(120deg,#FFFFFF,#F1F7FE);border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 12px 26px -18px rgba(11,60,107,.32)">
+<h4 style="font-size:16px;color:#0B3C6B">Nueva solicitud de consumo</h4>
+<p style="margin:4px 0 16px;font-size:12.5px;color:#7089A0">Juanita Ríos · Recursos Humanos. Agregá los elementos que necesitás del inventario; la solicitud pasa a aprobación antes del despacho.</p>
+<div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end">
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Elemento del catálogo</label>
+<input placeholder="Buscar: papel, ganchos, tóner…" style="width:100%;height:38px;padding:0 11px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px">
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Cantidad</label>
+<input value="3" style="width:100%;height:38px;padding:0 11px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px">
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Destino</label>
+<select style="width:100%;height:38px;padding:0 9px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px"><option>Oficina RRHH</option><option>Recepción</option><option>Sala de reuniones</option></select>
+</div>
+<button style="cursor:pointer;height:38px;padding:0 15px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif">Agregar</button>
+</div>
+</div>
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06);overflow:hidden">
+<div style="display:flex;align-items:center;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7"><h4 style="font-size:16px;color:#0B3C6B">Elementos solicitados</h4><span style="margin-left:auto;font-size:11px;padding:3px 9px;border-radius:11px;background:#CFE8FB;color:#0B3C6B">2 ítems</span></div>
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Elemento</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Ubicación</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Solicitado</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Disponible</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Estado</th>
+<th style="border-bottom:1px solid #DCE8F4;padding:9px 16px"></th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ carrito }}" as="c" hint-placeholder-count="2">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:10px 16px;border-bottom:1px solid #EEF3F9">
+<div style="font-size:13.5px">{{ c.producto }}</div>
+<div style="font-size:11px;color:#7089A0">{{ c.sku }} · {{ c.unidad }}</div>
+</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ c.ubicacion }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;text-align:right;font-weight:500;font-variant-numeric:tabular-nums">{{ c.cantidad }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;text-align:right;color:#7089A0;font-variant-numeric:tabular-nums">{{ c.disponible }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:{{ c.tagBg }};color:{{ c.tagFg }}">{{ c.estado }}</span></td>
+<td style="padding:10px 16px;border-bottom:1px solid #EEF3F9;text-align:right"><button style="cursor:pointer;background:none;border:0;font:500 12.5px Roboto,sans-serif;color:#D32F2F;text-decoration:underline">Quitar</button></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06);overflow:hidden">
+<h4 style="font-size:16px;color:#0B3C6B;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">Mis solicitudes anteriores</h4>
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Solicitud</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Fecha</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Detalle</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Aprobador</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Estado</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ misSolicitudes }}" as="q" hint-placeholder-count="4">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9;font-weight:500;color:#0F4C81;font-variant-numeric:tabular-nums">{{ q.id }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#7089A0;white-space:nowrap">{{ q.fecha }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ q.detalle }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ q.aprobador }}</td>
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:{{ q.tagBg }};color:{{ q.tagFg }}">{{ q.estado }}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</div>
+<div style="position:sticky;top:16px;padding:16px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F3F8FE);border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.08),0 18px 40px -24px rgba(11,60,107,.45)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:10px">Resumen de la solicitud</div>
+<div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
+<div style="display:flex"><span style="flex:1;color:#5A7189">Solicitante</span><span>Juanita Ríos</span></div>
+<div style="display:flex"><span style="flex:1;color:#5A7189">Área</span><span>Recursos Humanos</span></div>
+<div style="display:flex"><span style="flex:1;color:#5A7189">Destino</span><span>Oficina RRHH</span></div>
+<div style="display:flex;padding-top:9px;border-top:1px solid #E7EFF7"><span style="flex:1;color:#5A7189">Ítems</span><span style="font-variant-numeric:tabular-nums">2</span></div>
+<div style="display:flex"><span style="flex:1;color:#5A7189">Unidades</span><span style="font-variant-numeric:tabular-nums">5</span></div>
+</div>
+<div style="margin-top:14px">
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Justificación</label>
+<textarea style="width:100%;min-height:70px;padding:9px 11px;font:400 13.5px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px;resize:vertical">Reposición de material de archivo para el cierre de contratos del mes.</textarea>
+</div>
+<div style="margin-top:12px;padding:11px 12px;border-radius:8px;background:#CFE8FB;border:1px solid #A9D3F2;font-size:12.5px;color:#255C8C;display:flex;gap:9px"><i class="ph ph-user-check" style="font-size:16px;color:#0F4C81"></i>Aprobación asignada a Rocío Soto (Aprobador · Administración).</div>
+<button style="cursor:pointer;width:100%;margin-top:14px;height:38px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)">Enviar a aprobación</button>
+<button style="cursor:pointer;width:100%;margin-top:8px;height:38px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#0F4C81;font:500 13px Roboto,sans-serif" style-hover="background:#F2F7FD">Guardar borrador</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isForm }}">
+<div style="max-width:780px">
+<div style="padding:20px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35)">
+<h4 style="font-size:18px;color:#0B3C6B">Datos del producto</h4>
+<p style="margin:4px 0 18px;font-size:12.5px;color:#7089A0">Los campos con asterisco son obligatorios. Unidad y categoría se eligen del catálogo y se pueden crear en línea.</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div style="grid-column:1/-1">
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Nombre *</label>
+<input value="Guantes de nitrilo talla M" style="width:100%;height:38px;padding:0 11px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px">
+</div>
+<div style="grid-column:1/-1">
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Descripción</label>
+<textarea style="width:100%;min-height:76px;padding:9px 11px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px;resize:vertical">Caja de 100 unidades, sin polvo.</textarea>
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Unidad de manejo *</label>
+<select style="width:100%;height:38px;padding:0 9px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px"><option>Caja</option><option>Unidad</option><option>Litro</option></select>
+<button style="cursor:pointer;margin-top:7px;background:none;border:0;padding:0;font:500 12.5px Roboto,sans-serif;color:#0F4C81;text-decoration:underline">+ Crear nueva unidad</button>
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Categoría</label>
+<select style="width:100%;height:38px;padding:0 9px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px"><option>Insumos</option><option>Equipos</option><option>Sin categoría</option></select>
+<button style="cursor:pointer;margin-top:7px;background:none;border:0;padding:0;font:500 12.5px Roboto,sans-serif;color:#0F4C81;text-decoration:underline">+ Crear nueva categoría</button>
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Stock mínimo (dispara alerta)</label>
+<input value="400" style="width:100%;height:38px;padding:0 11px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px">
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Estado</label>
+<div style="display:inline-flex;border:1px solid #C9DCEC;border-radius:6px;overflow:hidden">
+<label style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;font-size:13px;cursor:pointer;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff"><input type="radio" name="estado" checked style="display:none">Activo</label>
+<label style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;font-size:13px;cursor:pointer;border-left:1px solid #C9DCEC;color:#43596E"><input type="radio" name="estado" style="display:none">Descontinuado</label>
+</div>
+</div>
+</div>
+<div style="margin-top:18px;padding:13px 14px;border-radius:8px;background:#CFE8FB;border:1px solid #A9D3F2;display:flex;gap:11px;align-items:flex-start">
+<input type="checkbox" checked style="width:17px;height:17px;margin-top:1px;accent-color:#0F4C81">
+<div>
+<div style="font-size:13.5px;color:#0B3C6B;font-weight:500">Requiere lote y fecha de vencimiento</div>
+<div style="font-size:12.5px;color:#255C8C">Al activarlo, todo movimiento de este producto pedirá un lote. No se puede desactivar si ya existen lotes con existencia.</div>
+</div>
+</div>
+<div style="display:flex;gap:9px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid #EEF3F9">
+<button style="cursor:pointer;height:38px;padding:0 16px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#43596E;font:500 13px Roboto,sans-serif" style-hover="background:#F5F8FC">Cancelar</button>
+<button style="cursor:pointer;height:38px;padding:0 18px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)">Guardar producto</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isEntrada }}">
+<div style="display:grid;grid-template-columns:1fr 336px;gap:16px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;padding:14px 16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<sc-for list="{{ pasos }}" as="p" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:10px">
+<div style="width:27px;height:27px;border-radius:50%;display:grid;place-items:center;font:500 12.5px Roboto,sans-serif;background:{{ p.bg }};color:{{ p.fg }};border:1px solid {{ p.edge }}">{{ p.n }}</div>
+<span style="font-size:13px;font-weight:500;color:{{ p.text }}">{{ p.label }}</span>
+<div style="width:52px;height:2px;border-radius:1px;background:{{ p.line }};margin:0 14px"></div>
+</div>
+</sc-for>
+</div>
+<div style="padding:18px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<h4 style="font-size:16px;color:#0B3C6B;margin-bottom:14px">Documento de compra</h4>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+<div><label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Proveedor *</label><select style="width:100%;height:38px;padding:0 9px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"><option>Insumos del Valle</option><option>Distribuidora Andina</option></select></div>
+<div><label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">N° de factura</label><input value="F-2026-0871" style="width:100%;height:38px;padding:0 11px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"></div>
+<div><label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Fecha de recepción</label><input value="16/08/2026" style="width:100%;height:38px;padding:0 11px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"></div>
+<div><label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Ubicación de destino *</label><select style="width:100%;height:38px;padding:0 9px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"><option>Bodega Central</option><option>Farmacia</option></select></div>
+<div style="grid-column:2/-1"><label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Notas</label><input placeholder="Opcional" style="width:100%;height:38px;padding:0 11px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"></div>
+</div>
+</div>
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06);overflow:hidden">
+<div style="display:flex;align-items:center;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7"><h4 style="font-size:16px;color:#0B3C6B">Líneas recibidas</h4><button style="cursor:pointer;margin-left:auto;background:none;border:0;font:500 12.5px Roboto,sans-serif;color:#0F4C81;text-decoration:underline">+ Agregar línea</button></div>
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Producto</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Lote</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Vence</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Cant.</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Precio unit.</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Subtotal</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ lineas }}" as="l" hint-placeholder-count="4">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9">{{ l.producto }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;font-variant-numeric:tabular-nums">{{ l.lote }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ l.vence }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ l.cantidad }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ l.precio }}</td>
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums;font-weight:500">{{ l.subtotal }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</div>
+<div style="position:sticky;top:16px;padding:16px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F3F8FE);border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.08),0 18px 40px -24px rgba(11,60,107,.45)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:10px">Resumen</div>
+<div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
+<div style="display:flex"><span style="flex:1;color:#5A7189">Líneas</span><span style="font-variant-numeric:tabular-nums">4</span></div>
+<div style="display:flex"><span style="flex:1;color:#5A7189">Unidades</span><span style="font-variant-numeric:tabular-nums">1.180</span></div>
+<div style="display:flex;align-items:baseline;padding-top:9px;border-top:1px solid #E7EFF7"><span style="flex:1;color:#5A7189">Total</span><span style="font:500 20px Roboto,sans-serif;color:#0B3C6B;font-variant-numeric:tabular-nums">$ 2.146.500</span></div>
+</div>
+<div style="margin-top:14px;padding:11px 12px;border-radius:8px;background:#FFF6EF;border:1px solid #F5D9BF;font-size:12.5px;color:#8A4102;display:flex;gap:9px"><i class="ph ph-info" style="font-size:16px;color:#ED6C02"></i>El precio unitario de Alcohol 70% es 12% mayor que la última compra a este proveedor.</div>
+<button style="cursor:pointer;width:100%;margin-top:14px;height:38px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)">Confirmar entrada</button>
+<button style="cursor:pointer;width:100%;margin-top:8px;height:38px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#0F4C81;font:500 13px Roboto,sans-serif" style-hover="background:#F2F7FD">Guardar borrador</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSalida }}">
+<div style="display:grid;grid-template-columns:1fr 348px;gap:16px;align-items:start">
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06);overflow:hidden">
+<div style="display:flex;align-items:center;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7"><h4 style="font-size:16px;color:#0B3C6B">Solicitudes de consumo aprobadas</h4><span style="margin-left:auto;font-size:11px;padding:3px 9px;border-radius:11px;background:#CFE8FB;color:#0B3C6B">3 por despachar</span></div>
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Solicitud</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Solicitante</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Destino</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Ítems</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Estado</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ despachos }}" as="d" hint-placeholder-count="4">
+<tr style="background:{{ d.rowBg }}" style-hover="background:#F7FBFF">
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9;font-variant-numeric:tabular-nums;font-weight:500;color:#0F4C81">{{ d.id }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9">{{ d.solicitante }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ d.destino }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ d.items }}</td>
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:{{ d.tagBg }};color:{{ d.tagFg }}">{{ d.estado }}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="position:sticky;top:16px;padding:16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.08),0 18px 40px -24px rgba(11,60,107,.45)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5">SOL-0294 · Sala 1 Curaciones</div>
+<h4 style="font-size:17px;color:#0B3C6B;margin:5px 0 12px">Lista de preparación</h4>
+<div style="display:flex;flex-direction:column;gap:9px">
+<sc-for list="{{ picking }}" as="p" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:8px;background:#F7FAFD;border:1px solid #E7EFF7">
+<input type="checkbox" style="width:17px;height:17px;accent-color:#0F4C81">
+<div style="flex:1;min-width:0">
+<div style="font-size:13px">{{ p.producto }}</div>
+<div style="font-size:11px;color:#7089A0">{{ p.lote }} · {{ p.ubicacion }}</div>
+</div>
+<span style="font:500 16px Roboto,sans-serif;color:#0B3C6B;font-variant-numeric:tabular-nums">{{ p.cantidad }}</span>
+</div>
+</sc-for>
+</div>
+<button style="cursor:pointer;width:100%;margin-top:14px;height:38px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)">Confirmar salida y descontar stock</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isConteos }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+<sc-for list="{{ conteoKpis }}" as="k" hint-placeholder-count="4">
+<div style="padding:14px 16px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F4F9FE);border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<div style="font:500 11px Roboto,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:#5A7189">{{ k.label }}</div>
+<div style="font:500 26px Roboto,sans-serif;color:{{ k.color }};margin-top:4px">{{ k.value }}</div>
+</div>
+</sc-for>
+</div>
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35);overflow:hidden">
+<div style="display:flex;align-items:center;gap:11px;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">
+<h4 style="font-size:16px;color:#0B3C6B">Conteo CT-014 · Bodega Central</h4>
+<span style="font-size:11px;padding:3px 9px;border-radius:11px;border:1px solid #6FB1E8;color:#0F4C81">En progreso</span>
+<button style="cursor:pointer;margin-left:auto;height:34px;padding:0 13px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#43596E;font:500 12.5px Roboto,sans-serif" style-hover="background:#F5F8FC">Pausar</button>
+<button style="cursor:pointer;height:34px;padding:0 13px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 12.5px Roboto,sans-serif">Cerrar y ajustar</button>
+</div>
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Producto</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Lote</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Sistema</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Contado</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Diferencia</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Responsable</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ conteo }}" as="c" hint-placeholder-count="6">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9">{{ c.producto }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#7089A0;font-variant-numeric:tabular-nums">{{ c.lote }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ c.sistema }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ c.contado }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums;font-weight:500;color:{{ c.color }}">{{ c.diferencia }}</td>
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ c.responsable }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isUbicaciones }}">
+<div style="display:grid;grid-template-columns:306px 1fr;gap:16px;align-items:start">
+<div style="padding:16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<h4 style="font-size:16px;color:#0B3C6B;margin-bottom:10px">Jerarquía</h4>
+<div style="display:flex;flex-direction:column;gap:2px;font-size:13px">
+<sc-for list="{{ arbol }}" as="n" hint-placeholder-count="7">
+<div style="display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:6px;padding-left:{{ n.indent }}" style-hover="background:#F2F7FD">
+<i class="ph {{ n.icon }}" style="font-size:15px;color:#1E6FB5"></i>
+<span style="flex:1">{{ n.nombre }}</span>
+<span style="font-size:11px;color:#7089A0;font-variant-numeric:tabular-nums">{{ n.skus }}</span>
+</div>
+</sc-for>
+</div>
+<button style="cursor:pointer;width:100%;margin-top:14px;height:36px;border-radius:6px;border:1px dashed #6FB1E8;background:#F7FBFF;color:#0F4C81;font:500 12.5px Roboto,sans-serif" style-hover="background:#EFF6FD">+ Nueva ubicación</button>
+</div>
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06);overflow:hidden">
+<h4 style="font-size:16px;color:#0B3C6B;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">Ubicaciones y salas</h4>
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Nombre</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Ubicación padre</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">SKUs</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Unidades</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Estado</th>
+<th style="border-bottom:1px solid #DCE8F4;padding:9px 16px"></th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ ubicaciones }}" as="u" hint-placeholder-count="6">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9">{{ u.nombre }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ u.padre }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ u.skus }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ u.unidades }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:{{ u.tagBg }};color:{{ u.tagFg }}">{{ u.estado }}</span></td>
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9;text-align:right"><button style="cursor:pointer;background:none;border:0;font:500 12.5px Roboto,sans-serif;color:#0F4C81;text-decoration:underline">{{ u.accion }}</button></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isProveedores }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35);overflow:hidden">
+<div style="display:flex;align-items:center;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7"><h4 style="font-size:16px;color:#0B3C6B">Proveedores</h4><button style="cursor:pointer;margin-left:auto;height:34px;padding:0 13px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 12.5px Roboto,sans-serif">+ Nuevo proveedor</button></div>
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:linear-gradient(180deg,#F7FBFF,#EFF6FD)">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 16px;border-bottom:1px solid #DCE8F4">Proveedor</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px;border-bottom:1px solid #DCE8F4">Contacto</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px;border-bottom:1px solid #DCE8F4">Productos</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px;border-bottom:1px solid #DCE8F4">Compras 12m</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px;border-bottom:1px solid #DCE8F4">Precio prom.</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px;border-bottom:1px solid #DCE8F4">Cumplimiento</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 16px;border-bottom:1px solid #DCE8F4">Estado</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ proveedores }}" as="p" hint-placeholder-count="5">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:10px 16px;border-bottom:1px solid #EEF3F9;font-weight:500">{{ p.nombre }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ p.contacto }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ p.productos }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ p.compras }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ p.precio }}</td>
+<td style="padding:10px;border-bottom:1px solid #EEF3F9"><div style="display:flex;align-items:center;gap:9px"><div style="width:66px;height:5px;border-radius:3px;background:#E7EFF7;overflow:hidden"><div style="height:5px;border-radius:3px;background:{{ p.color }};width:{{ p.bar }}"></div></div><span style="font-size:11.5px;color:#43596E">{{ p.cumplimiento }}</span></div></td>
+<td style="padding:10px 16px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:{{ p.tagBg }};color:{{ p.tagFg }}">{{ p.estado }}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="padding:18px;border-radius:10px;background:linear-gradient(120deg,#0B3C6B,#12558E);box-shadow:0 2px 4px rgba(11,60,107,.1),0 18px 40px -24px rgba(11,60,107,.6)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#9CC6E8">Comparativa de precios</div>
+<h4 style="font-size:18px;color:#fff;margin:5px 0 14px">Alcohol 70% 1L — última cotización por proveedor</h4>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+<sc-for list="{{ comparativa }}" as="c" hint-placeholder-count="4">
+<div style="padding:13px 14px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid {{ c.edge }}">
+<div style="font-size:12.5px;color:#C6DDF0">{{ c.proveedor }}</div>
+<div style="font:500 24px Roboto,sans-serif;color:{{ c.color }};margin-top:3px">{{ c.precio }}</div>
+<div style="font-size:11px;color:#9CC6E8;margin-top:2px">{{ c.nota }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReportes }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:9px;align-items:center">
+<div style="display:inline-flex;border:1px solid #C9DCEC;border-radius:6px;overflow:hidden;background:#fff">
+<label style="padding:8px 14px;font-size:13px;cursor:pointer;color:#43596E">30 días</label>
+<label style="padding:8px 14px;font-size:13px;cursor:pointer;border-left:1px solid #C9DCEC;border-right:1px solid #C9DCEC;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff">6 meses</label>
+<label style="padding:8px 14px;font-size:13px;cursor:pointer;color:#43596E">12 meses</label>
+</div>
+<select style="height:36px;padding:0 9px;font:400 13px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"><option>Todas las ubicaciones</option></select>
+<button style="cursor:pointer;margin-left:auto;display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#0F4C81;font:500 12.5px Roboto,sans-serif" style-hover="background:#F2F7FD"><i class="ph ph-file-csv" style="font-size:16px"></i>Exportar CSV</button>
+</div>
+<div style="display:grid;grid-template-columns:1.45fr 1fr;gap:16px">
+<div style="padding:18px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 12px 26px -18px rgba(11,60,107,.32)">
+<h4 style="font-size:16px;color:#0B3C6B">Compras por mes</h4>
+<div style="font-size:12px;color:#7089A0;margin:3px 0 16px">Monto total facturado a proveedores</div>
+<div style="display:flex;align-items:flex-end;gap:14px;height:190px">
+<sc-for list="{{ compras }}" as="c" hint-placeholder-count="6">
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px">
+<span style="font-size:10.5px;color:#5A7189;font-variant-numeric:tabular-nums">{{ c.monto }}</span>
+<div style="width:100%;border-radius:5px 5px 0 0;background:linear-gradient(180deg,#6FB1E8,#0F4C81);box-shadow:0 4px 10px -4px rgba(15,76,129,.5);height:{{ c.h }}"></div>
+<span style="font-size:11px;color:#5A7189">{{ c.mes }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="padding:18px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 12px 26px -18px rgba(11,60,107,.32)">
+<h4 style="font-size:16px;color:#0B3C6B;margin-bottom:14px">Consumo por ubicación</h4>
+<div style="display:flex;flex-direction:column;gap:13px">
+<sc-for list="{{ consumoUbic }}" as="c" hint-placeholder-count="5">
+<div>
+<div style="display:flex;font-size:13px"><span style="flex:1">{{ c.nombre }}</span><span style="font-variant-numeric:tabular-nums;color:#43596E">{{ c.valor }}</span></div>
+<div style="height:7px;border-radius:4px;background:#E7EFF7;margin-top:6px;overflow:hidden"><div style="height:7px;border-radius:4px;background:linear-gradient(90deg,#6FB1E8,#0F4C81);width:{{ c.bar }}"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06);overflow:hidden">
+<h4 style="font-size:16px;color:#0B3C6B;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">Productos con mayor rotación</h4>
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Producto</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Entradas</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Salidas</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Rotación</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Días de cobertura</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ rotacion }}" as="r" hint-placeholder-count="6">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9">{{ r.producto }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ r.entradas }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ r.salidas }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ r.rotacion }}</td>
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums;font-weight:500;color:{{ r.color }}">{{ r.cobertura }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isUsuarios }}">
+<div style="display:grid;grid-template-columns:1fr 392px;gap:16px;align-items:start">
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35);overflow:hidden">
+<div style="display:flex;align-items:center;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7"><h4 style="font-size:16px;color:#0B3C6B">Usuarios</h4><button style="cursor:pointer;margin-left:auto;height:34px;padding:0 13px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 12.5px Roboto,sans-serif">+ Nuevo usuario</button></div>
+<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Nombre</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Correo</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Rol</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 10px;border-bottom:1px solid #DCE8F4">Último acceso</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:9px 16px;border-bottom:1px solid #DCE8F4">Estado</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ usuarios }}" as="u" hint-placeholder-count="6">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9"><div style="display:flex;align-items:center;gap:10px"><div style="width:27px;height:27px;border-radius:50%;background:#CFE8FB;display:grid;place-items:center;font:500 10.5px Roboto,sans-serif;color:#0B3C6B">{{ u.iniciales }}</div>{{ u.nombre }}</div></td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ u.email }}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:#CFE8FB;color:#0B3C6B">{{ u.rol }}</span></td>
+<td style="padding:9px 10px;border-bottom:1px solid #EEF3F9;color:#7089A0">{{ u.acceso }}</td>
+<td style="padding:9px 16px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:{{ u.tagBg }};color:{{ u.tagFg }}">{{ u.estado }}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="padding:18px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F3F8FE);border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.08),0 18px 40px -24px rgba(11,60,107,.4)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5">Rol · Admin. inventario</div>
+<h4 style="font-size:17px;color:#0B3C6B;margin:5px 0 14px">Matriz de permisos</h4>
+<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:11px 16px;align-items:center;font-size:13px">
+<span></span>
+<span style="font:500 10px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189">Ver</span>
+<span style="font:500 10px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189">Crear</span>
+<span style="font:500 10px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189">Editar</span>
+<sc-for list="{{ permisos }}" as="p" hint-placeholder-count="6">
+<span style="color:#1F2A37">{{ p.modulo }}</span>
+<input type="checkbox" checked="{{ p.ver }}" style="width:17px;height:17px;accent-color:#0F4C81">
+<input type="checkbox" checked="{{ p.crear }}" style="width:17px;height:17px;accent-color:#0F4C81">
+<input type="checkbox" checked="{{ p.editar }}" style="width:17px;height:17px;accent-color:#0F4C81">
+</sc-for>
+</div>
+<button style="cursor:pointer;width:100%;margin-top:18px;height:38px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)">Guardar permisos</button>
+</div>
+</div>
+</sc-if>
+
+</div>
+</main>
+</div>
+
+<p style="margin:22px 0 0;font-size:12.5px;color:#5A7189;max-width:82ch">Siguientes pasos posibles: login y recuperación de contraseña, el flujo de creación de solicitud en pasos (mat-stepper del brief), estados vacíos y de error por pantalla, y la versión responsive — tablas a tarjetas apiladas bajo 600px, según la sección 4.</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1540,&quot;height&quot;:1200}}">
+const OK = { bg: '#E6F2E7', fg: '#2E7D32', line: '#2E7D32' };
+const WARN = { bg: '#FDEDDD', fg: '#B65302', line: '#ED6C02' };
+const BAD = { bg: '#FDEDED', fg: '#C62828', line: '#D32F2F' };
+const INFO = { bg: '#CFE8FB', fg: '#0B3C6B', line: '#1E6FB5' };
+const NEUTRAL = { bg: '#EEF3F9', fg: '#43596E' };
+
+const NAV = [
+  { name: 'Operación', items: [
+    { id: 'dashboard', label: 'Panel general', icon: 'ph-squares-four', crumb: 'Inicio', title: 'Panel general', roles: '*' },
+    { id: 'inventario', label: 'Inventario', icon: 'ph-package', crumb: 'Inventario', title: 'Existencias actuales', roles: '*' },
+    { id: 'solicitud', label: 'Solicitudes internas', icon: 'ph-note-pencil', crumb: 'Solicitudes internas', title: 'Solicitar elementos de inventario', roles: '*' },
+    { id: 'entrada', label: 'Entrada de mercancía', icon: 'ph-tray-arrow-down', crumb: 'Inventario / Movimientos', title: 'Registrar entrada', roles: ['Administrador', 'Admin. inventario'] },
+    { id: 'salida', label: 'Salida / despacho', icon: 'ph-tray-arrow-up', crumb: 'Inventario / Movimientos', title: 'Despacho de solicitudes', roles: ['Administrador', 'Admin. inventario'] },
+    { id: 'conteos', label: 'Conteos y auditoría', icon: 'ph-clipboard-text', crumb: 'Inventario', title: 'Conteos físicos', roles: ['Administrador', 'Admin. inventario', 'Aprobador'] },
+  ]},
+  { name: 'Catálogo', items: [
+    { id: 'articulo', label: 'Detalle de artículo', icon: 'ph-cube', crumb: 'Catálogo / Productos', title: 'Ficha de producto', roles: '*' },
+    { id: 'form', label: 'Crear / editar artículo', icon: 'ph-plus-square', crumb: 'Catálogo / Productos', title: 'Editar producto', roles: ['Administrador', 'Admin. inventario'] },
+    { id: 'ubicaciones', label: 'Ubicaciones', icon: 'ph-map-pin-area', crumb: 'Catálogo', title: 'Ubicaciones y salas', roles: ['Administrador', 'Admin. inventario'] },
+    { id: 'proveedores', label: 'Proveedores', icon: 'ph-truck', crumb: 'Abastecimiento', title: 'Proveedores y precios', roles: ['Administrador', 'Admin. inventario'] },
+  ]},
+  { name: 'Análisis y administración', items: [
+    { id: 'reportes', label: 'Reportes', icon: 'ph-chart-line-up', crumb: 'Análisis', title: 'Reportes de inventario', roles: ['Administrador', 'Admin. inventario', 'Aprobador'] },
+    { id: 'usuarios', label: 'Usuarios y permisos', icon: 'ph-users-three', crumb: 'Administración', title: 'Usuarios y roles', roles: ['Administrador'] },
+  ]},
+];
+
+const ROLES = ['Administrador', 'Admin. inventario', 'Aprobador', 'Usuario interno'];
+
+const STOCK = [
+  ['Guantes de nitrilo M', 'INS-0142', 'Caja', 'Insumos', 'Bodega Central', 'L-2411', 620, 400],
+  ['Guantes de nitrilo M', 'INS-0142', 'Caja', 'Insumos', 'Sala 1 · Curaciones', 'L-2411', 120, 150],
+  ['Alcohol 70% 1L', 'INS-0088', 'Litro', 'Insumos', 'Bodega Central', 'L-2380', 340, 200],
+  ['Jeringa 5 ml', 'INS-0311', 'Unidad', 'Insumos', 'Farmacia', '—', 2400, 1000],
+  ['Gasa estéril 10×10', 'INS-0205', 'Paquete', 'Insumos', 'Sala 2 · Procedimientos', 'L-2402', 48, 120],
+  ['Mascarilla N95', 'INS-0176', 'Caja', 'Insumos', 'Bodega Central', 'L-2377', 85, 200],
+  ['Termómetro digital', 'EQU-0021', 'Unidad', 'Equipos', 'Farmacia', '—', 34, 15],
+  ['Bolsa roja residuos', 'INS-0410', 'Rollo', 'Aseo', 'Depósito Norte', '—', 210, 80],
+  ['Papel toalla institucional', 'INS-0455', 'Fardo', 'Aseo', 'Depósito Norte', '—', 26, 60],
+];
+
+function nivel(actual, minimo) {
+  if (actual <= minimo * 0.5) return { estado: 'Crítico', icon: 'ph-x-circle', ...BAD };
+  if (actual <= minimo) return { estado: 'Bajo mínimo', icon: 'ph-warning', ...WARN };
+  return { estado: 'Normal', icon: 'ph-check-circle', ...OK };
+}
+
+const nf = (n) => n.toLocaleString('es-CL');
+
+class Component extends DCLogic {
+  state = { screen: 'dashboard', role: 'Administrador', layout: 'tabla' };
+
+  visibleGroups() {
+    const role = this.state.role;
+    return NAV.map(g => ({ name: g.name, items: g.items.filter(i => i.roles === '*' || i.roles.indexOf(role) > -1) }))
+      .filter(g => g.items.length);
+  }
+
+  currentItem() {
+    const all = NAV.reduce((acc, g) => acc.concat(g.items), []);
+    const visible = this.visibleGroups().reduce((acc, g) => acc.concat(g.items), []);
+    return visible.find(i => i.id === this.state.screen) || visible[0] || all[0];
+  }
+
+  renderVals() {
+    const s = this.state;
+    const item = this.currentItem();
+    const active = item.id;
+    const pct = (a, b) => Math.min(100, Math.round((a / (b * 2.2)) * 100)) + '%';
+
+    const stock = STOCK.map(r => {
+      const n = nivel(r[6], r[7]);
+      return {
+        producto: r[0], sku: r[1], unidad: r[2], categoria: r[3], ubicacion: r[4], lote: r[5],
+        cantidad: nf(r[6]), minimo: nf(r[7]), bar: pct(r[6], r[7]), barColor: n.line,
+        estado: n.estado, tagBg: n.bg, tagFg: n.fg, tagIcon: n.icon,
+        rowBg: r[0] === 'Guantes de nitrilo M' && r[4] === 'Bodega Central' ? '#CFE8FB' : 'transparent',
+        rowEdge: r[0] === 'Guantes de nitrilo M' && r[4] === 'Bodega Central' ? '#0F4C81' : 'transparent',
+      };
+    });
+
+    const mov = (producto, tipo, ubicacion, cantidad, usuario, fecha) => {
+      const t = tipo === 'Entrada' ? OK : tipo === 'Salida' ? WARN : tipo === 'Ajuste' ? BAD : INFO;
+      return { producto, tipo, ubicacion, cantidad, usuario, fecha, tagBg: t.bg, tagFg: t.fg,
+        color: cantidad.charAt(0) === '+' ? '#2E7D32' : cantidad.charAt(0) === '−' ? '#D32F2F' : '#1F2A37' };
+    };
+
+    const paso = (n, label, state) => ({
+      n, label,
+      bg: state === 'done' ? '#0F4C81' : state === 'current' ? '#CFE8FB' : '#fff',
+      fg: state === 'done' ? '#fff' : state === 'current' ? '#0B3C6B' : '#7089A0',
+      edge: state === 'todo' ? '#DCE8F4' : '#0F4C81',
+      text: state === 'todo' ? '#7089A0' : '#0B3C6B',
+      line: state === 'done' ? '#0F4C81' : '#DCE8F4',
+    });
+
+    return {
+      role: s.role,
+      crumb: item.crumb,
+      title: item.title,
+      roles: ROLES.map(r => ({ name: r, active: s.role === r, inactive: s.role !== r, pick: () => this.setState({ role: r }) })),
+      navGroups: this.visibleGroups().map(g => ({
+        name: g.name,
+        items: g.items.map(i => ({ label: i.label, icon: i.icon, active: active === i.id, inactive: active !== i.id, pick: () => this.setState({ screen: i.id }) })),
+      })),
+
+      isDashboard: active === 'dashboard',
+      isInventario: active === 'inventario',
+      isArticulo: active === 'articulo',
+      isSolicitud: active === 'solicitud',
+      isForm: active === 'form',
+      isEntrada: active === 'entrada',
+      isSalida: active === 'salida',
+      isConteos: active === 'conteos',
+      isUbicaciones: active === 'ubicaciones',
+      isProveedores: active === 'proveedores',
+      isReportes: active === 'reportes',
+      isUsuarios: active === 'usuarios',
+
+      layouts: [
+        { id: 'tabla', name: 'Tabla completa', icon: 'ph-rows' },
+        { id: 'split', name: 'Tabla + detalle', icon: 'ph-columns' },
+        { id: 'tarjetas', name: 'Por ubicación', icon: 'ph-squares-four' },
+      ].map(l => ({ name: l.name, icon: l.icon, active: s.layout === l.id, inactive: s.layout !== l.id, pick: () => this.setState({ layout: l.id }) })),
+      layoutTabla: s.layout === 'tabla',
+      layoutSplit: s.layout === 'split',
+      layoutTarjetas: s.layout === 'tarjetas',
+
+      kpis: [
+        { label: 'SKUs activos', value: '348', note: '12 nuevos este mes', icon: 'ph-package', bar: '72%' },
+        { label: 'Unidades en stock', value: '18.420', note: 'en 5 ubicaciones', icon: 'ph-stack', bar: '58%' },
+        { label: 'Bajo mínimo', value: '4', note: '2 en estado crítico', icon: 'ph-warning', bar: '18%' },
+        { label: 'Solicitudes abiertas', value: '7', note: '3 esperan aprobación', icon: 'ph-clipboard-text', bar: '35%' },
+      ],
+      movimientos: [
+        mov('Guantes de nitrilo M', 'Entrada', 'Bodega Central', '+240', 'M. Cabrera', 'Hoy 09:41'),
+        mov('Alcohol 70% 1L', 'Salida', 'Sala 1 · Curaciones', '−30', 'J. Pérez', 'Hoy 08:55'),
+        mov('Gasa estéril 10×10', 'Traslado', 'Bodega → Sala 2', '60', 'M. Cabrera', 'Ayer 17:20'),
+        mov('Mascarilla N95', 'Ajuste', 'Bodega Central', '−5', 'R. Soto', 'Ayer 16:02'),
+        mov('Jeringa 5 ml', 'Entrada', 'Farmacia', '+1.200', 'C. Núñez', '14 ago 11:30'),
+        mov('Termómetro digital', 'Salida', 'Farmacia', '−2', 'J. Pérez', '14 ago 10:10'),
+      ],
+      alertas: [
+        { producto: 'Gasa estéril 10×10', ubicacion: 'Sala 2', actual: '48', minimo: '120', color: '#D32F2F' },
+        { producto: 'Papel toalla institucional', ubicacion: 'Depósito Norte', actual: '26', minimo: '60', color: '#D32F2F' },
+        { producto: 'Mascarilla N95', ubicacion: 'Bodega Central', actual: '85', minimo: '200', color: '#B65302' },
+        { producto: 'Guantes de nitrilo M', ubicacion: 'Sala 1', actual: '120', minimo: '150', color: '#B65302' },
+      ],
+      solicitudes: [
+        { detalle: '2 ítems · resmas de papel y ganchos legajadores', solicitante: 'Juanita Ríos · RRHH', tipo: 'Consumo' },
+        { detalle: '4 ítems · insumos de curación para Sala 1', solicitante: 'Jorge Pérez · Enfermería', tipo: 'Consumo' },
+        { detalle: '1 ítem · tóner impresora recepción', solicitante: 'Luis Fuentes · Admisión', tipo: 'Reposición' },
+      ],
+
+      carrito: [
+        { producto: 'Resma papel carta 500 hojas', sku: 'OFI-0021', unidad: 'Resma', cantidad: '3', disponible: '48', ubicacion: 'Bodega Central', estado: 'Disponible', tagBg: OK.bg, tagFg: OK.fg },
+        { producto: 'Gancho legajador plástico', sku: 'OFI-0034', unidad: 'Caja x50', cantidad: '2', disponible: '11', ubicacion: 'Bodega Central', estado: 'Disponible', tagBg: OK.bg, tagFg: OK.fg },
+      ],
+      misSolicitudes: [
+        { id: 'SOL-0301', fecha: 'Hoy 10:05', detalle: '3 resmas de papel · 2 cajas de ganchos legajadores', items: '2', estado: 'Borrador', tagBg: NEUTRAL.bg, tagFg: NEUTRAL.fg, aprobador: '—' },
+        { id: 'SOL-0288', fecha: '12 ago', detalle: '1 tóner negro · 2 marcadores', items: '2', estado: 'Aprobada', tagBg: OK.bg, tagFg: OK.fg, aprobador: 'Rocío Soto' },
+        { id: 'SOL-0275', fecha: '04 ago', detalle: '5 carpetas colgantes', items: '1', estado: 'Entregada', tagBg: INFO.bg, tagFg: INFO.fg, aprobador: 'Rocío Soto' },
+        { id: 'SOL-0261', fecha: '28 jul', detalle: '2 sillas de escritorio', items: '1', estado: 'Rechazada', tagBg: BAD.bg, tagFg: BAD.fg, aprobador: 'Rocío Soto' },
+      ],
+
+      stock,
+      porUbicacion: [
+        { nombre: 'Bodega Central', cantidad: '620' },
+        { nombre: 'Farmacia', cantidad: '310' },
+        { nombre: 'Sala 1 · Curaciones', cantidad: '120' },
+        { nombre: 'Sala 2 · Procedimientos', cantidad: '190' },
+      ],
+      ubicacionesCards: [
+        { nombre: 'Bodega Central', skus: 214, ultimo: 'hace 20 min', items: [
+          { producto: 'Guantes de nitrilo M', cantidad: '620', estado: 'Normal', tagBg: OK.bg, tagFg: OK.fg },
+          { producto: 'Alcohol 70% 1L', cantidad: '340', estado: 'Normal', tagBg: OK.bg, tagFg: OK.fg },
+          { producto: 'Mascarilla N95', cantidad: '85', estado: 'Bajo', tagBg: WARN.bg, tagFg: WARN.fg },
+        ]},
+        { nombre: 'Farmacia', skus: 96, ultimo: 'hace 2 h', items: [
+          { producto: 'Jeringa 5 ml', cantidad: '2.400', estado: 'Normal', tagBg: OK.bg, tagFg: OK.fg },
+          { producto: 'Termómetro digital', cantidad: '34', estado: 'Normal', tagBg: OK.bg, tagFg: OK.fg },
+        ]},
+        { nombre: 'Sala 1 · Curaciones', skus: 41, ultimo: 'hace 3 h', items: [
+          { producto: 'Guantes de nitrilo M', cantidad: '120', estado: 'Bajo', tagBg: WARN.bg, tagFg: WARN.fg },
+          { producto: 'Gasa estéril 10×10', cantidad: '96', estado: 'Normal', tagBg: OK.bg, tagFg: OK.fg },
+        ]},
+        { nombre: 'Sala 2 · Procedimientos', skus: 38, ultimo: 'ayer', items: [
+          { producto: 'Gasa estéril 10×10', cantidad: '48', estado: 'Crítico', tagBg: BAD.bg, tagFg: BAD.fg },
+          { producto: 'Alcohol 70% 1L', cantidad: '75', estado: 'Normal', tagBg: OK.bg, tagFg: OK.fg },
+        ]},
+        { nombre: 'Depósito Norte', skus: 27, ultimo: 'ayer', items: [
+          { producto: 'Bolsa roja residuos', cantidad: '210', estado: 'Normal', tagBg: OK.bg, tagFg: OK.fg },
+          { producto: 'Papel toalla institucional', cantidad: '26', estado: 'Crítico', tagBg: BAD.bg, tagFg: BAD.fg },
+        ]},
+        { nombre: 'Esterilización', skus: 19, ultimo: '13 ago', items: [
+          { producto: 'Indicador químico', cantidad: '480', estado: 'Normal', tagBg: OK.bg, tagFg: OK.fg },
+          { producto: 'Bolsa de esterilización', cantidad: '310', estado: 'Normal', tagBg: OK.bg, tagFg: OK.fg },
+        ]},
+      ],
+
+      lotes: [
+        { ubicacion: 'Bodega Central', lote: 'L-2411', vence: '03/2027', cantidad: '620', estado: 'Vigente', tagBg: OK.bg, tagFg: OK.fg },
+        { ubicacion: 'Farmacia', lote: 'L-2411', vence: '03/2027', cantidad: '310', estado: 'Vigente', tagBg: OK.bg, tagFg: OK.fg },
+        { ubicacion: 'Sala 1 · Curaciones', lote: 'L-2398', vence: '11/2026', cantidad: '120', estado: 'Por vencer', tagBg: WARN.bg, tagFg: WARN.fg },
+        { ubicacion: 'Sala 2 · Procedimientos', lote: 'L-2377', vence: '09/2026', cantidad: '190', estado: 'Por vencer', tagBg: WARN.bg, tagFg: WARN.fg },
+      ],
+      precios: [
+        { proveedor: 'Insumos del Valle', precio: '$ 8.400', bar: '62%', color: '#2E7D32', nota: 'Mejor precio · última compra 02 ago' },
+        { proveedor: 'Distribuidora Andina', precio: '$ 9.150', bar: '72%', color: '#0F4C81', nota: 'Entrega en 48 h' },
+        { proveedor: 'Médica Sur', precio: '$ 9.800', bar: '80%', color: '#0F4C81', nota: 'Sin compras en 4 meses' },
+        { proveedor: 'Global Health SpA', precio: '$ 11.200', bar: '96%', color: '#D32F2F', nota: 'Alza de 14% respecto a mayo' },
+      ],
+      consumo: [
+        { mes: 'ene', h: '38%' }, { mes: 'feb', h: '52%' }, { mes: 'mar', h: '44%' }, { mes: 'abr', h: '66%' },
+        { mes: 'may', h: '58%' }, { mes: 'jun', h: '74%' }, { mes: 'jul', h: '86%' }, { mes: 'ago', h: '62%' },
+      ],
+
+      pasos: [paso(1, 'Documento', 'done'), paso(2, 'Líneas y lotes', 'current'), paso(3, 'Confirmación', 'todo')],
+      lineas: [
+        { producto: 'Guantes de nitrilo M', lote: 'L-2411', vence: '03/2027', cantidad: '240', precio: '$ 4.850', subtotal: '$ 1.164.000' },
+        { producto: 'Alcohol 70% 1L', lote: 'L-2418', vence: '05/2028', cantidad: '80', precio: '$ 8.400', subtotal: '$ 672.000' },
+        { producto: 'Gasa estéril 10×10', lote: 'L-2420', vence: '01/2028', cantidad: '360', precio: '$ 620', subtotal: '$ 223.200' },
+        { producto: 'Jeringa 5 ml', lote: '—', vence: '—', cantidad: '500', precio: '$ 175', subtotal: '$ 87.500' },
+      ],
+
+      despachos: [
+        { id: 'SOL-0294', solicitante: 'Jorge Pérez · Enfermería', destino: 'Sala 1 · Curaciones', items: '4', estado: 'Aprobada', tagBg: OK.bg, tagFg: OK.fg, rowBg: '#CFE8FB' },
+        { id: 'SOL-0293', solicitante: 'Juanita Ríos · RRHH', destino: 'Oficina RRHH', items: '2', estado: 'Aprobada', tagBg: OK.bg, tagFg: OK.fg, rowBg: 'transparent' },
+        { id: 'SOL-0291', solicitante: 'Luis Fuentes · Admisión', destino: 'Recepción', items: '6', estado: 'Aprobada', tagBg: OK.bg, tagFg: OK.fg, rowBg: 'transparent' },
+        { id: 'SOL-0288', solicitante: 'R. Soto', destino: 'Esterilización', items: '3', estado: 'Despachada', tagBg: NEUTRAL.bg, tagFg: NEUTRAL.fg, rowBg: 'transparent' },
+      ],
+      picking: [
+        { producto: 'Guantes de nitrilo M', lote: 'L-2411', ubicacion: 'Bodega Central · E2-B3', cantidad: '4' },
+        { producto: 'Gasa estéril 10×10', lote: 'L-2402', ubicacion: 'Bodega Central · E1-A1', cantidad: '12' },
+        { producto: 'Alcohol 70% 1L', lote: 'L-2380', ubicacion: 'Bodega Central · E3-C2', cantidad: '6' },
+        { producto: 'Jeringa 5 ml', lote: '—', ubicacion: 'Bodega Central · E1-A4', cantidad: '50' },
+      ],
+
+      conteoKpis: [
+        { label: 'Ítems contados', value: '128/214', color: '#0B3C6B' },
+        { label: 'Sin diferencia', value: '112', color: '#2E7D32' },
+        { label: 'Con diferencia', value: '16', color: '#ED6C02' },
+        { label: 'Ajuste neto', value: '−48 u', color: '#D32F2F' },
+      ],
+      conteo: [
+        { producto: 'Guantes de nitrilo M', lote: 'L-2411', sistema: '620', contado: '620', diferencia: '0', color: '#43596E', responsable: 'M. Cabrera' },
+        { producto: 'Alcohol 70% 1L', lote: 'L-2380', sistema: '340', contado: '332', diferencia: '−8', color: '#D32F2F', responsable: 'M. Cabrera' },
+        { producto: 'Mascarilla N95', lote: 'L-2377', sistema: '85', contado: '85', diferencia: '0', color: '#43596E', responsable: 'R. Soto' },
+        { producto: 'Gasa estéril 10×10', lote: 'L-2402', sistema: '96', contado: '108', diferencia: '+12', color: '#2E7D32', responsable: 'R. Soto' },
+        { producto: 'Jeringa 5 ml', lote: '—', sistema: '2.400', contado: '2.348', diferencia: '−52', color: '#D32F2F', responsable: 'J. Pérez' },
+        { producto: 'Bolsa roja residuos', lote: '—', sistema: '210', contado: '210', diferencia: '0', color: '#43596E', responsable: 'J. Pérez' },
+      ],
+
+      arbol: [
+        { nombre: 'Sede Central', skus: '348', icon: 'ph-buildings', indent: '9px' },
+        { nombre: 'Bodega Central', skus: '214', icon: 'ph-warehouse', indent: '26px' },
+        { nombre: 'Estante E1', skus: '96', icon: 'ph-shelf', indent: '43px' },
+        { nombre: 'Estante E2', skus: '74', icon: 'ph-shelf', indent: '43px' },
+        { nombre: 'Farmacia', skus: '96', icon: 'ph-first-aid-kit', indent: '26px' },
+        { nombre: 'Sala 1 · Curaciones', skus: '41', icon: 'ph-door-open', indent: '26px' },
+        { nombre: 'Depósito Norte', skus: '27', icon: 'ph-warehouse', indent: '26px' },
+      ],
+      ubicaciones: [
+        { nombre: 'Bodega Central', padre: 'Sede Central', skus: '214', unidades: '11.480', estado: 'Activa', tagBg: OK.bg, tagFg: OK.fg, accion: 'Desactivar' },
+        { nombre: 'Estante E1', padre: 'Bodega Central', skus: '96', unidades: '4.210', estado: 'Activa', tagBg: OK.bg, tagFg: OK.fg, accion: 'Desactivar' },
+        { nombre: 'Farmacia', padre: 'Sede Central', skus: '96', unidades: '3.870', estado: 'Activa', tagBg: OK.bg, tagFg: OK.fg, accion: 'Desactivar' },
+        { nombre: 'Sala 1 · Curaciones', padre: 'Sede Central', skus: '41', unidades: '1.240', estado: 'Activa', tagBg: OK.bg, tagFg: OK.fg, accion: 'Desactivar' },
+        { nombre: 'Depósito Norte', padre: 'Sede Central', skus: '27', unidades: '1.620', estado: 'Activa', tagBg: OK.bg, tagFg: OK.fg, accion: 'Desactivar' },
+        { nombre: 'Bodega temporal', padre: 'Sede Central', skus: '0', unidades: '0', estado: 'Inactiva', tagBg: NEUTRAL.bg, tagFg: NEUTRAL.fg, accion: 'Activar' },
+      ],
+
+      proveedores: [
+        { nombre: 'Insumos del Valle', contacto: 'ventas@insumosdelvalle.cl', productos: '84', compras: '$ 24.6M', precio: '$ 5.120', bar: '96%', cumplimiento: '96%', color: '#2E7D32', estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg },
+        { nombre: 'Distribuidora Andina', contacto: 'contacto@andina.cl', productos: '62', compras: '$ 18.1M', precio: '$ 5.640', bar: '88%', cumplimiento: '88%', color: '#2E7D32', estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg },
+        { nombre: 'Médica Sur', contacto: 'compras@medicasur.cl', productos: '41', compras: '$ 9.4M', precio: '$ 6.010', bar: '74%', cumplimiento: '74%', color: '#ED6C02', estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg },
+        { nombre: 'Global Health SpA', contacto: 'hello@globalhealth.com', productos: '28', compras: '$ 6.2M', precio: '$ 7.480', bar: '52%', cumplimiento: '52%', color: '#D32F2F', estado: 'En revisión', tagBg: WARN.bg, tagFg: WARN.fg },
+        { nombre: 'Proveedora Austral', contacto: 'austral@correo.cl', productos: '12', compras: '$ 1.1M', precio: '$ 8.900', bar: '40%', cumplimiento: '40%', color: '#D32F2F', estado: 'Inactivo', tagBg: NEUTRAL.bg, tagFg: NEUTRAL.fg },
+      ],
+      comparativa: [
+        { proveedor: 'Insumos del Valle', precio: '$ 8.400', nota: 'Mejor precio', color: '#8FE0A0', edge: 'rgba(143,224,160,.5)' },
+        { proveedor: 'Distribuidora Andina', precio: '$ 9.150', nota: '+9% vs. mejor', color: '#fff', edge: 'rgba(255,255,255,.2)' },
+        { proveedor: 'Médica Sur', precio: '$ 9.800', nota: '+17% vs. mejor', color: '#fff', edge: 'rgba(255,255,255,.2)' },
+        { proveedor: 'Global Health SpA', precio: '$ 11.200', nota: '+33% vs. mejor', color: '#FFB4A8', edge: 'rgba(255,180,168,.45)' },
+      ],
+
+      compras: [
+        { mes: 'Mar', monto: '$ 14.2M', h: '52%' },
+        { mes: 'Abr', monto: '$ 16.8M', h: '62%' },
+        { mes: 'May', monto: '$ 12.4M', h: '46%' },
+        { mes: 'Jun', monto: '$ 21.6M', h: '80%' },
+        { mes: 'Jul', monto: '$ 25.1M', h: '93%' },
+        { mes: 'Ago', monto: '$ 18.9M', h: '70%' },
+      ],
+      consumoUbic: [
+        { nombre: 'Sala 1 · Curaciones', valor: '4.210 u', bar: '92%' },
+        { nombre: 'Farmacia', valor: '3.180 u', bar: '70%' },
+        { nombre: 'Sala 2 · Procedimientos', valor: '2.460 u', bar: '54%' },
+        { nombre: 'Esterilización', valor: '1.320 u', bar: '29%' },
+        { nombre: 'Depósito Norte', valor: '640 u', bar: '14%' },
+      ],
+      rotacion: [
+        { producto: 'Guantes de nitrilo M', entradas: '4.800', salidas: '4.240', rotacion: '3,4×', cobertura: '38', color: '#2E7D32' },
+        { producto: 'Jeringa 5 ml', entradas: '9.600', salidas: '8.900', rotacion: '2,9×', cobertura: '52', color: '#2E7D32' },
+        { producto: 'Gasa estéril 10×10', entradas: '3.600', salidas: '3.980', rotacion: '4,1×', cobertura: '9', color: '#D32F2F' },
+        { producto: 'Alcohol 70% 1L', entradas: '1.240', salidas: '1.060', rotacion: '2,2×', cobertura: '61', color: '#2E7D32' },
+        { producto: 'Mascarilla N95', entradas: '860', salidas: '910', rotacion: '3,0×', cobertura: '14', color: '#ED6C02' },
+        { producto: 'Papel toalla institucional', entradas: '420', salidas: '470', rotacion: '2,6×', cobertura: '7', color: '#D32F2F' },
+      ],
+
+      usuarios: [
+        { iniciales: 'MC', nombre: 'María Cabrera', email: 'mcabrera@losrobles.cl', rol: 'Administrador', acceso: 'Hoy 09:12', estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg },
+        { iniciales: 'JP', nombre: 'Jorge Pérez', email: 'jperez@losrobles.cl', rol: 'Admin. inventario', acceso: 'Hoy 08:40', estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg },
+        { iniciales: 'JR', nombre: 'Juanita Ríos', email: 'jrios@losrobles.cl', rol: 'Usuario interno', acceso: 'Hoy 10:05', estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg },
+        { iniciales: 'LF', nombre: 'Luis Fuentes', email: 'lfuentes@losrobles.cl', rol: 'Usuario interno', acceso: 'Ayer 12:22', estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg },
+        { iniciales: 'RS', nombre: 'Rocío Soto', email: 'rsoto@losrobles.cl', rol: 'Aprobador', acceso: '12 ago 16:48', estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg },
+        { iniciales: 'DT', nombre: 'Diego Tapia', email: 'dtapia@losrobles.cl', rol: 'Usuario interno', acceso: '28 jul 09:03', estado: 'Bloqueado', tagBg: BAD.bg, tagFg: BAD.fg },
+      ],
+      permisos: [
+        { modulo: 'Productos', ver: true, crear: true, editar: true },
+        { modulo: 'Inventario', ver: true, crear: true, editar: true },
+        { modulo: 'Ubicaciones', ver: true, crear: true, editar: true },
+        { modulo: 'Proveedores', ver: true, crear: false, editar: false },
+        { modulo: 'Solicitudes', ver: true, crear: true, editar: false },
+        { modulo: 'Usuarios y roles', ver: false, crear: false, editar: false },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
