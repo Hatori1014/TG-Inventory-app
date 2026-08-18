@@ -1,35 +1,83 @@
-<h1>{{ isEditMode ? 'Editar usuario' : 'Nuevo usuario' }}</h1>
+<div class="user-form-page-header">
+  <h1>{{ isEditMode ? 'Editar usuario' : 'Nuevo usuario' }}</h1>
+  <span class="user-form-page-route">/users</span>
+</div>
 
 @if (loading()) {
-  <p>Cargando...</p>
+  <p class="user-form-loading">Cargando...</p>
 } @else {
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <input type="text" formControlName="name" placeholder="Nombre" />
-    <input type="email" formControlName="email" placeholder="Correo" />
-
-    @if (!isEditMode) {
-      <input type="password" formControlName="password" placeholder="Contraseña" />
-    }
-
-    <select formControlName="roleId">
-      <option value="" disabled>Seleccioná un rol</option>
-      @for (role of roles(); track role.id) {
-        <option [value]="role.id">{{ role.name }}</option>
+  <div class="user-form-card">
+    <h2 class="user-form-title">{{ isEditMode ? 'Editar usuario' : 'Crear usuario' }}</h2>
+    <p class="user-form-subtitle">
+      @if (isEditMode) {
+        Se editan nombre, correo, rol y estado. La contraseña no se toca.
+      } @else {
+        El rol es obligatorio y la contraseña se define acá; la cuenta nace activa.
       }
-    </select>
+    </p>
 
-    @if (isEditMode) {
-      <select formControlName="status">
-        <option value="active">Activo</option>
-        <option value="blocked">Bloqueado</option>
-      </select>
-    }
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="user-field">
+        <label for="user-name">Nombre *</label>
+        <input id="user-name" type="text" formControlName="name" />
+      </div>
 
-    @if (errorMessage) {
-      <p role="alert">{{ errorMessage }}</p>
-    }
+      <div class="user-field">
+        <label for="user-email">Correo *</label>
+        <input id="user-email" type="email" formControlName="email" />
+      </div>
 
-    <button type="submit" [disabled]="form.invalid || isSubmitting">Guardar</button>
-    <a routerLink="/users">Cancelar</a>
-  </form>
+      @if (!isEditMode) {
+        <div class="user-field">
+          <label for="user-password">Contraseña *</label>
+          <input id="user-password" type="password" formControlName="password" placeholder="Entre 8 y 72 caracteres" />
+        </div>
+      }
+
+      <div class="user-field">
+        <label for="user-role">Rol *</label>
+        <select id="user-role" formControlName="roleId">
+          <option value="" disabled>Seleccioná un rol</option>
+          @for (role of roles(); track role.id) {
+            <option [value]="role.id">{{ role.name }}</option>
+          }
+        </select>
+      </div>
+
+      @if (isEditMode) {
+        <div class="user-field">
+          <label>Estado</label>
+          <div class="user-status-toggle">
+            <label class="user-status-option" [class.user-status-option--active]="form.value.status === 'active'">
+              <input type="radio" formControlName="status" value="active" />
+              Activo
+            </label>
+            <label
+              class="user-status-option"
+              [class.user-status-option--active]="form.value.status === 'blocked'"
+            >
+              <input type="radio" formControlName="status" value="blocked" />
+              Bloqueado
+            </label>
+          </div>
+        </div>
+
+        <div class="user-password-note">
+          <i class="ph ph-key"></i>
+          <span>La edición no cambia la contraseña: todavía no hay flujo de restablecimiento.</span>
+        </div>
+      }
+
+      @if (errorMessage) {
+        <p class="user-form-error" role="alert">{{ errorMessage }}</p>
+      }
+
+      <div class="user-form-actions">
+        <a routerLink="/users" class="user-cancel-btn">Cancelar</a>
+        <button type="submit" class="user-submit-btn" [disabled]="form.invalid || isSubmitting">
+          {{ isEditMode ? 'Guardar cambios' : 'Crear usuario' }}
+        </button>
+      </div>
+    </form>
+  </div>
 }
