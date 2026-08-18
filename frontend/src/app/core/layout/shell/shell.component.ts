@@ -8,50 +8,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthService } from '../../services/auth.service';
-
-interface NavItem {
-  label: string;
-  path: string;
-  icon: string;
-  roles?: string[];
-}
-
-interface NavSection {
-  label: string;
-  items: NavItem[];
-}
-
-// Labels, grouping and role gating match the Claude Design mockup exactly
-// (docs/Design/TG Inventory UI.dc.html — the NAV constant), which itself
-// mirrors this file's own information architecture: the redesign changes
-// how this looks, not what it contains.
-const NAV_SECTIONS: NavSection[] = [
-  { label: '', items: [{ label: 'Panel principal', path: '/dashboard', icon: 'ph-squares-four' }] },
-  {
-    label: 'Catálogo',
-    items: [
-      { label: 'Productos', path: '/products', icon: 'ph-package' },
-      { label: 'Categorías', path: '/categories', icon: 'ph-tag' },
-      { label: 'Unidades', path: '/units', icon: 'ph-ruler' },
-    ],
-  },
-  {
-    label: 'Inventario',
-    items: [
-      { label: 'Registrar movimiento', path: '/inventory', icon: 'ph-arrows-left-right', roles: ['Administrador'] },
-      { label: 'Lotes', path: '/inventory/batches', icon: 'ph-stack', roles: ['Administrador'] },
-      { label: 'Stock actual', path: '/inventory/stock', icon: 'ph-list-magnifying-glass' },
-    ],
-  },
-  {
-    label: 'Administración',
-    items: [
-      { label: 'Ubicaciones', path: '/locations', icon: 'ph-map-pin-area', roles: ['Administrador'] },
-      { label: 'Roles y permisos', path: '/roles', icon: 'ph-shield-check', roles: ['Administrador'] },
-      { label: 'Usuarios', path: '/users', icon: 'ph-users-three', roles: ['Administrador'] },
-    ],
-  },
-];
+import { visibleSections } from '../nav-items';
 
 // First real navigation shell for the app — until now every screen was an
 // isolated route only reachable by typing its URL by hand (see
@@ -99,13 +56,7 @@ export class ShellComponent {
       .join('');
   });
 
-  readonly sections = computed(() => {
-    const role = this.user()?.role ?? '';
-    return NAV_SECTIONS.map((section) => ({
-      ...section,
-      items: section.items.filter((item) => !item.roles || item.roles.includes(role)),
-    })).filter((section) => section.items.length > 0);
-  });
+  readonly sections = computed(() => visibleSections(this.user()?.role));
 
   isExactMatch(path: string): boolean {
     // '/inventory' is a path prefix of '/inventory/batches' and
