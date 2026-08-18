@@ -1,24 +1,60 @@
-<h1>Permisos de {{ roleName() }}</h1>
+<div class="role-perm-page-header">
+  <h1>Permisos de {{ roleName() }}</h1>
+  <span class="role-perm-page-route">/roles</span>
+</div>
 
 @if (loading()) {
-  <p>Cargando...</p>
+  <p class="role-perm-loading">Cargando...</p>
 } @else {
-  <ul>
-    @for (permission of permissions(); track permission.id) {
-      <li>
-        <label>
-          <input
-            type="checkbox"
-            [checked]="isSelected(permission.id)"
-            (change)="toggle(permission.id)"
-          />
-          {{ permission.module }}:{{ permission.action }}
-        </label>
-      </li>
+  <div class="role-perm-card">
+    <div class="role-perm-eyebrow">Rol seleccionado</div>
+    <h2 class="role-perm-title">{{ roleName() }}</h2>
+    <p class="role-perm-subtitle">
+      Matriz de <code>module</code> × <code>action</code> del catálogo de permisos. Guardar reemplaza el conjunto
+      completo del rol.
+    </p>
+
+    <div class="role-perm-matrix" [style.grid-template-columns]="'1fr repeat(' + actions().length + ', 52px)'">
+      <span></span>
+      @for (action of actions(); track action) {
+        <span class="role-perm-action-label">{{ action }}</span>
+      }
+
+      @for (row of rows(); track row.module) {
+        <div class="role-perm-module">{{ row.module }}</div>
+        @for (cell of row.cells; track cell.action) {
+          <div class="role-perm-cell">
+            @if (cell.permission) {
+              <input
+                type="checkbox"
+                [checked]="isSelected(cell.permission.id)"
+                (change)="toggle(cell.permission.id)"
+              />
+            } @else {
+              <span class="role-perm-dash">—</span>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <div class="role-perm-info">
+      <i class="ph ph-info"></i>
+      <span>
+        Productos, categorías y unidades no tienen permiso de lectura: su consulta está abierta a cualquier usuario
+        autenticado, así que un checkbox ahí sería inerte.
+      </span>
+    </div>
+
+    @if (errorMessage) {
+      <p class="role-perm-error" role="alert">{{ errorMessage }}</p>
     }
-  </ul>
-  @if (errorMessage) {
-    <p role="alert">{{ errorMessage }}</p>
-  }
-  <button type="button" [disabled]="isSubmitting" (click)="onSubmit()">Guardar</button>
+
+    <div class="role-perm-actions">
+      <a routerLink="/roles" class="role-perm-cancel-btn">Descartar</a>
+      <button type="button" class="role-perm-submit-btn" [disabled]="isSubmitting" (click)="onSubmit()">
+        Guardar permisos
+      </button>
+    </div>
+  </div>
 }

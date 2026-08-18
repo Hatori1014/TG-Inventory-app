@@ -1,27 +1,46 @@
-<h1>Roles</h1>
-<a routerLink="new">Nuevo rol</a>
+<div class="roles-page-header">
+  <h1>Roles y permisos</h1>
+  <span class="roles-page-route">/roles</span>
+</div>
 
-@if (loading()) {
-  <p>Cargando...</p>
-} @else {
-  <table>
+<div class="roles-table-card">
+  <div class="roles-table-header">
+    <h2>Roles</h2>
+    <a routerLink="new" class="roles-new-btn">+ Nuevo rol</a>
+  </div>
+
+  <table class="roles-table">
     <thead>
       <tr>
-        <th>Nombre</th>
+        <th>Rol</th>
         <th>Descripción</th>
-        <th>Permisos</th>
+        <th class="roles-col-right">Permisos</th>
+        <th class="roles-col-right">Usuarios</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
-      @for (role of roles(); track role.id) {
+      @if (loading()) {
         <tr>
-          <td>{{ role.name }}</td>
-          <td>{{ role.description || '—' }}</td>
-          <td>{{ role.permissions.length }}</td>
-          <td><a [routerLink]="[role.id, 'permissions']">Asignar permisos</a></td>
+          <td colspan="5" class="roles-empty">Cargando...</td>
         </tr>
+      } @else {
+        @for (role of roles(); track role.id) {
+          <tr>
+            <td class="roles-name">{{ role.name }}</td>
+            <td class="roles-col-muted">{{ role.description || '—' }}</td>
+            <td class="roles-col-right roles-col-muted">{{ role.permissions.length }}</td>
+            <td class="roles-col-right roles-col-muted">{{ userCountFor(role.id) }}</td>
+            <td class="roles-col-right">
+              <a [routerLink]="[role.id, 'permissions']" class="roles-edit-link">Editar permisos</a>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="roles-empty">No hay roles registrados.</td>
+          </tr>
+        }
       }
     </tbody>
   </table>
-}
+</div>

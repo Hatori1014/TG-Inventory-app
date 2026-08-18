@@ -1,16 +1,21 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RolesService } from '../roles.service';
 
 // HU-02 — creates a role with name/description. Permission assignment
 // happens separately, from the roles list, once the role exists.
+// TT-24 phase 9 (final) — styled to match the mockup's "Nuevo rol" card.
+// Logic unchanged: still a separate /roles/new route, same precedent
+// phases 5 and 8 set (Products, Users) over the mockup's single-panel
+// layout.
 @Component({
   selector: 'app-role-form',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './role-form.component.html',
+  styleUrl: './role-form.component.scss',
 })
 export class RoleFormComponent {
   private fb = inject(FormBuilder);
