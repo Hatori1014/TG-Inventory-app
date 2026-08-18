@@ -2,28 +2,21 @@ import { Component, inject } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/services/auth.service';
 
 // HU-01 — functional login. Password policy (HU-19) and lockout on failed
 // attempts (HU-20) are separate stories, not enforced here.
+// TT-24 phase 0 — matches the Claude Design mockup exactly: plain styled
+// inputs/button (docs/Design/TG Inventory UI.dc.html), not Material's
+// default outlined form-field chrome — a deliberate departure from the
+// brief's original "use Material's own patterns" guidance now that a real
+// mockup exists and is the authoritative visual source.
 // Note: on-screen text stays in Spanish — that's the app's UI language
 // for its Spanish-speaking end users. English applies to code, not UI copy.
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-  ],
+  imports: [ReactiveFormsModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })

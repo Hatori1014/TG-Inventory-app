@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+body{margin:0;background:#F5F8FC;color:#1F2A37;font-family:Roboto,"Helvetica Neue",sans-serif;font-size:14px;line-height:1.5}
+h1,h2,h3,h4,h5{font-family:Roboto,"Helvetica Neue",sans-serif;font-weight:500;margin:0}
+a{color:#0F4C81;text-decoration:none}
+a:hover{color:#1E6FB5;text-decoration:underline}
+*,*::before,*::after{box-sizing:border-box}
+i.ph{display:inline-block;line-height:1}
+:focus{outline:none}
+:focus-visible{outline:2px solid #1E6FB5;outline-offset:2px}
+::selection{background:#CFE8FB}
+</style>
+</helmet>
+
+<section style="padding:40px 44px 4px;max-width:1120px">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:16px">
+<span style="font:500 10px ui-monospace,Menlo,monospace;padding:4px 9px;background:#CFE8FB;color:#0B3C6B;border-radius:4px;letter-spacing:.1em">TG INVENTORY · MVP1</span>
+<span style="font-size:12px;color:#5A7189">Alcance: sección 6 del brief · Backend: módulos auth, roles, users, products, locations, inventory</span>
+</div>
+<h2 style="font-size:30px;color:#0B3C6B;margin-bottom:10px;letter-spacing:-.01em">Shell de navegación y las once pantallas de MVP1</h2>
+<p style="max-width:70ch;color:#43596E">Los mockups cubren exactamente lo que existe hoy contra el backend real: <span style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px">POST /auth/login</span>, roles y permisos, usuarios, productos con sus catálogos de categorías y unidades, ubicaciones jerárquicas, movimientos de inventario, lotes y stock actual. Lo primero que resuelven es el gap de la sección 5: un shell persistente con menú consciente del rol, indicador de sección activa, nombre y rol del usuario, y cerrar sesión siempre visible.</p>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px">
+<div style="padding:16px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F2F7FD);border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 8px 20px -12px rgba(11,60,107,.18)">
+<div style="font:500 10px/1 Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:7px">Paleta de la sección 2</div>
+<div style="display:flex;gap:5px;margin-bottom:9px">
+<span style="width:26px;height:26px;border-radius:5px;background:#0B3C6B"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#0F4C81"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#1E6FB5"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#6FB1E8"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#CFE8FB"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#FFFFFF;border:1px solid #DCE8F4"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#2E7D32"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#ED6C02"></span>
+<span style="width:26px;height:26px;border-radius:5px;background:#D32F2F"></span>
+</div>
+<p style="margin:0;font-size:13px;color:#43596E">Cada token en el rol que le asigna el brief. Roboto en los cuatro tamaños de la sección 3. El naranja de alerta no aparece en estas pantallas: HU-12 no es de MVP1, así que no se diluye.</p>
+</div>
+<div style="padding:16px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F2F7FD);border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 8px 20px -12px rgba(11,60,107,.18)">
+<div style="font:500 10px/1 Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:7px">Menú por rol, real</div>
+<p style="margin:0;font-size:13px;color:#43596E">El selector de arriba cambia entre el rol <span style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px">Administrador</span> sembrado con sus 17 permisos y un usuario autenticado sin permisos. El menú oculta lo que el rol no puede abrir, en vez de dejar que el clic termine en 403.</p>
+</div>
+<div style="padding:16px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F2F7FD);border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 8px 20px -12px rgba(11,60,107,.18)">
+<div style="font:500 10px/1 Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:7px">Fuera de alcance</div>
+<p style="margin:0;font-size:13px;color:#43596E">Proveedores, alertas de stock bajo, compras y solicitudes internas quedan fuera, según la nota final de la sección 6: no tienen backend ni pantalla construida. La versión anterior de estos mockups los incluía y quedó archivada.</p>
+</div>
+</div>
+</section>
+
+<section style="padding:26px 44px 20px">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<h3 style="font-size:20px;color:#0B3C6B">Login <span style="font-family:ui-monospace,Menlo,monospace;font-size:13px;color:#7089A0">/login</span></h3>
+<span style="font-size:12.5px;color:#5A7189">Público, antes del shell. Único endpoint de auth construido; no hay recuperar contraseña ni <span style="font-family:ui-monospace,Menlo,monospace">GET /auth/me</span>.</span>
+</div>
+<div style="width:1440px;height:560px;border-radius:12px;overflow:hidden;border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.06),0 24px 60px -30px rgba(11,60,107,.45);display:grid;place-items:center;background:linear-gradient(150deg,#0B3C6B,#0F4C81 55%,#12558E)">
+<div style="width:400px;padding:28px;border-radius:12px;background:#fff;box-shadow:0 18px 50px -18px rgba(6,32,58,.6)">
+<div style="display:flex;align-items:center;gap:11px;margin-bottom:22px">
+<img src="frontend/public/logo-placeholder.png" alt="TG Inventory" style="width:38px;height:38px;border-radius:9px;object-fit:contain">
+<div>
+<div style="font:500 17px Roboto,sans-serif;color:#0B3C6B;line-height:1.2">TG Inventory</div>
+<div style="font-size:11.5px;color:#7089A0">Control de inventario</div>
+</div>
+</div>
+<h4 style="font-size:22px;color:#0B3C6B;margin-bottom:3px">Control de Inventario</h4>
+<p style="margin:0 0 20px;font-size:13.5px;color:#7089A0">Iniciá sesión para continuar</p>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Correo</label>
+<input value="mcabrera@tginventory" style="width:100%;height:40px;padding:0 11px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1.5px solid #D32F2F;border-radius:6px">
+<div style="display:flex;gap:6px;align-items:center;margin-top:6px"><i class="ph ph-warning-circle" style="font-size:14px;color:#D32F2F"></i><span style="font-size:12px;color:#C62828">Ingresá un correo válido.</span></div>
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Contraseña</label>
+<input type="password" style="width:100%;height:40px;padding:0 11px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1.5px solid #D32F2F;border-radius:6px">
+<div style="display:flex;gap:6px;align-items:center;margin-top:6px"><i class="ph ph-warning-circle" style="font-size:14px;color:#D32F2F"></i><span style="font-size:12px;color:#C62828">La contraseña es obligatoria.</span></div>
+</div>
+<button style="width:100%;height:42px;border-radius:6px;border:1px solid #C9DCEC;background:#EEF3F9;color:#8FA3B5;font:500 14px Roboto,sans-serif;cursor:not-allowed">Ingresar</button>
+<p style="margin:0;font-size:12px;color:#7089A0">El botón queda deshabilitado mientras el formulario es inválido.</p>
+</div>
+</div>
+</div>
+<div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap">
+<div style="width:420px;padding:16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:10px">Enviando</div>
+<button style="width:100%;height:42px;border-radius:6px;border:1px solid #C9DCEC;background:#EEF3F9;color:#8FA3B5;font:500 14px Roboto,sans-serif;cursor:not-allowed;display:grid;place-items:center">
+<span style="width:20px;height:20px;border-radius:50%;border:2.5px solid #C9DCEC;border-top-color:#0F4C81;display:block"></span>
+</button>
+<p style="margin:11px 0 0;font-size:12.5px;color:#43596E">Con la petición en curso el botón se deshabilita y muestra el spinner en lugar del texto.</p>
+</div>
+<div style="width:420px;padding:16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:10px">Error del servidor</div>
+<div style="padding:10px 12px;border-radius:6px;background:#FDEDED;border:1px solid #F1C7C7;display:flex;gap:9px;align-items:flex-start">
+<i class="ph ph-warning-circle" style="font-size:16px;color:#D32F2F;margin-top:1px"></i>
+<span style="font-size:12.5px;color:#B71C1C">Credenciales inválidas.</span>
+</div>
+<p style="margin:11px 0 0;font-size:12.5px;color:#43596E">Los errores de formato van por campo; el rechazo del backend va en un aviso propio bajo los campos, con rol de alerta.</p>
+</div>
+</div>
+</section>
+
+<section style="padding:20px 44px 60px">
+<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px">
+<h3 style="font-size:20px;color:#0B3C6B">Shell de la aplicación</h3>
+<span style="font:500 11px Roboto,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#5A7189;margin-left:8px">Rol de la sesión</span>
+<div style="display:flex;gap:7px">
+<sc-for list="{{ roles }}" as="r" hint-placeholder-count="2">
+<sc-if value="{{ r.active }}"><button onClick="{{ r.pick }}" style="cursor:pointer;font:500 12.5px Roboto,sans-serif;padding:6px 13px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)">{{ r.name }}</button></sc-if>
+<sc-if value="{{ r.inactive }}"><button onClick="{{ r.pick }}" style="cursor:pointer;font:400 12.5px Roboto,sans-serif;padding:6px 13px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#43596E" style-hover="border-color:#6FB1E8;color:#0F4C81">{{ r.name }}</button></sc-if>
+</sc-for>
+</div>
+<span style="font-size:12px;color:#7089A0">{{ roleNote }}</span>
+</div>
+
+<div style="position:relative;width:1440px;border-radius:12px;overflow:hidden;border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.06),0 24px 60px -30px rgba(11,60,107,.45);display:grid;grid-template-columns:248px 1fr;background:#F5F8FC">
+
+<nav style="background:linear-gradient(180deg,#0B3C6B,#0F4C81 60%,#12558E);padding:18px 0 22px;display:flex;flex-direction:column;gap:20px;min-height:880px">
+<div style="display:flex;align-items:center;gap:10px;padding:0 18px 6px">
+<img src="frontend/public/logo-placeholder.png" alt="TG Inventory" style="width:32px;height:32px;border-radius:8px;object-fit:contain">
+<div>
+<div style="font:500 15px Roboto,sans-serif;color:#fff;line-height:1.15">TG Inventory</div>
+<div style="font-size:10.5px;color:#9CC6E8">Logo placeholder</div>
+</div>
+</div>
+<sc-for list="{{ navGroups }}" as="group" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:#7FAFD8;padding:0 18px 7px">{{ group.name }}</div>
+<sc-for list="{{ group.items }}" as="item" hint-placeholder-count="4">
+<sc-if value="{{ item.active }}">
+<button onClick="{{ item.pick }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:11px;padding:9px 18px;font:500 13px Roboto,sans-serif;color:#fff;background:linear-gradient(90deg,rgba(111,177,232,.32),rgba(111,177,232,.04));box-shadow:inset 3px 0 0 #6FB1E8">
+<i class="ph {{ item.icon }}" style="font-size:16px;color:#CFE8FB"></i>{{ item.label }}
+</button>
+</sc-if>
+<sc-if value="{{ item.inactive }}">
+<button onClick="{{ item.pick }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:11px;padding:9px 18px;font:400 13px Roboto,sans-serif;color:#C6DDF0" style-hover="background:rgba(255,255,255,.08);color:#fff">
+<i class="ph {{ item.icon }}" style="font-size:16px;color:#8FBBE2"></i>{{ item.label }}
+</button>
+</sc-if>
+</sc-for>
+</div>
+</sc-for>
+<div style="margin-top:auto;padding:14px 18px 0;border-top:1px solid rgba(255,255,255,.16);font-size:11px;color:#9CC6E8">{{ navFootnote }}</div>
+</nav>
+
+<main style="min-width:0;background:linear-gradient(180deg,#F7FAFD,#F5F8FC 240px)">
+<header style="display:flex;align-items:center;gap:16px;padding:13px 26px;background:#fff;border-bottom:1px solid #DCE8F4;box-shadow:0 1px 3px rgba(11,60,107,.06)">
+<span style="font:500 20px Roboto,sans-serif;color:#0B3C6B">Control de Inventario</span>
+<div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+<span style="font-size:13.5px;color:#43596E">{{ userName }} · {{ role }}</span>
+<div style="width:34px;height:34px;border-radius:50%;background:#CFE8FB;display:grid;place-items:center;font:500 12px Roboto,sans-serif;color:#0B3C6B">{{ userInitials }}</div>
+<button onClick="{{ openLogout }}" title="Cerrar sesión" aria-label="Cerrar sesión" style="cursor:pointer;width:38px;height:38px;border-radius:50%;border:1px solid #DCE8F4;background:#fff;color:#0F4C81;display:grid;place-items:center" style-hover="background:#F2F7FD;border-color:#6FB1E8"><i class="ph ph-sign-out" style="font-size:18px"></i></button>
+</div>
+</header>
+
+<div style="padding:22px 26px 40px">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:16px">
+<h4 style="font-size:24px;color:#0B3C6B">{{ title }}</h4>
+<span style="font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#7089A0">{{ route }}</span>
+</div>
+
+<sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+<div style="padding:20px;border-radius:10px;background:linear-gradient(120deg,#0B3C6B,#12558E);box-shadow:0 2px 4px rgba(11,60,107,.1),0 18px 40px -24px rgba(11,60,107,.6);margin-bottom:18px">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#9CC6E8">Sesión iniciada</div>
+<h4 style="font-size:24px;color:#fff;margin:6px 0 4px">Bienvenida, {{ firstName }}</h4>
+<p style="margin:0;font-size:13.5px;color:#C6DDF0;max-width:70ch">{{ dashboardIntro }}</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+<sc-for list="{{ accesos }}" as="a" hint-placeholder-count="6">
+<button onClick="{{ a.pick }}" style="all:unset;cursor:pointer;display:flex;flex-direction:column;gap:7px;padding:17px 18px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F4F9FE);border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 10px 24px -16px rgba(11,60,107,.3)" style-hover="border-color:#6FB1E8;box-shadow:0 2px 4px rgba(11,60,107,.1),0 14px 30px -18px rgba(11,60,107,.45)">
+<div style="display:flex;align-items:center;gap:10px">
+<span style="width:32px;height:32px;border-radius:8px;background:#CFE8FB;display:grid;place-items:center"><i class="ph {{ a.icon }}" style="font-size:17px;color:#0F4C81"></i></span>
+<span style="font:500 17px Roboto,sans-serif;color:#0B3C6B">{{ a.label }}</span>
+</div>
+<span style="font-size:13px;color:#43596E">{{ a.desc }}</span>
+<span style="font:400 11.5px ui-monospace,Menlo,monospace;color:#7089A0">{{ a.route }}</span>
+</button>
+</sc-for>
+</div>
+<div style="margin-top:18px;padding:14px 16px;border-radius:10px;background:#CFE8FB;border:1px solid #A9D3F2;display:flex;gap:11px;align-items:flex-start">
+<i class="ph ph-info" style="font-size:18px;color:#0F4C81;margin-top:1px"></i>
+<div>
+<div style="font-size:13.5px;font-weight:500;color:#0B3C6B">Sin indicadores todavía</div>
+<div style="font-size:12.5px;color:#255C8C">MVP1 no tiene historias de reporting, así que el dashboard es un panel de accesos y no de métricas. Cuando entre HU-12 este es el lugar donde aparecen las alertas de stock bajo.</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isStock }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;padding:15px 16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<div style="min-width:240px">
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Filtrar por producto</label>
+<select style="width:100%;height:38px;padding:0 9px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px"><option>Todos los productos</option><option>Resma papel carta</option><option>Guantes de nitrilo M</option></select>
+</div>
+<div style="min-width:240px">
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Filtrar por ubicación</label>
+<select style="width:100%;height:38px;padding:0 9px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px"><option>Todas las ubicaciones</option><option>Bodega Central</option><option>Estante A1</option></select>
+</div>
+<button style="cursor:pointer;height:38px;padding:0 14px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#43596E;font:500 12.5px Roboto,sans-serif" style-hover="background:#F5F8FC">Limpiar filtros</button>
+<span style="margin-left:auto;font-size:12px;color:#7089A0;max-width:34ch">Cada filtro recarga la tabla contra <span style="font-family:ui-monospace,Menlo,monospace">GET /inventory/stock</span>; los nombres ya vienen resueltos por el backend.</span>
+</div>
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35);overflow:hidden">
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+<thead><tr style="background:linear-gradient(180deg,#F7FBFF,#EFF6FD)">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 16px;border-bottom:1px solid #DCE8F4">Producto</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Ubicación</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Lote</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 16px;border-bottom:1px solid #DCE8F4">Cantidad</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ stock }}" as="s" hint-placeholder-count="8">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9">{{ s.producto }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ s.ubicacion }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;color:#7089A0;font-family:ui-monospace,Menlo,monospace;font-size:12.5px">{{ s.lote }}</td>
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9;text-align:right;font-weight:500;font-variant-numeric:tabular-nums">{{ s.cantidad }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-top:1px solid #DCE8F4;background:#F7FAFD;font-size:12.5px;color:#5A7189">
+<span>Página 1 de 3 · 48 registros</span>
+<div style="margin-left:auto;display:flex;align-items:center;gap:9px">
+<span>Filas por página</span>
+<select style="height:30px;padding:0 6px;font:400 12.5px Roboto,sans-serif;background:#fff;border:1px solid #DCE8F4;border-radius:6px;color:#1F2A37"><option>20</option><option>50</option><option>100</option></select>
+<button style="cursor:pointer;width:30px;height:30px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#B7C6D4"><i class="ph ph-caret-left" style="font-size:15px"></i></button>
+<button style="cursor:pointer;width:30px;height:30px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#0F4C81" style-hover="background:#F2F7FD"><i class="ph ph-caret-right" style="font-size:15px"></i></button>
+</div>
+</div>
+</div>
+<p style="margin:12px 0 0;font-size:12px;color:#7089A0">La respuesta trae <span style="font-family:ui-monospace,Menlo,monospace">product</span>, <span style="font-family:ui-monospace,Menlo,monospace">location</span>, <span style="font-family:ui-monospace,Menlo,monospace">batchId</span> y <span style="font-family:ui-monospace,Menlo,monospace">quantity</span>. El máximo por página es 100.</p>
+</sc-if>
+
+<sc-if value="{{ isMovements }}">
+<div style="display:grid;grid-template-columns:1fr 330px;gap:16px;align-items:start">
+<div style="padding:20px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35)">
+<h4 style="font-size:18px;color:#0B3C6B">Registrar movimiento</h4>
+<p style="margin:4px 0 18px;font-size:12.5px;color:#7089A0">Un solo formulario para los cuatro tipos. Los campos cambian según el tipo elegido, no hay pestañas separadas.</p>
+<div style="margin-bottom:18px">
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:7px">Tipo de movimiento</label>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{ tipos }}" as="t" hint-placeholder-count="4">
+<sc-if value="{{ t.active }}">
+<button onClick="{{ t.pick }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 15px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13.5px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)"><i class="ph {{ t.icon }}" style="font-size:17px"></i>{{ t.label }}</button>
+</sc-if>
+<sc-if value="{{ t.inactive }}">
+<button onClick="{{ t.pick }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 15px;border-radius:6px;border:1px solid #C9DCEC;background:#fff;color:#43596E;font:400 13.5px Roboto,sans-serif" style-hover="border-color:#6FB1E8;color:#0F4C81"><i class="ph {{ t.icon }}" style="font-size:17px;color:#7089A0"></i>{{ t.label }}</button>
+</sc-if>
+</sc-for>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div style="grid-column:1/-1">
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Producto *</label>
+<select style="width:100%;height:40px;padding:0 9px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px"><option>Guantes de nitrilo M — requiere lote</option><option>Resma papel carta</option></select>
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">{{ labelOrigen }} *</label>
+<select style="width:100%;height:40px;padding:0 9px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px"><option>Bodega Central</option><option>Estante A1</option><option>Oficina RRHH</option></select>
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Cantidad *</label>
+<input value="24" style="width:100%;height:40px;padding:0 11px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px">
+<div style="font-size:11.5px;color:#7089A0;margin-top:5px">Siempre positiva. El tipo define el signo en el libro mayor.</div>
+</div>
+<sc-if value="{{ needsDestino }}">
+<div style="grid-column:1/-1;padding:13px 14px;border-radius:8px;background:#CFE8FB;border:1px solid #A9D3F2">
+<label style="display:block;font-size:12px;color:#0B3C6B;margin-bottom:5px">Ubicación de destino *</label>
+<select style="width:100%;height:40px;padding:0 9px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #A9D3F2;border-radius:6px"><option>Estante A1</option><option>Oficina RRHH</option></select>
+<div style="font-size:11.5px;color:#255C8C;margin-top:6px">Solo en traslado. El backend escribe dos filas en el libro mayor: <span style="font-family:ui-monospace,Menlo,monospace">transfer_out</span> en el origen y <span style="font-family:ui-monospace,Menlo,monospace">transfer_in</span> en el destino.</div>
+</div>
+</sc-if>
+<sc-if value="{{ needsDireccion }}">
+<div style="grid-column:1/-1;padding:13px 14px;border-radius:8px;background:#CFE8FB;border:1px solid #A9D3F2">
+<label style="display:block;font-size:12px;color:#0B3C6B;margin-bottom:7px">Dirección del ajuste *</label>
+<div style="display:inline-flex;border:1px solid #A9D3F2;border-radius:6px;overflow:hidden;background:#fff">
+<label style="display:inline-flex;align-items:center;gap:7px;padding:9px 15px;font-size:13.5px;cursor:pointer;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff"><i class="ph ph-plus-circle" style="font-size:16px"></i>Incremento</label>
+<label style="display:inline-flex;align-items:center;gap:7px;padding:9px 15px;font-size:13.5px;cursor:pointer;border-left:1px solid #A9D3F2;color:#43596E"><i class="ph ph-minus-circle" style="font-size:16px"></i>Decremento</label>
+</div>
+<div style="font-size:11.5px;color:#255C8C;margin-top:6px">Solo en ajuste. Un decremento sin stock suficiente se rechaza, igual que una salida.</div>
+</div>
+</sc-if>
+<sc-if value="{{ needsLote }}">
+<div style="grid-column:1/-1">
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Lote *</label>
+<div style="display:flex;gap:9px;align-items:center">
+<select style="flex:1;height:40px;padding:0 9px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px"><option>L-2411 — vence 03/2027</option><option>L-2398 — vence 11/2026</option></select>
+<button onClick="{{ goBatches }}" style="cursor:pointer;height:40px;padding:0 14px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#0F4C81;font:500 12.5px Roboto,sans-serif;white-space:nowrap" style-hover="background:#F2F7FD">Gestionar lotes</button>
+</div>
+<div style="font-size:11.5px;color:#7089A0;margin-top:5px">El selector aparece solo cuando el producto tiene <span style="font-family:ui-monospace,Menlo,monospace">requiresBatch</span> activo.</div>
+</div>
+</sc-if>
+<div style="grid-column:1/-1">
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Notas</label>
+<textarea placeholder="Opcional, hasta 500 caracteres" style="width:100%;min-height:74px;padding:9px 11px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px;resize:vertical"></textarea>
+</div>
+</div>
+<div style="display:flex;gap:9px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid #EEF3F9">
+<button style="cursor:pointer;height:40px;padding:0 16px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#43596E;font:500 13px Roboto,sans-serif" style-hover="background:#F5F8FC">Limpiar</button>
+<button style="cursor:pointer;height:40px;padding:0 18px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)">{{ submitLabel }}</button>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="padding:16px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F3F8FE);border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:10px">Qué se escribe</div>
+<div style="display:flex;flex-direction:column;gap:9px;font-size:13px">
+<div style="display:flex"><span style="flex:1;color:#5A7189">Tipo enviado</span><span style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:#0B3C6B">{{ apiType }}</span></div>
+<div style="display:flex"><span style="flex:1;color:#5A7189">Filas en el libro</span><span>{{ ledgerRows }}</span></div>
+<div style="display:flex"><span style="flex:1;color:#5A7189">Stock del origen</span><span style="color:{{ deltaColor }}">{{ deltaOrigen }}</span></div>
+</div>
+<p style="margin:12px 0 0;font-size:12px;color:#7089A0">El movimiento y el stock derivado se guardan en la misma transacción; el libro mayor es inmutable, un error se corrige con un ajuste, nunca editando la fila.</p>
+</div>
+<div style="padding:14px 16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:8px">Atajos</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<button onClick="{{ goStock }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:9px;font-size:13.5px;color:#0F4C81" style-hover="text-decoration:underline"><i class="ph ph-list-magnifying-glass" style="font-size:16px"></i>Consultar stock actual</button>
+<button onClick="{{ goBatches }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:9px;font-size:13.5px;color:#0F4C81" style-hover="text-decoration:underline"><i class="ph ph-stack" style="font-size:16px"></i>Gestionar lotes</button>
+</div>
+<p style="margin:10px 0 0;font-size:11.5px;color:#7089A0">Los links que hoy están sueltos dentro del formulario pasan a ser parte del shell, y estos quedan como atajos del contexto.</p>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBatches }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="padding:16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06);display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap">
+<div style="min-width:320px">
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Producto que requiere lote *</label>
+<select style="width:100%;height:40px;padding:0 9px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px"><option>Guantes de nitrilo M</option><option>Alcohol 70% 1L</option></select>
+</div>
+<span style="font-size:12px;color:#7089A0;max-width:40ch">Solo aparecen productos con <span style="font-family:ui-monospace,Menlo,monospace">requiresBatch</span>. Elegido el producto se cargan sus lotes.</span>
+</div>
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35);overflow:hidden">
+<div style="display:flex;align-items:center;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">
+<h4 style="font-size:18px;color:#0B3C6B">Lotes de Guantes de nitrilo M</h4>
+<span style="margin-left:auto;font-size:12px;color:#7089A0">3 lotes registrados</span>
+</div>
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:10px 16px;border-bottom:1px solid #DCE8F4">Número de lote</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:10px 12px;border-bottom:1px solid #DCE8F4">Vencimiento</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:10px 12px;border-bottom:1px solid #DCE8F4">Recibido</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:10px 16px;border-bottom:1px solid #DCE8F4">Stock del lote</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ lotes }}" as="l" hint-placeholder-count="3">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9;font-family:ui-monospace,Menlo,monospace;font-size:13px">{{ l.numero }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ l.vence }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;color:#7089A0">{{ l.recibido }}</td>
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ l.stock }}</td>
+</tr>
+</sc-for>
+<tr style="background:#F7FBFF">
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9"><input placeholder="Nuevo lote, ej. L-2425" style="width:100%;height:36px;padding:0 10px;font:400 13.5px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"></td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9"><input placeholder="dd/mm/aaaa" style="width:100%;height:36px;padding:0 10px;font:400 13.5px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"></td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9"><input placeholder="Hoy" style="width:100%;height:36px;padding:0 10px;font:400 13.5px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"></td>
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9;text-align:right"><button style="cursor:pointer;height:36px;padding:0 14px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 12.5px Roboto,sans-serif">Agregar lote</button></td>
+</tr>
+</tbody>
+</table>
+<div style="padding:11px 16px;background:#F7FAFD;border-top:1px solid #DCE8F4;font-size:12px;color:#7089A0">El vencimiento es opcional y la fecha de recepción se puede antedatar cuando el lote llegó antes de hoy.</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isProducts }}">
+<div style="display:grid;grid-template-columns:1fr 400px;gap:16px;align-items:start">
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35);overflow:hidden">
+<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">
+<h4 style="font-size:18px;color:#0B3C6B">Productos</h4>
+<div style="position:relative;display:flex;align-items:center;margin-left:auto">
+<i class="ph ph-magnifying-glass" style="position:absolute;left:10px;font-size:15px;color:#7089A0"></i>
+<input placeholder="Filtrar por nombre" style="width:210px;height:34px;padding:0 11px 0 30px;font:400 13px Roboto,sans-serif;background:#F5F8FC;border:1px solid #DCE8F4;border-radius:6px;color:#1F2A37">
+</div>
+<sc-if value="{{ canWriteProducts }}">
+<button style="cursor:pointer;height:34px;padding:0 13px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 12.5px Roboto,sans-serif">+ Nuevo producto</button>
+</sc-if>
+</div>
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+<thead><tr style="background:linear-gradient(180deg,#F7FBFF,#EFF6FD)">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 16px;border-bottom:1px solid #DCE8F4">Nombre</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Categoría</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Unidad</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Lote</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Estado</th>
+<th style="border-bottom:1px solid #DCE8F4;padding:10px 16px"></th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ productos }}" as="p" hint-placeholder-count="7">
+<tr style="background:{{ p.rowBg }}" style-hover="background:#F7FBFF">
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9">
+<div>{{ p.nombre }}</div>
+<div style="font-size:11.5px;color:#7089A0">{{ p.descripcion }}</div>
+</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ p.categoria }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ p.unidad }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:{{ p.loteBg }};color:{{ p.loteFg }}">{{ p.lote }}</span></td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:{{ p.tagBg }};color:{{ p.tagFg }}">{{ p.estado }}</span></td>
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9;text-align:right">
+<sc-if value="{{ canWriteProducts }}"><button style="cursor:pointer;background:none;border:0;font:500 12.5px Roboto,sans-serif;color:#0F4C81;text-decoration:underline">Editar</button></sc-if>
+</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<div style="display:flex;align-items:center;padding:11px 16px;border-top:1px solid #DCE8F4;background:#F7FAFD;font-size:12.5px;color:#5A7189">
+<span>Página 1 de 2 · 24 productos</span>
+<div style="margin-left:auto;display:flex;gap:7px">
+<button style="cursor:pointer;width:30px;height:30px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#B7C6D4"><i class="ph ph-caret-left" style="font-size:15px"></i></button>
+<button style="cursor:pointer;width:30px;height:30px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#0F4C81" style-hover="background:#F2F7FD"><i class="ph ph-caret-right" style="font-size:15px"></i></button>
+</div>
+</div>
+</div>
+<sc-if value="{{ canWriteProducts }}">
+<div style="padding:18px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F3F8FE);border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.08),0 18px 40px -24px rgba(11,60,107,.4)">
+<h4 style="font-size:18px;color:#0B3C6B">Editar producto</h4>
+<p style="margin:4px 0 16px;font-size:12px;color:#7089A0">Mismo formulario para crear y editar. Categoría y unidad se pueden crear sin salir de acá.</p>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Nombre *</label>
+<input value="Guantes de nitrilo M" style="width:100%;height:40px;padding:0 11px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37">
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Descripción</label>
+<textarea style="width:100%;min-height:66px;padding:9px 11px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37;resize:vertical">Caja de 100 unidades, sin polvo.</textarea>
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Unidad *</label>
+<div style="display:flex;gap:9px">
+<select style="flex:1;height:40px;padding:0 9px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"><option>Caja</option><option>Unidad</option><option>Litro</option></select>
+<button onClick="{{ toggleNuevaUnidad }}" style="cursor:pointer;height:40px;padding:0 13px;border-radius:6px;border:1px dashed #6FB1E8;background:#F7FBFF;color:#0F4C81;font:500 12.5px Roboto,sans-serif;white-space:nowrap" style-hover="background:#EFF6FD">+ Crear</button>
+</div>
+<sc-if value="{{ nuevaUnidad }}">
+<div style="margin-top:9px;padding:11px 12px;border-radius:8px;background:#CFE8FB;border:1px solid #A9D3F2;display:flex;gap:9px;align-items:center">
+<input placeholder="Nombre de la unidad" style="flex:1;height:36px;padding:0 10px;font:400 13.5px Roboto,sans-serif;background:#fff;border:1px solid #A9D3F2;border-radius:6px;color:#1F2A37">
+<button style="cursor:pointer;height:36px;padding:0 13px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 12.5px Roboto,sans-serif">Guardar</button>
+<button onClick="{{ toggleNuevaUnidad }}" style="cursor:pointer;height:36px;padding:0 11px;border-radius:6px;border:1px solid #A9D3F2;background:#fff;color:#43596E;font:400 12.5px Roboto,sans-serif">Cancelar</button>
+</div>
+</sc-if>
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Categoría</label>
+<div style="display:flex;gap:9px">
+<select style="flex:1;height:40px;padding:0 9px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"><option>Insumos clínicos</option><option>Papelería</option><option>Sin categoría</option></select>
+<button onClick="{{ toggleNuevaCategoria }}" style="cursor:pointer;height:40px;padding:0 13px;border-radius:6px;border:1px dashed #6FB1E8;background:#F7FBFF;color:#0F4C81;font:500 12.5px Roboto,sans-serif;white-space:nowrap" style-hover="background:#EFF6FD">+ Crear</button>
+</div>
+<sc-if value="{{ nuevaCategoria }}">
+<div style="margin-top:9px;padding:11px 12px;border-radius:8px;background:#CFE8FB;border:1px solid #A9D3F2;display:flex;gap:9px;align-items:center">
+<input placeholder="Nombre de la categoría" style="flex:1;height:36px;padding:0 10px;font:400 13.5px Roboto,sans-serif;background:#fff;border:1px solid #A9D3F2;border-radius:6px;color:#1F2A37">
+<button style="cursor:pointer;height:36px;padding:0 13px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 12.5px Roboto,sans-serif">Guardar</button>
+<button onClick="{{ toggleNuevaCategoria }}" style="cursor:pointer;height:36px;padding:0 11px;border-radius:6px;border:1px solid #A9D3F2;background:#fff;color:#43596E;font:400 12.5px Roboto,sans-serif">Cancelar</button>
+</div>
+</sc-if>
+</div>
+<div style="padding:13px 14px;border-radius:8px;background:#fff;border:1px solid #DCE8F4;display:flex;gap:11px;align-items:flex-start">
+<input type="checkbox" checked style="width:17px;height:17px;margin-top:1px;accent-color:#0F4C81">
+<div>
+<div style="font-size:13.5px;font-weight:500;color:#0B3C6B">Requiere lote</div>
+<div style="font-size:12px;color:#5A7189">Todo movimiento de este producto pedirá lote y habilita su pantalla de lotes.</div>
+</div>
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:7px">Estado</label>
+<div style="display:inline-flex;border:1px solid #C9DCEC;border-radius:6px;overflow:hidden;background:#fff">
+<label style="padding:9px 15px;font-size:13.5px;cursor:pointer;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff">Activo</label>
+<label style="padding:9px 15px;font-size:13.5px;cursor:pointer;border-left:1px solid #C9DCEC;color:#43596E">Descontinuado</label>
+</div>
+</div>
+<div style="display:flex;gap:9px;justify-content:flex-end;padding-top:14px;border-top:1px solid #EEF3F9">
+<button style="cursor:pointer;height:40px;padding:0 16px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#43596E;font:500 13px Roboto,sans-serif" style-hover="background:#F5F8FC">Cancelar</button>
+<button style="cursor:pointer;height:40px;padding:0 18px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)">Guardar cambios</button>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ readOnlyProducts }}">
+<div style="padding:16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+<i class="ph ph-eye" style="font-size:17px;color:#0F4C81"></i>
+<h4 style="font-size:16px;color:#0B3C6B">Solo lectura</h4>
+</div>
+<p style="margin:0;font-size:13px;color:#43596E">Cualquier usuario autenticado puede consultar el catálogo. Este rol no tiene <span style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px">products:create</span> ni <span style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px">products:update</span>, así que no se muestran acciones de escritura en lugar de dejar que fallen con 403.</p>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isCatalogs }}">
+<p style="margin:0 0 16px;font-size:12.5px;color:#7089A0;max-width:74ch">Todo en la fila: alta inline y activar o desactivar, sin pantalla de formulario aparte. Categorías y unidades son dos rutas distintas con el mismo patrón.</p>
+<div style="max-width:820px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35);overflow:hidden">
+<div style="display:flex;align-items:center;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">
+<h4 style="font-size:18px;color:#0B3C6B">{{ catalogTitle }}</h4>
+<span style="margin-left:auto;font-size:12px;color:#7089A0">{{ catalogCount }}</span>
+</div>
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+<thead><tr style="background:#F7FAFD">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:10px 16px;border-bottom:1px solid #DCE8F4">Nombre</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:10px 12px;border-bottom:1px solid #DCE8F4">Productos</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;padding:10px 12px;border-bottom:1px solid #DCE8F4">Estado</th>
+<th style="border-bottom:1px solid #DCE8F4;padding:10px 16px"></th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ catalogRows }}" as="c" hint-placeholder-count="5">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9">{{ c.nombre }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums;color:#43596E">{{ c.productos }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:{{ c.tagBg }};color:{{ c.tagFg }}">{{ c.estado }}</span></td>
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9;text-align:right">
+<sc-if value="{{ canWriteCatalogs }}"><button style="cursor:pointer;background:none;border:0;font:500 12.5px Roboto,sans-serif;color:{{ c.accionColor }};text-decoration:underline">{{ c.accion }}</button></sc-if>
+</td>
+</tr>
+</sc-for>
+<sc-if value="{{ canWriteCatalogs }}">
+<tr style="background:#F7FBFF">
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9"><input placeholder="{{ catalogPlaceholder }}" style="width:100%;height:36px;padding:0 10px;font:400 13.5px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"></td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9"></td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;font-size:12px;color:#7089A0">Se crea activa</td>
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9;text-align:right"><button style="cursor:pointer;height:36px;padding:0 14px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 12.5px Roboto,sans-serif">Agregar</button></td>
+</tr>
+</sc-if>
+</tbody>
+</table>
+<div style="padding:11px 16px;background:#F7FAFD;border-top:1px solid #DCE8F4;font-size:12px;color:#7089A0">Desactivar no borra: los productos que ya la usan la conservan, pero deja de ofrecerse al crear productos nuevos.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLocations }}">
+<div style="display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start">
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35);overflow:hidden">
+<div style="display:flex;align-items:center;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">
+<h4 style="font-size:18px;color:#0B3C6B">Ubicaciones</h4>
+<span style="margin-left:auto;font-size:12px;color:#7089A0">Jerarquía armada en el frontend a partir de <span style="font-family:ui-monospace,Menlo,monospace">parentId</span></span>
+</div>
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+<thead><tr style="background:linear-gradient(180deg,#F7FBFF,#EFF6FD)">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 16px;border-bottom:1px solid #DCE8F4">Nombre</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Ubicación padre</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Estado</th>
+<th style="border-bottom:1px solid #DCE8F4;padding:10px 16px"></th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ ubicaciones }}" as="u" hint-placeholder-count="7">
+<tr style-hover="background:#F7FBFF">
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9;padding-left:{{ u.indent }}">
+<span style="display:inline-flex;align-items:center;gap:9px"><i class="ph {{ u.icon }}" style="font-size:16px;color:#6FB1E8"></i>{{ u.nombre }}</span>
+</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ u.padre }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:{{ u.tagBg }};color:{{ u.tagFg }}">{{ u.estado }}</span></td>
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9;text-align:right;white-space:nowrap">
+<button style="cursor:pointer;background:none;border:0;font:500 12.5px Roboto,sans-serif;color:#0F4C81;text-decoration:underline">Renombrar</button>
+<button style="cursor:pointer;background:none;border:0;margin-left:12px;font:500 12.5px Roboto,sans-serif;color:{{ u.accionColor }};text-decoration:underline">{{ u.accion }}</button>
+</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="padding:18px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F3F8FE);border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.08),0 18px 40px -24px rgba(11,60,107,.4)">
+<h4 style="font-size:18px;color:#0B3C6B">Nueva ubicación</h4>
+<p style="margin:4px 0 16px;font-size:12px;color:#7089A0">Alta inline, sin salir del listado.</p>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Nombre *</label>
+<input placeholder="Ej. Estante B2" style="width:100%;height:40px;padding:0 11px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37">
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Ubicación padre</label>
+<select style="width:100%;height:40px;padding:0 9px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"><option>Sin padre (raíz)</option><option>Sede Central</option><option>Bodega Central</option></select>
+</div>
+<div style="padding:11px 12px;border-radius:8px;background:#FDEDED;border:1px solid #F1C7C7;display:flex;gap:9px;align-items:flex-start">
+<i class="ph ph-warning-circle" style="font-size:16px;color:#D32F2F;margin-top:1px"></i>
+<span style="font-size:12.5px;color:#B71C1C">Ya existe "Estante A1" dentro de Bodega Central. El nombre debe ser único entre las ubicaciones que comparten padre.</span>
+</div>
+<button style="cursor:pointer;width:100%;height:40px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)">Crear ubicación</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isUsers }}">
+<div style="display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start">
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35);overflow:hidden">
+<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">
+<h4 style="font-size:18px;color:#0B3C6B">Usuarios</h4>
+<div style="position:relative;display:flex;align-items:center;margin-left:auto">
+<i class="ph ph-magnifying-glass" style="position:absolute;left:10px;font-size:15px;color:#7089A0"></i>
+<input placeholder="Filtrar por nombre o correo" style="width:220px;height:34px;padding:0 11px 0 30px;font:400 13px Roboto,sans-serif;background:#F5F8FC;border:1px solid #DCE8F4;border-radius:6px;color:#1F2A37">
+</div>
+<button style="cursor:pointer;height:34px;padding:0 13px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 12.5px Roboto,sans-serif">+ Nuevo usuario</button>
+</div>
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+<thead><tr style="background:linear-gradient(180deg,#F7FBFF,#EFF6FD)">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 16px;border-bottom:1px solid #DCE8F4">Nombre</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Correo</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Rol</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Estado</th>
+<th style="border-bottom:1px solid #DCE8F4;padding:10px 16px"></th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ usuarios }}" as="u" hint-placeholder-count="5">
+<tr style="background:{{ u.rowBg }}" style-hover="background:#F7FBFF">
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9"><div style="display:flex;align-items:center;gap:10px"><div style="width:28px;height:28px;border-radius:50%;background:#CFE8FB;display:grid;place-items:center;font:500 11px Roboto,sans-serif;color:#0B3C6B">{{ u.iniciales }}</div>{{ u.nombre }}</div></td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ u.email }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:#CFE8FB;color:#0B3C6B">{{ u.rol }}</span></td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9"><span style="font-size:11px;padding:3px 9px;border-radius:11px;background:{{ u.tagBg }};color:{{ u.tagFg }}">{{ u.estado }}</span></td>
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9;text-align:right"><button style="cursor:pointer;background:none;border:0;font:500 12.5px Roboto,sans-serif;color:#0F4C81;text-decoration:underline">Editar</button></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="padding:18px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F3F8FE);border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.08),0 18px 40px -24px rgba(11,60,107,.4)">
+<div style="display:flex;gap:8px;margin-bottom:14px">
+<sc-for list="{{ userModes }}" as="m" hint-placeholder-count="2">
+<sc-if value="{{ m.active }}"><button onClick="{{ m.pick }}" style="cursor:pointer;height:34px;padding:0 14px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 12.5px Roboto,sans-serif">{{ m.label }}</button></sc-if>
+<sc-if value="{{ m.inactive }}"><button onClick="{{ m.pick }}" style="cursor:pointer;height:34px;padding:0 14px;border-radius:6px;border:1px solid #C9DCEC;background:#fff;color:#43596E;font:400 12.5px Roboto,sans-serif" style-hover="border-color:#6FB1E8;color:#0F4C81">{{ m.label }}</button></sc-if>
+</sc-for>
+</div>
+<h4 style="font-size:18px;color:#0B3C6B">{{ userFormTitle }}</h4>
+<p style="margin:4px 0 16px;font-size:12px;color:#7089A0">{{ userFormNote }}</p>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Nombre *</label>
+<input value="{{ userFormName }}" style="width:100%;height:40px;padding:0 11px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37">
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Correo *</label>
+<input value="{{ userFormEmail }}" style="width:100%;height:40px;padding:0 11px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37">
+</div>
+<sc-if value="{{ isCreateUser }}">
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Contraseña *</label>
+<input type="password" placeholder="Entre 8 y 72 caracteres" style="width:100%;height:40px;padding:0 11px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37">
+</div>
+</sc-if>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Rol *</label>
+<select style="width:100%;height:40px;padding:0 9px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"><option>Administrador</option><option>Consulta</option></select>
+</div>
+<sc-if value="{{ isEditUser }}">
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:7px">Estado</label>
+<div style="display:inline-flex;border:1px solid #C9DCEC;border-radius:6px;overflow:hidden;background:#fff">
+<label style="padding:9px 15px;font-size:13.5px;cursor:pointer;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff">Activo</label>
+<label style="padding:9px 15px;font-size:13.5px;cursor:pointer;border-left:1px solid #C9DCEC;color:#43596E">Bloqueado</label>
+</div>
+</div>
+<div style="padding:11px 12px;border-radius:8px;background:#F7FAFD;border:1px solid #DCE8F4;font-size:12.5px;color:#43596E;display:flex;gap:9px"><i class="ph ph-key" style="font-size:16px;color:#7089A0"></i>La edición no cambia la contraseña: todavía no hay flujo de restablecimiento.</div>
+</sc-if>
+<button style="cursor:pointer;width:100%;height:40px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)">{{ userSubmit }}</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isRoles }}">
+<div style="display:grid;grid-template-columns:1fr 470px;gap:16px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06),0 14px 30px -20px rgba(11,60,107,.35);overflow:hidden">
+<div style="display:flex;align-items:center;padding:14px 16px;background:linear-gradient(180deg,#F7FBFF,#FFFFFF);border-bottom:1px solid #E7EFF7">
+<h4 style="font-size:18px;color:#0B3C6B">Roles</h4>
+<span style="margin-left:auto;font-size:12px;color:#7089A0">Hoy solo Administrador tiene permisos sembrados</span>
+</div>
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+<thead><tr style="background:linear-gradient(180deg,#F7FBFF,#EFF6FD)">
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 16px;border-bottom:1px solid #DCE8F4">Rol</th>
+<th style="text-align:left;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Descripción</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Permisos</th>
+<th style="text-align:right;font:500 10.5px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#0F4C81;padding:10px 12px;border-bottom:1px solid #DCE8F4">Usuarios</th>
+<th style="border-bottom:1px solid #DCE8F4;padding:10px 16px"></th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ rolesRows }}" as="r" hint-placeholder-count="3">
+<tr style="background:{{ r.rowBg }}" style-hover="background:#F7FBFF">
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9;font-weight:500">{{ r.nombre }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;color:#43596E">{{ r.descripcion }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ r.permisos }}</td>
+<td style="padding:11px 12px;border-bottom:1px solid #EEF3F9;text-align:right;font-variant-numeric:tabular-nums">{{ r.usuarios }}</td>
+<td style="padding:11px 16px;border-bottom:1px solid #EEF3F9;text-align:right"><button style="cursor:pointer;background:none;border:0;font:500 12.5px Roboto,sans-serif;color:#0F4C81;text-decoration:underline">Editar permisos</button></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="padding:16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<h4 style="font-size:16px;color:#0B3C6B;margin-bottom:12px">Nuevo rol</h4>
+<div style="display:flex;gap:12px;align-items:flex-end">
+<div style="flex:1">
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Nombre *</label>
+<input placeholder="Ej. Admin Inventario" style="width:100%;height:40px;padding:0 11px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37">
+</div>
+<div style="flex:1.4">
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Descripción</label>
+<input placeholder="Opcional" style="width:100%;height:40px;padding:0 11px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37">
+</div>
+<button style="cursor:pointer;height:40px;padding:0 16px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif">Crear rol</button>
+</div>
+<p style="margin:12px 0 0;font-size:12px;color:#7089A0">El rol se crea sin permisos y se le asignan después; nombre y descripción no se editan desde la matriz.</p>
+</div>
+</div>
+<div style="padding:18px;border-radius:10px;background:linear-gradient(165deg,#FFFFFF,#F3F8FE);border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.08),0 18px 40px -24px rgba(11,60,107,.4)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5">Rol seleccionado</div>
+<h4 style="font-size:18px;color:#0B3C6B;margin:5px 0 4px">Administrador</h4>
+<p style="margin:0 0 16px;font-size:12px;color:#7089A0">Matriz de <span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">module</span> × <span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">action</span> del catálogo de permisos. Guardar reemplaza el conjunto completo del rol.</p>
+<div style="display:grid;grid-template-columns:1fr repeat(3,52px);gap:10px 8px;align-items:center">
+<span></span>
+<span style="font:500 10px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;text-align:center">Read</span>
+<span style="font:500 10px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;text-align:center">Create</span>
+<span style="font:500 10px Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A7189;text-align:center">Update</span>
+<sc-for list="{{ permisos }}" as="p" hint-placeholder-count="7">
+<div style="min-width:0">
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:13px;color:#1F2A37">{{ p.modulo }}</div>
+<div style="font-size:11px;color:#7089A0">{{ p.nota }}</div>
+</div>
+<sc-if value="{{ p.readExists }}"><div style="text-align:center"><input type="checkbox" checked="{{ p.read }}" style="width:17px;height:17px;accent-color:#0F4C81"></div></sc-if>
+<sc-if value="{{ p.readMissing }}"><div style="text-align:center;color:#B7C6D4;font-size:13px">—</div></sc-if>
+<div style="text-align:center"><input type="checkbox" checked="{{ p.create }}" style="width:17px;height:17px;accent-color:#0F4C81"></div>
+<div style="text-align:center"><input type="checkbox" checked="{{ p.update }}" style="width:17px;height:17px;accent-color:#0F4C81"></div>
+</sc-for>
+</div>
+<div style="margin-top:16px;padding:11px 12px;border-radius:8px;background:#CFE8FB;border:1px solid #A9D3F2;font-size:12.5px;color:#255C8C;display:flex;gap:9px"><i class="ph ph-info" style="font-size:16px;color:#0F4C81"></i>Productos, categorías y unidades no tienen permiso de lectura: su consulta está abierta a cualquier usuario autenticado, así que un checkbox ahí sería inerte.</div>
+<div style="display:flex;gap:9px;justify-content:flex-end;margin-top:16px">
+<button style="cursor:pointer;height:40px;padding:0 16px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#43596E;font:500 13px Roboto,sans-serif" style-hover="background:#F5F8FC">Descartar</button>
+<button style="cursor:pointer;height:40px;padding:0 18px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)">Guardar permisos</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+</main>
+<sc-if value="{{ logoutOpen }}">
+<div style="position:absolute;inset:0;background:rgba(11,32,56,.52);display:grid;place-items:center;padding:24px">
+<div style="width:440px;padding:24px;border-radius:12px;background:#fff;box-shadow:0 24px 60px -20px rgba(6,32,58,.6)">
+<div style="display:flex;align-items:flex-start;gap:13px">
+<span style="width:38px;height:38px;flex:none;border-radius:9px;background:#CFE8FB;display:grid;place-items:center"><i class="ph ph-sign-out" style="font-size:19px;color:#0F4C81"></i></span>
+<div>
+<h4 style="font-size:18px;color:#0B3C6B">¿Cerrar sesión?</h4>
+<p style="margin:5px 0 0;font-size:13.5px;color:#43596E">Se cerrará la sesión de {{ userName }} en este dispositivo. Cualquier formulario abierto sin guardar se pierde.</p>
+</div>
+</div>
+<div style="margin-top:16px;padding:11px 12px;border-radius:8px;background:#F7FAFD;border:1px solid #DCE8F4;font-size:12.5px;color:#43596E;display:flex;gap:9px">
+<i class="ph ph-shield-check" style="font-size:16px;color:#7089A0;margin-top:1px"></i>
+<span>Hoy <span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">AuthService.logout()</span> es puramente local: borra el token de <span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">localStorage</span> y navega a <span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">/login</span>, sin llamada de red. Cuando exista <span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">POST /auth/logout</span>, si falla la sesión local se cierra igual.</span>
+</div>
+<div style="display:flex;gap:9px;justify-content:flex-end;margin-top:18px">
+<button onClick="{{ closeLogout }}" style="cursor:pointer;height:40px;padding:0 16px;border-radius:6px;border:1px solid #DCE8F4;background:#fff;color:#43596E;font:500 13px Roboto,sans-serif" style-hover="background:#F5F8FC">Seguir trabajando</button>
+<button onClick="{{ closeLogout }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 18px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 13px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)"><i class="ph ph-sign-out" style="font-size:16px"></i>Cerrar sesión</button>
+</div>
+</div>
+</div>
+</sc-if>
+</div>
+<p style="margin:14px 0 0;font-size:12.5px;color:#5A7189;max-width:82ch">El botón de cerrar sesión abre esta confirmación: probalo desde el icono del header. <strong style="font-weight:500">Es una propuesta, no lo que hay hoy</strong>: el shell actual cierra la sesión en el primer clic, sin confirmar. El paso intermedio evita el cierre accidental con un formulario a medio llenar; si preferís mantener el clic directo, se elimina el diálogo y queda solo la pantalla de abajo.</p>
+</section>
+
+<section style="padding:20px 44px 20px">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<h3 style="font-size:20px;color:#0B3C6B">Sesión cerrada <span style="font-family:ui-monospace,Menlo,monospace;font-size:13px;color:#7089A0">/login</span></h3>
+<span style="font-size:12.5px;color:#5A7189">Vuelta al login con confirmación, y el mismo aviso cuando el token vence solo.</span>
+</div>
+<div style="width:1440px;height:520px;border-radius:12px;overflow:hidden;border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.06),0 24px 60px -30px rgba(11,60,107,.45);display:grid;place-items:center;background:linear-gradient(150deg,#0B3C6B,#0F4C81 55%,#12558E)">
+<div style="width:400px;padding:28px;border-radius:12px;background:#fff;box-shadow:0 18px 50px -18px rgba(6,32,58,.6)">
+<div style="display:flex;align-items:center;gap:11px;margin-bottom:20px">
+<img src="frontend/public/logo-placeholder.png" alt="TG Inventory" style="width:38px;height:38px;border-radius:9px;object-fit:contain">
+<div>
+<div style="font:500 17px Roboto,sans-serif;color:#0B3C6B;line-height:1.2">TG Inventory</div>
+<div style="font-size:11.5px;color:#7089A0">Control de inventario</div>
+</div>
+</div>
+<div style="padding:11px 12px;border-radius:8px;background:#E6F2E7;border:1px solid #C3E0C5;display:flex;gap:9px;align-items:flex-start;margin-bottom:18px">
+<i class="ph ph-check-circle" style="font-size:17px;color:#2E7D32;margin-top:1px"></i>
+<div>
+<div style="font-size:13.5px;font-weight:500;color:#1B5E20">Cerraste sesión correctamente</div>
+<div style="font-size:12.5px;color:#2E7D32">Podés volver a entrar cuando quieras.</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Correo electrónico</label>
+<input value="mcabrera@tginventory.cl" style="width:100%;height:40px;padding:0 11px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px">
+</div>
+<div>
+<label style="display:block;font-size:12px;color:#5A7189;margin-bottom:5px">Contraseña</label>
+<input type="password" placeholder="Ingresá tu contraseña" style="width:100%;height:40px;padding:0 11px;font:400 14px Roboto,sans-serif;color:#1F2A37;background:#fff;border:1px solid #C9DCEC;border-radius:6px">
+</div>
+<button style="cursor:pointer;width:100%;height:42px;border-radius:6px;border:1px solid #0F4C81;background:linear-gradient(180deg,#1E6FB5,#0F4C81);color:#fff;font:500 14px Roboto,sans-serif;box-shadow:0 2px 6px -2px rgba(11,60,107,.5)" style-hover="background:linear-gradient(180deg,#2A7EC6,#12558E)">Ingresar</button>
+</div>
+</div>
+</div>
+<div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap">
+<div style="width:420px;padding:16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:9px">Variante: sesión expirada</div>
+<div style="padding:11px 12px;border-radius:8px;background:#FDEDDD;border:1px solid #F5D9BF;display:flex;gap:9px;align-items:flex-start">
+<i class="ph ph-clock-countdown" style="font-size:17px;color:#ED6C02;margin-top:1px"></i>
+<div>
+<div style="font-size:13.5px;font-weight:500;color:#8A4102">Tu sesión expiró</div>
+<div style="font-size:12.5px;color:#B65302">Volvé a ingresar para continuar donde estabas.</div>
+</div>
+</div>
+<p style="margin:11px 0 0;font-size:12.5px;color:#43596E">Mismo componente de aviso, otro tono: el cierre voluntario es una confirmación en verde, el vencimiento del token es una advertencia. Ambos con icono y texto, nunca solo color.</p>
+</div>
+<div style="width:420px;padding:16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<div style="font:500 10px Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1E6FB5;margin-bottom:9px">Dónde vive la acción</div>
+<div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:#43596E">
+<div style="display:flex;gap:9px"><i class="ph ph-sidebar" style="font-size:16px;color:#7089A0;margin-top:2px"></i><span>Desktop: botón de icono en el toolbar, junto a "nombre · rol", como ya está en el shell.</span></div>
+<div style="display:flex;gap:9px"><i class="ph ph-device-mobile" style="font-size:16px;color:#7089A0;margin-top:2px"></i><span>Mobile: último ítem del drawer, separado por una línea, más el icono en la barra superior.</span></div>
+<div style="display:flex;gap:9px"><i class="ph ph-keyboard" style="font-size:16px;color:#7089A0;margin-top:2px"></i><span>El diálogo abre con foco en "Seguir trabajando" y cierra con Escape.</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<section style="padding:20px 44px 70px">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<h3 style="font-size:20px;color:#0B3C6B">Mobile, menos de 600px</h3>
+<span style="font-size:12.5px;color:#5A7189">Drawer colapsable y la tabla de stock como tarjetas apiladas: se reorganiza la información, no se oculta.</span>
+</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div style="width:375px;border-radius:12px;overflow:hidden;border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.06),0 20px 44px -26px rgba(11,60,107,.5);background:#F5F8FC">
+<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:linear-gradient(120deg,#0B3C6B,#12558E)">
+<button style="cursor:pointer;width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.1);color:#fff"><i class="ph ph-list" style="font-size:18px"></i></button>
+<div style="min-width:0">
+<div style="font:500 16px Roboto,sans-serif;color:#fff;line-height:1.2">Stock actual</div>
+<div style="font-size:10.5px;color:#9CC6E8">María Cabrera · Administrador</div>
+</div>
+<button style="cursor:pointer;margin-left:auto;width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.1);color:#fff"><i class="ph ph-sign-out" style="font-size:17px"></i></button>
+</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:12px">
+<select style="width:100%;height:40px;padding:0 9px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"><option>Todos los productos</option></select>
+<select style="width:100%;height:40px;padding:0 9px;font:400 14px Roboto,sans-serif;background:#fff;border:1px solid #C9DCEC;border-radius:6px;color:#1F2A37"><option>Todas las ubicaciones</option></select>
+<sc-for list="{{ stockMobile }}" as="s" hint-placeholder-count="4">
+<div style="padding:13px 14px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="flex:1;font-size:14px;font-weight:500;color:#0B3C6B">{{ s.producto }}</span>
+<span style="font:500 17px Roboto,sans-serif;color:#0B3C6B;font-variant-numeric:tabular-nums">{{ s.cantidad }}</span>
+</div>
+<div style="display:flex;gap:8px;margin-top:7px;flex-wrap:wrap">
+<span style="font-size:11.5px;padding:3px 9px;border-radius:11px;background:#EEF3F9;color:#43596E">{{ s.ubicacion }}</span>
+<span style="font-size:11.5px;padding:3px 9px;border-radius:11px;background:#EEF3F9;color:#43596E;font-family:ui-monospace,Menlo,monospace">{{ s.lote }}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="width:375px;border-radius:12px;overflow:hidden;border:1px solid #DCE8F4;box-shadow:0 2px 4px rgba(11,60,107,.06),0 20px 44px -26px rgba(11,60,107,.5);background:linear-gradient(120deg,#0B3C6B,#12558E)">
+<div style="display:flex;align-items:center;gap:11px;padding:14px">
+<img src="frontend/public/logo-placeholder.png" alt="TG Inventory" style="width:32px;height:32px;border-radius:8px;object-fit:contain">
+<div style="min-width:0">
+<div style="font:500 15px Roboto,sans-serif;color:#fff;line-height:1.15">TG Inventory</div>
+<div style="font-size:10.5px;color:#9CC6E8">María Cabrera · Administrador</div>
+</div>
+<button style="cursor:pointer;margin-left:auto;width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.1);color:#fff"><i class="ph ph-x" style="font-size:16px"></i></button>
+</div>
+<div style="padding:4px 0 14px;display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ drawerItems }}" as="d" hint-placeholder-count="9">
+<sc-if value="{{ d.active }}">
+<div style="display:flex;align-items:center;gap:11px;padding:11px 16px;font:500 14px Roboto,sans-serif;color:#fff;background:linear-gradient(90deg,rgba(111,177,232,.32),rgba(111,177,232,.04));box-shadow:inset 3px 0 0 #6FB1E8"><i class="ph {{ d.icon }}" style="font-size:17px;color:#CFE8FB"></i>{{ d.label }}</div>
+</sc-if>
+<sc-if value="{{ d.inactive }}">
+<div style="display:flex;align-items:center;gap:11px;padding:11px 16px;font:400 14px Roboto,sans-serif;color:#C6DDF0"><i class="ph {{ d.icon }}" style="font-size:17px;color:#8FBBE2"></i>{{ d.label }}</div>
+</sc-if>
+</sc-for>
+<div style="margin:10px 16px 0;padding-top:12px;border-top:1px solid rgba(255,255,255,.16);display:flex;align-items:center;gap:10px;font:500 14px Roboto,sans-serif;color:#fff"><i class="ph ph-sign-out" style="font-size:17px;color:#8FBBE2"></i>Cerrar sesión</div>
+</div>
+</div>
+<div style="max-width:340px;padding:16px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<h4 style="font-size:16px;color:#0B3C6B;margin-bottom:8px">Entre 600 y 960px</h4>
+<p style="margin:0 0 10px;font-size:13px;color:#43596E">El drawer sigue colapsable pero más ancho, y las tablas conservan su forma con scroll horizontal cuando hace falta. El corte a tarjetas ocurre solo bajo 600px.</p>
+<p style="margin:0;font-size:12.5px;color:#7089A0">Los iconos de alerta y error siempre van con texto, nunca solo con color.</p>
+</div>
+</div>
+</section>
+
+<section style="padding:0 44px 70px">
+<div style="max-width:1000px;padding:18px 20px;border-radius:10px;background:#fff;border:1px solid #DCE8F4;box-shadow:0 1px 2px rgba(11,60,107,.06)">
+<h4 style="font-size:18px;color:#0B3C6B;margin-bottom:10px">Pendiente de definir</h4>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px 24px;font-size:13px;color:#43596E">
+<div>Logo real: sigue el monograma placeholder de la sección 2.</div>
+<div>Tema oscuro (HU-30): los colores están declarados como tokens, no hardcodeados por componente.</div>
+<div>Proveedores, alertas de stock bajo, compras y solicitudes internas: sin backend ni pantalla, entran en MVP2 y siguientes.</div>
+<div>Cerrar sesión es una acción de cliente: el token es stateless y no hay endpoint de logout.</div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1540,&quot;height&quot;:1200}}">
+const OK = { bg: '#E6F2E7', fg: '#2E7D32' };
+const NEUTRAL = { bg: '#EEF3F9', fg: '#43596E' };
+const INFO = { bg: '#CFE8FB', fg: '#0B3C6B' };
+const BAD = { bg: '#FDEDED', fg: '#C62828' };
+
+// Sections, order, labels and role gating mirror NAV_SECTIONS in
+// core/layout/shell/shell.component.ts — the shell already shipped; what
+// this redesigns is its visual treatment, not its information architecture.
+const NAV = [
+  { name: '', items: [
+    { id: 'dashboard', label: 'Panel principal', icon: 'ph-squares-four', route: '/dashboard', title: 'Panel principal' },
+  ]},
+  { name: 'Catálogo', items: [
+    { id: 'products', label: 'Productos', icon: 'ph-package', route: '/products', title: 'Productos' },
+    { id: 'categories', label: 'Categorías', icon: 'ph-tag', route: '/categories', title: 'Categorías' },
+    { id: 'units', label: 'Unidades', icon: 'ph-ruler', route: '/units', title: 'Unidades' },
+  ]},
+  { name: 'Inventario', items: [
+    { id: 'movements', label: 'Registrar movimiento', icon: 'ph-arrows-left-right', route: '/inventory', title: 'Registrar movimiento', roles: ['Administrador'] },
+    { id: 'batches', label: 'Lotes', icon: 'ph-stack', route: '/inventory/batches', title: 'Lotes', roles: ['Administrador'] },
+    { id: 'stock', label: 'Stock actual', icon: 'ph-list-magnifying-glass', route: '/inventory/stock', title: 'Stock actual' },
+  ]},
+  { name: 'Administración', items: [
+    { id: 'locations', label: 'Ubicaciones', icon: 'ph-map-pin-area', route: '/locations', title: 'Ubicaciones', roles: ['Administrador'] },
+    { id: 'roles', label: 'Roles y permisos', icon: 'ph-shield-check', route: '/roles', title: 'Roles y permisos', roles: ['Administrador'] },
+    { id: 'users', label: 'Usuarios', icon: 'ph-users-three', route: '/users', title: 'Usuarios', roles: ['Administrador'] },
+  ]},
+];
+
+// The 17 permissions the seed actually grants the Administrador role.
+const ADMIN_PERMS = [
+  'roles:read', 'roles:create', 'roles:update',
+  'users:read', 'users:create', 'users:update',
+  'products:create', 'products:update',
+  'categories:create', 'categories:update',
+  'units:create', 'units:update',
+  'locations:read', 'locations:create', 'locations:update',
+  'inventory:create', 'inventory:read',
+];
+
+// The shipped menu filters by ROLE NAME (item.roles.includes(user.role)),
+// not by permission strings — that's the backend guard's model.
+const SESSIONS = {
+  'Administrador': {
+    name: 'Administrador',
+    userName: 'María Cabrera', initials: 'MC', first: 'María',
+    perms: ADMIN_PERMS,
+    note: 'Único rol con permisos sembrados: los 17 del seed.',
+    footnote: 'Menú completo: 10 de 10 entradas.',
+    intro: 'Estos son los módulos que tu rol puede abrir. El menú de la izquierda muestra lo mismo, así que no hay rutas a las que llegues y reboten con un 403.',
+  },
+  'Consulta': {
+    name: 'Consulta',
+    userName: 'Juanita Ríos', initials: 'JR', first: 'Juanita',
+    perms: [],
+    note: 'Cualquier rol distinto de Administrador: el menú lo filtra por nombre de rol.',
+    footnote: 'Menú recortado: 5 de 10 entradas. Las demás piden el rol Administrador.',
+    intro: 'Tu rol no es Administrador, así que solo ves lo que está abierto a cualquier usuario autenticado: el catálogo y la consulta de stock.',
+  },
+};
+
+const STOCK = [
+  ['Guantes de nitrilo M', 'Bodega Central', 'L-2411', '620'],
+  ['Guantes de nitrilo M', 'Estante A1', 'L-2398', '120'],
+  ['Alcohol 70% 1L', 'Bodega Central', 'L-2380', '340'],
+  ['Resma papel carta', 'Bodega Central', '—', '48'],
+  ['Resma papel carta', 'Oficina RRHH', '—', '12'],
+  ['Gancho legajador', 'Bodega Central', '—', '11'],
+  ['Jeringa 5 ml', 'Estante A1', '—', '2.400'],
+  ['Tóner negro 85A', 'Bodega Central', '—', '6'],
+];
+
+const TIPOS = [
+  { id: 'in', label: 'Entrada', icon: 'ph-tray-arrow-down' },
+  { id: 'out', label: 'Salida', icon: 'ph-tray-arrow-up' },
+  { id: 'adjustment', label: 'Ajuste', icon: 'ph-sliders-horizontal' },
+  { id: 'transfer', label: 'Traslado', icon: 'ph-arrows-left-right' },
+];
+
+class Component extends DCLogic {
+  state = {
+    screen: 'dashboard', session: 'Administrador', tipo: 'transfer',
+    catalog: 'categories', userMode: 'create',
+    nuevaUnidad: false, nuevaCategoria: false, logoutOpen: false,
+  };
+
+  can(perm) {
+    return SESSIONS[this.state.session].perms.indexOf(perm) > -1;
+  }
+
+  visibleGroups() {
+    const role = SESSIONS[this.state.session].name;
+    return NAV.map(g => ({
+      name: g.name,
+      items: g.items.filter(i => !i.roles || i.roles.indexOf(role) > -1),
+    })).filter(g => g.items.length);
+  }
+
+  current() {
+    const visible = this.visibleGroups().reduce((a, g) => a.concat(g.items), []);
+    return visible.find(i => i.id === this.state.screen) || visible[0];
+  }
+
+  renderVals() {
+    const s = this.state;
+    const ses = SESSIONS[s.session];
+    const item = this.current();
+    const active = item.id;
+    const go = (id) => () => this.setState({ screen: id });
+
+    const isCats = active === 'categories';
+    const catRows = isCats
+      ? [
+          { nombre: 'Insumos clínicos', productos: '11', activa: true },
+          { nombre: 'Papelería', productos: '7', activa: true },
+          { nombre: 'Aseo', productos: '4', activa: true },
+          { nombre: 'Equipos', productos: '2', activa: true },
+          { nombre: 'Sin clasificar', productos: '0', activa: false },
+        ]
+      : [
+          { nombre: 'Unidad', productos: '9', activa: true },
+          { nombre: 'Caja', productos: '6', activa: true },
+          { nombre: 'Resma', productos: '3', activa: true },
+          { nombre: 'Litro', productos: '3', activa: true },
+          { nombre: 'Fardo', productos: '0', activa: false },
+        ];
+
+    return {
+      role: ses.name,
+      userName: ses.userName,
+      userInitials: ses.initials,
+      firstName: ses.first,
+      roleNote: ses.note,
+      navFootnote: ses.footnote,
+      dashboardIntro: ses.intro,
+      route: item.route,
+      title: item.title,
+      logoutOpen: s.logoutOpen,
+      openLogout: () => this.setState({ logoutOpen: true }),
+      closeLogout: () => this.setState({ logoutOpen: false }),
+
+      roles: Object.keys(SESSIONS).map(k => ({
+        name: k, active: s.session === k, inactive: s.session !== k,
+        pick: () => this.setState({ session: k }),
+      })),
+      navGroups: this.visibleGroups().map(g => ({
+        name: g.name,
+        items: g.items.map(i => ({
+          label: i.label, icon: i.icon,
+          active: active === i.id, inactive: active !== i.id, pick: go(i.id),
+        })),
+      })),
+
+      isDashboard: active === 'dashboard',
+      isStock: active === 'stock',
+      isMovements: active === 'movements',
+      isBatches: active === 'batches',
+      isProducts: active === 'products',
+      isCatalogs: isCats || active === 'units',
+      isLocations: active === 'locations',
+      isUsers: active === 'users',
+      isRoles: active === 'roles',
+
+      accesos: this.visibleGroups()
+        .reduce((a, g) => a.concat(g.items), [])
+        .filter(i => i.id !== 'dashboard')
+        .map(i => ({
+          label: i.label, icon: i.icon, route: i.route, pick: go(i.id),
+          desc: {
+            stock: 'Consultá existencias por producto y ubicación.',
+            movements: 'Registrá entradas, salidas, ajustes y traslados.',
+            batches: 'Cargá lotes y vencimientos de los productos que lo requieren.',
+            products: 'Catálogo de productos, con su unidad y categoría.',
+            categories: 'Administrá las categorías que agrupan productos.',
+            units: 'Administrá las unidades de manejo.',
+            locations: 'Bodegas, salas y estantes en jerarquía.',
+            users: 'Altas, edición y bloqueo de cuentas.',
+            roles: 'Roles y su matriz de permisos por módulo.',
+          }[i.id],
+        })),
+
+      stock: STOCK.map(r => ({ producto: r[0], ubicacion: r[1], lote: r[2], cantidad: r[3] })),
+      stockMobile: STOCK.slice(0, 4).map(r => ({ producto: r[0], ubicacion: r[1], lote: r[2], cantidad: r[3] })),
+
+      tipos: TIPOS.map(t => ({
+        label: t.label, icon: t.icon,
+        active: s.tipo === t.id, inactive: s.tipo !== t.id,
+        pick: () => this.setState({ tipo: t.id }),
+      })),
+      needsDestino: s.tipo === 'transfer',
+      needsDireccion: s.tipo === 'adjustment',
+      needsLote: true,
+      labelOrigen: s.tipo === 'transfer' ? 'Ubicación de origen' : 'Ubicación',
+      apiType: s.tipo,
+      ledgerRows: s.tipo === 'transfer' ? '2 (salida y entrada)' : '1',
+      deltaOrigen: s.tipo === 'in' ? '+24' : s.tipo === 'adjustment' ? '+24 o −24 según dirección' : '−24',
+      deltaColor: s.tipo === 'in' ? '#2E7D32' : s.tipo === 'adjustment' ? '#43596E' : '#D32F2F',
+      submitLabel: {
+        in: 'Registrar entrada', out: 'Registrar salida',
+        adjustment: 'Registrar ajuste', transfer: 'Registrar traslado',
+      }[s.tipo],
+      goStock: go('stock'),
+      goBatches: go('batches'),
+
+      lotes: [
+        { numero: 'L-2411', vence: '03/2027', recibido: '02/08/2026', stock: '740' },
+        { numero: 'L-2398', vence: '11/2026', recibido: '14/06/2026', stock: '120' },
+        { numero: 'L-2377', vence: '09/2026', recibido: '28/04/2026', stock: '0' },
+      ],
+
+      canWriteProducts: this.can('products:update'),
+      readOnlyProducts: !this.can('products:update'),
+      productos: [
+        { nombre: 'Guantes de nitrilo M', descripcion: 'Caja de 100 unidades, sin polvo', categoria: 'Insumos clínicos', unidad: 'Caja', lote: 'Requiere', loteBg: INFO.bg, loteFg: INFO.fg, estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg, rowBg: '#CFE8FB' },
+        { nombre: 'Alcohol 70% 1L', descripcion: 'Antiséptico de superficie', categoria: 'Insumos clínicos', unidad: 'Litro', lote: 'Requiere', loteBg: INFO.bg, loteFg: INFO.fg, estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg, rowBg: 'transparent' },
+        { nombre: 'Resma papel carta', descripcion: '500 hojas, 75 g', categoria: 'Papelería', unidad: 'Resma', lote: 'No', loteBg: NEUTRAL.bg, loteFg: NEUTRAL.fg, estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg, rowBg: 'transparent' },
+        { nombre: 'Gancho legajador', descripcion: 'Caja de 50 unidades', categoria: 'Papelería', unidad: 'Caja', lote: 'No', loteBg: NEUTRAL.bg, loteFg: NEUTRAL.fg, estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg, rowBg: 'transparent' },
+        { nombre: 'Jeringa 5 ml', descripcion: 'Estéril, desechable', categoria: 'Insumos clínicos', unidad: 'Unidad', lote: 'No', loteBg: NEUTRAL.bg, loteFg: NEUTRAL.fg, estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg, rowBg: 'transparent' },
+        { nombre: 'Tóner negro 85A', descripcion: 'Compatible impresora recepción', categoria: 'Papelería', unidad: 'Unidad', lote: 'No', loteBg: NEUTRAL.bg, loteFg: NEUTRAL.fg, estado: 'Activo', tagBg: OK.bg, tagFg: OK.fg, rowBg: 'transparent' },
+        { nombre: 'Termómetro digital', descripcion: 'Modelo discontinuado', categoria: 'Equipos', unidad: 'Unidad', lote: 'No', loteBg: NEUTRAL.bg, loteFg: NEUTRAL.fg, estado: 'Descontinuado', tagBg: NEUTRAL.bg, tagFg: NEUTRAL.fg, rowBg: 'transparent' },
+      ],
+      nuevaUnidad: s.nuevaUnidad,
+      nuevaCategoria: s.nuevaCategoria,
+      toggleNuevaUnidad: () => this.setState(p => ({ nuevaUnidad: !p.nuevaUnidad })),
+      toggleNuevaCategoria: () => this.setState(p => ({ nuevaCategoria: !p.nuevaCategoria })),
+
+      canWriteCatalogs: this.can(isCats ? 'categories:update' : 'units:update'),
+      catalogTitle: isCats ? 'Categorías' : 'Unidades de manejo',
+      catalogCount: isCats ? '5 categorías' : '5 unidades',
+      catalogPlaceholder: isCats ? 'Nueva categoría, ej. Ferretería' : 'Nueva unidad, ej. Galón',
+      catalogRows: catRows.map(c => ({
+        nombre: c.nombre, productos: c.productos,
+        estado: c.activa ? 'Activa' : 'Inactiva',
+        tagBg: c.activa ? OK.bg : NEUTRAL.bg, tagFg: c.activa ? OK.fg : NEUTRAL.fg,
+        accion: c.activa ? 'Desactivar' : 'Activar',
+        accionColor: c.activa ? '#D32F2F' : '#2E7D32',
+      })),
+
+      ubicaciones: [
+        { nombre: 'Sede Central', padre: '—', nivel: 0, icon: 'ph-buildings', activa: true },
+        { nombre: 'Bodega Central', padre: 'Sede Central', nivel: 1, icon: 'ph-warehouse', activa: true },
+        { nombre: 'Estante A1', padre: 'Bodega Central', nivel: 2, icon: 'ph-shelf', activa: true },
+        { nombre: 'Estante A2', padre: 'Bodega Central', nivel: 2, icon: 'ph-shelf', activa: true },
+        { nombre: 'Oficina RRHH', padre: 'Sede Central', nivel: 1, icon: 'ph-door-open', activa: true },
+        { nombre: 'Recepción', padre: 'Sede Central', nivel: 1, icon: 'ph-door-open', activa: true },
+        { nombre: 'Bodega temporal', padre: 'Sede Central', nivel: 1, icon: 'ph-warehouse', activa: false },
+      ].map(u => ({
+        nombre: u.nombre, padre: u.padre, icon: u.icon,
+        indent: (16 + u.nivel * 22) + 'px',
+        estado: u.activa ? 'Activa' : 'Inactiva',
+        tagBg: u.activa ? OK.bg : NEUTRAL.bg, tagFg: u.activa ? OK.fg : NEUTRAL.fg,
+        accion: u.activa ? 'Desactivar' : 'Activar',
+        accionColor: u.activa ? '#D32F2F' : '#2E7D32',
+      })),
+
+      usuarios: [
+        { iniciales: 'MC', nombre: 'María Cabrera', email: 'mcabrera@tginventory.cl', rol: 'Administrador', activo: true, rowBg: '#CFE8FB' },
+        { iniciales: 'JR', nombre: 'Juanita Ríos', email: 'jrios@tginventory.cl', rol: 'Consulta', activo: true, rowBg: 'transparent' },
+        { iniciales: 'JP', nombre: 'Jorge Pérez', email: 'jperez@tginventory.cl', rol: 'Consulta', activo: true, rowBg: 'transparent' },
+        { iniciales: 'LF', nombre: 'Luis Fuentes', email: 'lfuentes@tginventory.cl', rol: 'Consulta', activo: true, rowBg: 'transparent' },
+        { iniciales: 'DT', nombre: 'Diego Tapia', email: 'dtapia@tginventory.cl', rol: 'Consulta', activo: false, rowBg: 'transparent' },
+      ].map(u => ({
+        iniciales: u.iniciales, nombre: u.nombre, email: u.email, rol: u.rol, rowBg: u.rowBg,
+        estado: u.activo ? 'Activo' : 'Bloqueado',
+        tagBg: u.activo ? OK.bg : BAD.bg, tagFg: u.activo ? OK.fg : BAD.fg,
+      })),
+      userModes: [
+        { id: 'create', label: 'Crear usuario' },
+        { id: 'edit', label: 'Editar usuario' },
+      ].map(m => ({
+        label: m.label, active: s.userMode === m.id, inactive: s.userMode !== m.id,
+        pick: () => this.setState({ userMode: m.id }),
+      })),
+      isCreateUser: s.userMode === 'create',
+      isEditUser: s.userMode === 'edit',
+      userFormTitle: s.userMode === 'create' ? 'Crear usuario' : 'Editar María Cabrera',
+      userFormNote: s.userMode === 'create'
+        ? 'El rol es obligatorio y la contraseña se define acá; la cuenta nace activa.'
+        : 'Se editan nombre, correo, rol y estado. La contraseña no se toca.',
+      userFormName: s.userMode === 'create' ? '' : 'María Cabrera',
+      userFormEmail: s.userMode === 'create' ? '' : 'mcabrera@tginventory.cl',
+      userSubmit: s.userMode === 'create' ? 'Crear usuario' : 'Guardar cambios',
+
+      rolesRows: [
+        { nombre: 'Administrador', descripcion: 'Acceso total al sistema', permisos: '17', usuarios: '1', rowBg: '#CFE8FB' },
+        { nombre: 'Consulta', descripcion: 'Solo lectura del catálogo y del stock', permisos: '0', usuarios: '4', rowBg: 'transparent' },
+      ],
+      permisos: [
+        { modulo: 'roles', nota: 'Roles y permisos', read: true, create: true, update: true, readExists: true, readMissing: false },
+        { modulo: 'users', nota: 'Usuarios', read: true, create: true, update: true, readExists: true, readMissing: false },
+        { modulo: 'products', nota: 'Lectura abierta', read: false, create: true, update: true, readExists: false, readMissing: true },
+        { modulo: 'categories', nota: 'Lectura abierta', read: false, create: true, update: true, readExists: false, readMissing: true },
+        { modulo: 'units', nota: 'Lectura abierta', read: false, create: true, update: true, readExists: false, readMissing: true },
+        { modulo: 'locations', nota: 'Ubicaciones', read: true, create: true, update: true, readExists: true, readMissing: false },
+        { modulo: 'inventory', nota: 'Movimientos y lotes', read: true, create: true, update: false, readExists: true, readMissing: false },
+      ],
+
+      drawerItems: this.visibleGroups().reduce((a, g) => a.concat(g.items), []).map(i => ({
+        label: i.label, icon: i.icon,
+        active: i.id === 'stock', inactive: i.id !== 'stock',
+      })),
+    };
+  }
+}
+</script>
+</body>
+</html>

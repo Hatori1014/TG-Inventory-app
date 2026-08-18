@@ -1,48 +1,61 @@
 <div class="login-page">
-  <mat-card class="login-card">
-    <mat-card-header>
-      <mat-card-title>Control de Inventario</mat-card-title>
-      <mat-card-subtitle>Iniciá sesión para continuar</mat-card-subtitle>
-    </mat-card-header>
+  <div class="login-card">
+    <div class="login-brand">
+      <img src="logo-placeholder.png" alt="TG Inventory" class="login-brand-logo" />
+      <div>
+        <div class="login-brand-name">TG Inventory</div>
+        <div class="login-brand-tag">Control de inventario</div>
+      </div>
+    </div>
 
-    <mat-card-content>
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form">
-        <mat-form-field appearance="outline" class="login-field">
-          <mat-label>Correo</mat-label>
-          <input matInput type="email" formControlName="email" autocomplete="email" />
-          @if (form.controls.email.hasError('required')) {
-            <mat-error>El correo es obligatorio.</mat-error>
-          } @else if (form.controls.email.hasError('email')) {
-            <mat-error>Ingresá un correo válido.</mat-error>
-          }
-        </mat-form-field>
+    <h1 class="login-title">Control de Inventario</h1>
+    <p class="login-subtitle">Iniciá sesión para continuar</p>
 
-        <mat-form-field appearance="outline" class="login-field">
-          <mat-label>Contraseña</mat-label>
-          <input matInput type="password" formControlName="password" autocomplete="current-password" />
-          @if (form.controls.password.hasError('required')) {
-            <mat-error>La contraseña es obligatoria.</mat-error>
-          }
-        </mat-form-field>
-
-        @if (errorMessage) {
-          <p class="login-error" role="alert">{{ errorMessage }}</p>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form">
+      <div class="login-field">
+        <label for="login-email">Correo</label>
+        <input
+          id="login-email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          [class.login-input--invalid]="form.controls.email.invalid && form.controls.email.touched"
+        />
+        @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+          <div class="login-field-error"><i class="ph ph-warning-circle"></i><span>El correo es obligatorio.</span></div>
+        } @else if (form.controls.email.touched && form.controls.email.hasError('email')) {
+          <div class="login-field-error"><i class="ph ph-warning-circle"></i><span>Ingresá un correo válido.</span></div>
         }
+      </div>
 
-        <button
-          mat-flat-button
-          color="primary"
-          type="submit"
-          class="login-submit"
-          [disabled]="form.invalid || isSubmitting"
-        >
-          @if (isSubmitting) {
-            <mat-spinner diameter="20" class="login-spinner"></mat-spinner>
-          } @else {
-            Ingresar
-          }
-        </button>
-      </form>
-    </mat-card-content>
-  </mat-card>
+      <div class="login-field">
+        <label for="login-password">Contraseña</label>
+        <input
+          id="login-password"
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+          [class.login-input--invalid]="form.controls.password.invalid && form.controls.password.touched"
+        />
+        @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+          <div class="login-field-error"><i class="ph ph-warning-circle"></i><span>La contraseña es obligatoria.</span></div>
+        }
+      </div>
+
+      @if (errorMessage) {
+        <div class="login-server-error" role="alert">
+          <i class="ph ph-warning-circle"></i>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      <button type="submit" class="login-submit" [disabled]="form.invalid || isSubmitting">
+        @if (isSubmitting) {
+          <span class="login-spinner"></span>
+        } @else {
+          Ingresar
+        }
+      </button>
+    </form>
+  </div>
 </div>

@@ -6,7 +6,6 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
-import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthService } from '../../services/auth.service';
 
@@ -22,39 +21,44 @@ interface NavSection {
   items: NavItem[];
 }
 
+// Labels, grouping and role gating match the Claude Design mockup exactly
+// (docs/Design/TG Inventory UI.dc.html — the NAV constant), which itself
+// mirrors this file's own information architecture: the redesign changes
+// how this looks, not what it contains.
 const NAV_SECTIONS: NavSection[] = [
-  { label: '', items: [{ label: 'Panel principal', path: '/dashboard', icon: 'dashboard' }] },
+  { label: '', items: [{ label: 'Panel principal', path: '/dashboard', icon: 'ph-squares-four' }] },
   {
     label: 'Catálogo',
     items: [
-      { label: 'Productos', path: '/products', icon: 'inventory_2' },
-      { label: 'Categorías', path: '/categories', icon: 'category' },
-      { label: 'Unidades', path: '/units', icon: 'straighten' },
+      { label: 'Productos', path: '/products', icon: 'ph-package' },
+      { label: 'Categorías', path: '/categories', icon: 'ph-tag' },
+      { label: 'Unidades', path: '/units', icon: 'ph-ruler' },
     ],
   },
   {
     label: 'Inventario',
     items: [
-      { label: 'Registrar movimiento', path: '/inventory', icon: 'swap_horiz', roles: ['Administrador'] },
-      { label: 'Lotes', path: '/inventory/batches', icon: 'inventory', roles: ['Administrador'] },
-      { label: 'Stock actual', path: '/inventory/stock', icon: 'list_alt' },
+      { label: 'Registrar movimiento', path: '/inventory', icon: 'ph-arrows-left-right', roles: ['Administrador'] },
+      { label: 'Lotes', path: '/inventory/batches', icon: 'ph-stack', roles: ['Administrador'] },
+      { label: 'Stock actual', path: '/inventory/stock', icon: 'ph-list-magnifying-glass' },
     ],
   },
   {
     label: 'Administración',
     items: [
-      { label: 'Ubicaciones', path: '/locations', icon: 'store', roles: ['Administrador'] },
-      { label: 'Roles y permisos', path: '/roles', icon: 'admin_panel_settings', roles: ['Administrador'] },
-      { label: 'Usuarios', path: '/users', icon: 'group', roles: ['Administrador'] },
+      { label: 'Ubicaciones', path: '/locations', icon: 'ph-map-pin-area', roles: ['Administrador'] },
+      { label: 'Roles y permisos', path: '/roles', icon: 'ph-shield-check', roles: ['Administrador'] },
+      { label: 'Usuarios', path: '/users', icon: 'ph-users-three', roles: ['Administrador'] },
     ],
   },
 ];
 
 // First real navigation shell for the app — until now every screen was an
 // isolated route only reachable by typing its URL by hand (see
-// docs/esp/ui-ux-design-brief.md section 5). Deliberately built with a
-// stock Angular Material theme, not the final blue palette from the brief —
-// that swap happens once the Claude Design mockups land.
+// docs/esp/ui-ux-design-brief.md section 5). TT-24 phase 0 — visual design
+// now matches the Claude Design mockup (blue palette, Phosphor icons);
+// information architecture (sections/labels/role gating) is unchanged from
+// the original functional pass.
 @Component({
   selector: 'app-shell',
   standalone: true,
@@ -65,7 +69,6 @@ const NAV_SECTIONS: NavSection[] = [
     MatSidenavModule,
     MatToolbarModule,
     MatListModule,
-    MatIconModule,
     MatButtonModule,
   ],
   templateUrl: './shell.component.html',
@@ -85,6 +88,16 @@ export class ShellComponent {
   readonly sidenavOpened = computed(() => !this.isMobile());
 
   readonly user = this.authService.user;
+
+  readonly initials = computed(() => {
+    const name = this.user()?.name ?? '';
+    return name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('');
+  });
 
   readonly sections = computed(() => {
     const role = this.user()?.role ?? '';
