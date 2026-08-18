@@ -5,10 +5,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { LoginUseCase } from './application/use-cases/login.use-case';
+import { LogoutUseCase } from './application/use-cases/logout.use-case';
 import { JwtStrategy } from './infrastructure/jwt.strategy';
 import { UsersModule } from '../users/users.module';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { PrismaService } from '../../database/prisma.service';
 
 @Module({
   imports: [
@@ -27,7 +29,9 @@ import { RolesGuard } from '../../common/guards/roles.guard';
   ],
   controllers: [AuthController],
   providers: [
+    PrismaService,
     LoginUseCase,
+    LogoutUseCase,
     JwtStrategy,
     // ADR-24 — global by default: any new endpoint requires a valid JWT
     // (and the role it declares via @Roles()) unless marked @Public().

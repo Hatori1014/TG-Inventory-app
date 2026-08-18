@@ -41,11 +41,14 @@ describe('LoginUseCase', () => {
     );
     expect(result.accessToken).toBe('signed.jwt.token');
     expect(result.user).toEqual(authenticatedUser);
-    expect(jwtService.sign).toHaveBeenCalledWith({
-      sub: authenticatedUser.id,
-      email: authenticatedUser.email,
-      name: authenticatedUser.name,
-      role: authenticatedUser.role,
-    });
+    expect(jwtService.sign).toHaveBeenCalledWith(
+      {
+        sub: authenticatedUser.id,
+        email: authenticatedUser.email,
+        name: authenticatedUser.name,
+        role: authenticatedUser.role,
+      },
+      { jwtid: expect.any(String) },
+    );
   });
 });

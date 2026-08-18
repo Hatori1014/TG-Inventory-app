@@ -70,7 +70,11 @@ defineFeature(feature, (test) => {
       .overrideProvider(BatchPrismaRepository)
       .useValue(fakeBatchRepository)
       .overrideProvider(PrismaService)
-      .useValue({ rolePermission: { findFirst }, idempotencyKey })
+      .useValue({
+        rolePermission: { findFirst },
+        idempotencyKey,
+        revokedToken: { findUnique: jest.fn().mockResolvedValue(null) },
+      })
       .compile();
 
     app = moduleRef.createNestApplication();

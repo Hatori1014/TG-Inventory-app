@@ -10,10 +10,27 @@ import { FakeUserRepository } from './support/fake-user.repository';
 
 const feature = loadFeature('./test/bdd/login.feature');
 
+// In-memory stand-in for RevokedToken (ADR-32) — enough for JwtStrategy's
+// findUnique() check and LogoutUseCase's upsert() to behave like the real
+// table across a single test's login → logout → retry sequence.
+function fakeRevokedTokenPrisma() {
+  const revoked = new Map<string, { jti: string; expiresAt: Date }>();
+  return {
+    revokedToken: {
+      findUnique: async ({ where: { jti } }: { where: { jti: string } }) => revoked.get(jti) ?? null,
+      upsert: async ({ create }: { create: { jti: string; expiresAt: Date } }) => {
+        revoked.set(create.jti, create);
+        return create;
+      },
+    },
+  };
+}
+
 defineFeature(feature, (test) => {
   let app: INestApplication;
   let fakeRepository: FakeUserRepository;
   let response: request.Response;
+  let accessToken: string;
 
   beforeEach(async () => {
     process.env.JWT_SECRET = 'bdd-test-secret-at-least-16-chars';
@@ -26,7 +43,7 @@ defineFeature(feature, (test) => {
       .overrideProvider(USER_REPOSITORY)
       .useValue(fakeRepository)
       .overrideProvider(PrismaService)
-      .useValue({})
+      .useValue(fakeRevokedTokenPrisma())
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -129,6 +146,62 @@ defineFeature(feature, (test) => {
 
     and('no access token is issued', () => {
       expect(response.body.accessToken).toBeUndefined();
+    });
+  });
+
+  test('Successful logout', ({ given, and, when, then }) => {
+    given(
+      /^a user "(.*)" with password "(.*)" and role "(.*)"$/,
+      (email: string, password: string, role: string) => {
+        fakeRepository.seed(email, password, role);
+      },
+    );
+
+    and('they are logged in', async () => {
+      const login = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'admin@tg-group.local', password: 'correct-password' });
+      accessToken = login.body.accessToken;
+    });
+
+    when('they log out', async () => {
+      response = await request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Authorization', `Bearer ${accessToken}`);
+    });
+
+    then('the logout succeeds', () => {
+      expect(response.status).toBe(200);
+    });
+  });
+
+  test('A revoked token can no longer be used', ({ given, and, when, then }) => {
+    given(
+      /^a user "(.*)" with password "(.*)" and role "(.*)"$/,
+      (email: string, password: string, role: string) => {
+        fakeRepository.seed(email, password, role);
+      },
+    );
+
+    and('they are logged in', async () => {
+      const login = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'admin@tg-group.local', password: 'correct-password' });
+      accessToken = login.body.accessToken;
+    });
+
+    and('they log out', async () => {
+      await request(app.getHttpServer()).post('/auth/logout').set('Authorization', `Bearer ${accessToken}`);
+    });
+
+    when('they try to use the same token again', async () => {
+      response = await request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Authorization', `Bearer ${accessToken}`);
+    });
+
+    then('they see an unauthorized error', () => {
+      expect(response.status).toBe(401);
     });
   });
 });
