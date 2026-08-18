@@ -31,7 +31,7 @@ Defined by the user: dark blues, light blues, sky blues, and whites. Translated 
 | `error` / `warn` (Material) | `#D32F2F` | Validation errors, rejected request, account lockout (HU-20) |
 | `info` | `#1E6FB5` | Same as `primary-500`, for informational messages |
 
-**Logo**: the real logo hasn't been defined yet — a placeholder was generated (`frontend/public/logo-placeholder.png`, an "IC" monogram in the blue palette) so it doesn't block development. Replace before MVP 4 (final UAT), or sooner once the real logo is ready.
+**Logo**: real, in use since TT-24 phase 1 (`frontend/public/images/Logo.png`, links to `https://tgconsultores.net/` in both the shell and login). Replaced the initially generated placeholder.
 
 ## 3. Typography
 

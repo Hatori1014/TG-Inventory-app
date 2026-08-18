@@ -31,7 +31,7 @@ Definida por el usuario: azules oscuros, claros, celestes y blancos. Traducida a
 | `error` / `warn` (Material) | `#D32F2F` | Errores de validación, solicitud rechazada, bloqueo de cuenta (HU-20) |
 | `info` | `#1E6FB5` | Mismo que `primary-500`, para mensajes informativos |
 
-**Logo**: no se definió el logo real todavía — se generó un placeholder (`frontend/public/logo-placeholder.png`, monograma "IC" en la paleta de azules) para no bloquear el desarrollo. Reemplazar antes de MVP 4 (UAT final) o antes si el logo real está listo.
+**Logo**: real, en uso desde TT-24 fase 1 (`frontend/public/images/Logo.png`, con link a `https://tgconsultores.net/` en shell y login). Reemplazó al placeholder generado inicialmente.
 
 ## 3. Tipografía
 
