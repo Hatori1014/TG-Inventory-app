@@ -26,3 +26,16 @@ Feature: User login
     When they log in with email "blocked@tg-group.local" and password "correct-password"
     Then they see an invalid credentials error
     And no access token is issued
+
+  Scenario: Successful logout
+    Given a user "admin@tg-group.local" with password "correct-password" and role "Administrador"
+    And they are logged in
+    When they log out
+    Then the logout succeeds
+
+  Scenario: A revoked token can no longer be used
+    Given a user "admin@tg-group.local" with password "correct-password" and role "Administrador"
+    And they are logged in
+    And they log out
+    When they try to use the same token again
+    Then they see an unauthorized error

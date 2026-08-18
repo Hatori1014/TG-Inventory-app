@@ -91,14 +91,29 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBe(true);
   });
 
-  it('logout() clears the token and the user', () => {
+  it('logout() clears the token and the user immediately, and revokes it server-side', () => {
     localStorage.setItem('access_token', 'signed.jwt.token');
     const service = TestBed.inject(AuthService);
 
     service.logout();
 
+    // Local session clears synchronously, without waiting on the network call.
     expect(localStorage.getItem('access_token')).toBeNull();
     expect(service.user()).toBeNull();
     expect(service.isAuthenticated()).toBe(false);
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/auth/logout`);
+    expect(req.request.method).toBe('POST');
+    req.flush({});
+  });
+
+  it('logout() does not throw if the server-side revoke call fails', () => {
+    localStorage.setItem('access_token', 'signed.jwt.token');
+    const service = TestBed.inject(AuthService);
+
+    expect(() => service.logout()).not.toThrow();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/auth/logout`);
+    req.flush('error', { status: 500, statusText: 'Server Error' });
   });
 });
