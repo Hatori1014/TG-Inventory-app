@@ -12,11 +12,16 @@ import { Role } from '../../../shared/models/role.model';
 // yet, ADR-26). Edit resolves the target user from the paginated users list
 // (no GET /users/:id in plan section 7.4's endpoint table — same criterion
 // role-permissions.component.ts already uses for roles).
+// TT-24 phase 8 — styled to match the mockup's form fields and segmented
+// status toggle (Activo/Bloqueado), reusing product-form's pattern. Logic
+// unchanged: this is still a separate route/page per phase 5's precedent,
+// not the mockup's single-panel create/edit pills.
 @Component({
   selector: 'app-user-form',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './user-form.component.html',
+  styleUrl: './user-form.component.scss',
 })
 export class UserFormComponent {
   private fb = inject(FormBuilder);

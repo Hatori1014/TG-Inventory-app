@@ -1,10 +1,15 @@
-<h1>Usuarios</h1>
-<a routerLink="new">Nuevo usuario</a>
+<div class="users-page-header">
+  <h1>Usuarios</h1>
+  <span class="users-page-route">/users</span>
+</div>
 
-@if (loading()) {
-  <p>Cargando...</p>
-} @else {
-  <table>
+<div class="users-table-card">
+  <div class="users-table-header">
+    <h2>Usuarios</h2>
+    <a routerLink="new" class="users-new-btn">+ Nuevo usuario</a>
+  </div>
+
+  <table class="users-table">
     <thead>
       <tr>
         <th>Nombre</th>
@@ -15,15 +20,62 @@
       </tr>
     </thead>
     <tbody>
-      @for (user of users(); track user.id) {
+      @if (loading()) {
         <tr>
-          <td>{{ user.name }}</td>
-          <td>{{ user.email }}</td>
-          <td>{{ user.role.name }}</td>
-          <td>{{ user.status === 'active' ? 'Activo' : 'Bloqueado' }}</td>
-          <td><a [routerLink]="[user.id, 'edit']">Editar</a></td>
+          <td colspan="5" class="users-empty">Cargando...</td>
         </tr>
+      } @else {
+        @for (user of users(); track user.id) {
+          <tr>
+            <td>
+              <div class="users-name-cell">
+                <span class="users-avatar">{{ initials(user.name) }}</span>
+                {{ user.name }}
+              </div>
+            </td>
+            <td class="users-col-muted">{{ user.email }}</td>
+            <td>
+              <span class="users-badge users-badge--info">{{ user.role.name }}</span>
+            </td>
+            <td>
+              <span class="users-badge" [class.users-badge--ok]="user.status === 'active'">
+                {{ user.status === 'active' ? 'Activo' : 'Bloqueado' }}
+              </span>
+            </td>
+            <td class="users-col-right">
+              <a [routerLink]="[user.id, 'edit']" class="users-edit-link">Editar</a>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="users-empty">No hay usuarios registrados.</td>
+          </tr>
+        }
       }
     </tbody>
   </table>
-}
+
+  <div class="users-pagination">
+    <span>Página {{ page() }} de {{ totalPages() }} · {{ total() }} usuarios</span>
+    <div class="users-pagination-controls">
+      <button
+        type="button"
+        class="users-page-btn"
+        [disabled]="page() <= 1"
+        (click)="previousPage()"
+        aria-label="Página anterior"
+      >
+        <i class="ph ph-caret-left"></i>
+      </button>
+      <button
+        type="button"
+        class="users-page-btn"
+        [disabled]="page() >= totalPages()"
+        (click)="nextPage()"
+        aria-label="Página siguiente"
+      >
+        <i class="ph ph-caret-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
