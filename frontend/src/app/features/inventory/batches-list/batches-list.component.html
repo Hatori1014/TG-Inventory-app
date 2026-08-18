@@ -1,48 +1,95 @@
-<h1>Lotes de productos</h1>
-<a routerLink="/inventory">Volver a movimientos</a>
+<div class="batches-page-header">
+  <h1>Lotes de productos</h1>
+  <span class="batches-page-route">/inventory/batches</span>
+</div>
 
-<select [(ngModel)]="selectedProductId" (ngModelChange)="onProductChange()">
-  <option value="" disabled>Seleccioná un producto que requiera lote</option>
-  @for (product of products(); track product.id) {
-    <option [value]="product.id">{{ product.name }}</option>
-  }
-</select>
+<div class="batches-filter-bar">
+  <div class="batches-filter">
+    <label for="batches-product">Producto que requiere lote *</label>
+    <select id="batches-product" [(ngModel)]="selectedProductId" (ngModelChange)="onProductChange()">
+      <option value="" disabled>Seleccioná un producto</option>
+      @for (product of products(); track product.id) {
+        <option [value]="product.id">{{ product.name }}</option>
+      }
+    </select>
+  </div>
+  <span class="batches-filter-note">
+    Solo aparecen productos con lote requerido. Elegido el producto se cargan sus lotes.
+  </span>
+</div>
 
 @if (products().length === 0) {
-  <p>No hay productos marcados como "requiere lote". Marcalo desde la edición del producto.</p>
+  <p class="batches-empty-note">
+    No hay productos marcados como "requiere lote". Marcalo desde la edición del producto.
+  </p>
 }
 
 @if (errorMessage) {
-  <p role="alert">{{ errorMessage }}</p>
+  <p class="batches-error" role="alert">{{ errorMessage }}</p>
 }
 
 @if (selectedProductId) {
-  <form (ngSubmit)="addBatch()">
-    <input type="text" [(ngModel)]="newBatchNumber" name="newBatchNumber" placeholder="Número de lote" />
-    <input type="date" [(ngModel)]="newExpiresAt" name="newExpiresAt" placeholder="Fecha de vencimiento (opcional)" />
-    <button type="submit" [disabled]="!newBatchNumber.trim()">Agregar lote</button>
-  </form>
+  <div class="batches-table-card">
+    <div class="batches-table-header">
+      <h2>Lotes de {{ selectedProductName() }}</h2>
+      <span class="batches-count">{{ batches().length }} lotes registrados</span>
+    </div>
 
-  @if (loading()) {
-    <p>Cargando...</p>
-  } @else {
-    <table>
+    <table class="batches-table">
       <thead>
         <tr>
           <th>Número de lote</th>
           <th>Vencimiento</th>
-          <th>Ingreso</th>
+          <th>Recibido</th>
+          <th class="batches-col-right">Stock del lote</th>
         </tr>
       </thead>
       <tbody>
-        @for (batch of batches(); track batch.id) {
+        @if (loading()) {
           <tr>
-            <td>{{ batch.batchNumber }}</td>
-            <td>{{ batch.expiresAt ?? '—' }}</td>
-            <td>{{ batch.receivedAt }}</td>
+            <td colspan="4" class="batches-empty">Cargando...</td>
           </tr>
+        } @else {
+          @for (batch of batches(); track batch.id) {
+            <tr>
+              <td class="batches-col-mono">{{ batch.batchNumber }}</td>
+              <td class="batches-col-muted">{{ batch.expiresAt ?? '—' }}</td>
+              <td class="batches-col-muted">{{ batch.receivedAt }}</td>
+              <td class="batches-col-right batches-col-qty">{{ stockFor(batch.id) }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="batches-empty">Este producto no tiene lotes cargados todavía.</td>
+            </tr>
+          }
         }
+
+        <tr class="batches-add-row">
+          <td>
+            <input
+              type="text"
+              [(ngModel)]="newBatchNumber"
+              name="newBatchNumber"
+              placeholder="Nuevo lote, ej. L-2425"
+            />
+          </td>
+          <td>
+            <input type="date" [(ngModel)]="newExpiresAt" name="newExpiresAt" />
+          </td>
+          <td>
+            <input type="date" [(ngModel)]="newReceivedAt" name="newReceivedAt" placeholder="Hoy" />
+          </td>
+          <td class="batches-col-right">
+            <button type="button" class="batches-add-btn" [disabled]="!newBatchNumber.trim()" (click)="addBatch()">
+              Agregar lote
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
-  }
+
+    <div class="batches-table-footer">
+      El vencimiento es opcional y la fecha de recepción se puede antedatar cuando el lote llegó antes de hoy.
+    </div>
+  </div>
 }
