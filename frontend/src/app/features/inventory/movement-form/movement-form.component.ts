@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { InventoryService } from '../inventory.service';
 import { ProductsService } from '../../products/products.service';
@@ -10,22 +11,43 @@ import { Location } from '../../../shared/models/location.model';
 import { Batch } from '../../../shared/models/batch.model';
 import { MovementType } from '../../../shared/models/inventory.model';
 
+interface MovementTypeOption {
+  id: MovementType;
+  label: string;
+  icon: string;
+}
+
+const MOVEMENT_TYPES: MovementTypeOption[] = [
+  { id: 'in', label: 'Entrada', icon: 'ph-tray-arrow-down' },
+  { id: 'out', label: 'Salida', icon: 'ph-tray-arrow-up' },
+  { id: 'adjustment', label: 'Ajuste', icon: 'ph-sliders-horizontal' },
+  { id: 'transfer', label: 'Traslado', icon: 'ph-arrows-left-right' },
+];
+
 // HU-08 — one form covering all four movement categories the backend
 // exposes through the single POST /inventory/movements (ADR-27/ADR-28):
 // "adjustment" needs a direction, "transfer" needs a destination location —
 // both fields only shown/sent when relevant. HU-09 adds batchId, required
 // when the selected product has requiresBatch = true (ADR-28 extension).
+// TT-24 phase 3 — matches the Claude Design mockup: type selector as
+// pills instead of a <select>, and a new sidebar ("Qué se escribe") that
+// previews the ledger effect of the currently selected type/direction
+// before submitting — real derived state, not the mockup's static
+// illustrative text, since this form actually has the values bound.
 @Component({
   selector: 'app-movement-form',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './movement-form.component.html',
+  styleUrl: './movement-form.component.scss',
 })
 export class MovementFormComponent {
   private fb = inject(FormBuilder);
   private inventoryService = inject(InventoryService);
   private productsService = inject(ProductsService);
   private locationsService = inject(LocationsService);
+
+  readonly movementTypes = MOVEMENT_TYPES;
 
   products = signal<Product[]>([]);
   locations = signal<Location[]>([]);
@@ -45,14 +67,48 @@ export class MovementFormComponent {
     notes: [''],
   });
 
+  private readonly formValue = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
+
   selectedProductRequiresBatch = computed(() => {
-    const product = this.products().find((p) => p.id === this.form.value.productId);
+    const product = this.products().find((p) => p.id === this.formValue().productId);
     return product?.requiresBatch ?? false;
   });
+
+  readonly locationLabel = computed(() =>
+    this.formValue().type === 'transfer' ? 'Ubicación de origen' : 'Ubicación',
+  );
+
+  readonly submitLabel = computed(
+    () =>
+      ({ in: 'Registrar entrada', out: 'Registrar salida', adjustment: 'Registrar ajuste', transfer: 'Registrar traslado' })[
+        this.formValue().type ?? 'in'
+      ],
+  );
+
+  // Sidebar preview of the ledger effect — real values from the bound
+  // form, not the mockup's static "+24 o -24 según dirección" placeholder.
+  readonly ledgerRows = computed(() => (this.formValue().type === 'transfer' ? '2 (salida y entrada)' : '1'));
+
+  readonly deltaSign = computed(() => {
+    const { type, direction } = this.formValue();
+    if (type === 'in') return '+';
+    if (type === 'adjustment') return direction === 'decrease' ? '-' : '+';
+    return '-'; // out, transfer (origin always loses)
+  });
+
+  readonly deltaPreview = computed(() => `${this.deltaSign()}${this.formValue().quantity || 0}`);
+
+  readonly deltaColorClass = computed(() =>
+    this.deltaSign() === '+' ? 'movement-delta--positive' : 'movement-delta--negative',
+  );
 
   constructor() {
     this.productsService.listProducts(1, 100).subscribe({ next: (r) => this.products.set(r.items) });
     this.locationsService.list(1, 100).subscribe({ next: (r) => this.locations.set(r.items) });
+  }
+
+  selectType(type: MovementType): void {
+    this.form.patchValue({ type });
   }
 
   onProductChange(): void {
