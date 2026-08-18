@@ -19,6 +19,7 @@ import { Unit } from '../../../shared/models/unit.model';
   standalone: true,
   imports: [ReactiveFormsModule, FormsModule, RouterLink],
   templateUrl: './product-form.component.html',
+  styleUrl: './product-form.component.scss',
 })
 export class ProductFormComponent {
   private fb = inject(FormBuilder);
