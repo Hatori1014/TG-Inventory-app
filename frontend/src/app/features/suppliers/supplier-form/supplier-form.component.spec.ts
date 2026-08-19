@@ -21,15 +21,28 @@ describe('SupplierFormComponent', () => {
     });
     httpMock = TestBed.inject(HttpTestingController);
     const fixture = TestBed.createComponent(SupplierFormComponent);
+    httpMock.expectOne((r) => r.url.endsWith('/document-types')).flush({
+      items: [{ id: 'doc-nit', name: 'NIT', status: 'active' }],
+      total: 1,
+      page: 1,
+      pageSize: 100,
+    });
+    httpMock.expectOne((r) => r.url.endsWith('/person-types')).flush({
+      items: [{ id: 'per-jur', name: 'Jurídica', status: 'active' }],
+      total: 1,
+      page: 1,
+      pageSize: 100,
+    });
     return fixture.componentInstance;
   }
 
   describe('create mode', () => {
-    it('only requires a name — no HTTP request until submit', () => {
+    it('only requires a name — no supplier HTTP request until submit', () => {
       const component = create(null);
 
       expect(component.isEditMode).toBe(false);
       expect(component.form.invalid).toBe(true);
+      expect(component.documentTypes()).toEqual([{ id: 'doc-nit', name: 'NIT', status: 'active' }]);
 
       component.form.patchValue({ name: 'Acme Corp' });
 
@@ -38,7 +51,7 @@ describe('SupplierFormComponent', () => {
 
     it('posts only the filled-in fields and navigates to /suppliers on success', () => {
       const component = create(null);
-      component.form.patchValue({ name: 'Acme Corp', taxId: 'NIT-123' });
+      component.form.patchValue({ name: 'Acme Corp', taxId: 'NIT-123', documentTypeId: 'doc-nit' });
 
       component.onSubmit();
 
@@ -46,6 +59,8 @@ describe('SupplierFormComponent', () => {
       expect(postReq.request.body).toEqual({
         name: 'Acme Corp',
         taxId: 'NIT-123',
+        documentTypeId: 'doc-nit',
+        personTypeId: undefined,
         contact: undefined,
         phone: undefined,
         email: undefined,
@@ -54,6 +69,8 @@ describe('SupplierFormComponent', () => {
         id: 'sup-new',
         name: 'Acme Corp',
         taxId: 'NIT-123',
+        documentType: { id: 'doc-nit', name: 'NIT', status: 'active' },
+        personType: null,
         contact: null,
         phone: null,
         email: null,
@@ -70,7 +87,25 @@ describe('SupplierFormComponent', () => {
 
       const postReq = httpMock.expectOne((r) => r.url.endsWith('/suppliers') && r.method === 'POST');
       postReq.flush({ message: 'conflict' }, { status: 409, statusText: 'Conflict' });
-      expect(component.errorMessage).toBe('Ya existe un proveedor activo con ese NIT.');
+      expect(component.errorMessage).toBe('Ya existe un proveedor activo con ese NIT y tipo de documento.');
+    });
+
+    it('creates a document type inline and selects it', () => {
+      const component = create(null);
+
+      component.newDocumentTypeName = 'Pasaporte';
+      component.createDocumentTypeInline();
+
+      const postReq = httpMock.expectOne((r) => r.url.endsWith('/document-types') && r.method === 'POST');
+      expect(postReq.request.body).toEqual({ name: 'Pasaporte' });
+      postReq.flush({ id: 'doc-pass', name: 'Pasaporte', status: 'active' });
+
+      expect(component.documentTypes()).toEqual([
+        { id: 'doc-nit', name: 'NIT', status: 'active' },
+        { id: 'doc-pass', name: 'Pasaporte', status: 'active' },
+      ]);
+      expect(component.form.value.documentTypeId).toBe('doc-pass');
+      expect(component.showNewDocumentType()).toBe(false);
     });
 
     it('rejects an invalid email', () => {
@@ -91,6 +126,8 @@ describe('SupplierFormComponent', () => {
             id: 'sup-1',
             name: 'Beta SA',
             taxId: 'NIT-999',
+            documentType: { id: 'doc-nit', name: 'NIT', status: 'active' },
+            personType: { id: 'per-jur', name: 'Jurídica', status: 'active' },
             contact: 'Jane Doe',
             phone: '555-0100',
             email: 'jane@beta.test',
@@ -111,6 +148,8 @@ describe('SupplierFormComponent', () => {
       expect(component.form.value).toEqual({
         name: 'Beta SA',
         taxId: 'NIT-999',
+        documentTypeId: 'doc-nit',
+        personTypeId: 'per-jur',
         contact: 'Jane Doe',
         phone: '555-0100',
         email: 'jane@beta.test',
@@ -128,6 +167,8 @@ describe('SupplierFormComponent', () => {
       expect(patchReq.request.body).toEqual({
         name: 'Beta SA',
         taxId: 'NIT-999',
+        documentTypeId: 'doc-nit',
+        personTypeId: 'per-jur',
         contact: 'Jane Doe',
         phone: '555-0100',
         email: 'jane@beta.test',

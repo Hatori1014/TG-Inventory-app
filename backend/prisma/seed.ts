@@ -53,7 +53,40 @@ const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'suppliers', action: 'read' },
   { module: 'suppliers', action: 'create' },
   { module: 'suppliers', action: 'update' },
+  // HU-04, at the user's explicit request: DocumentType/PersonType are
+  // administrable catalogs (TT-23 pattern) supporting Supplier, gated the
+  // same as suppliers itself — GET included, unlike Category/Unit's open
+  // GET (they support Product, whose GET is "any authenticated user").
+  { module: 'document-types', action: 'read' },
+  { module: 'document-types', action: 'create' },
+  { module: 'document-types', action: 'update' },
+  { module: 'person-types', action: 'read' },
+  { module: 'person-types', action: 'create' },
+  { module: 'person-types', action: 'update' },
 ];
+
+// HU-04, at the user's explicit request: unlike Category/Unit (left empty
+// for an admin to populate as needed), these two catalogs get a starter
+// set seeded — a fixed, well-known vocabulary (Colombian ID document
+// types; natural vs. legal person) that every install needs from the
+// first supplier onward, not something specific to this business. Still
+// fully administrable afterwards (add/rename/deactivate via
+// /document-types, /person-types) — this only avoids forcing whoever
+// registers the first supplier to type "NIT" in by hand.
+const STARTER_DOCUMENT_TYPES = ['Cédula de ciudadanía', 'Cédula de extranjería', 'NIT'];
+const STARTER_PERSON_TYPES = ['Natural', 'Jurídica'];
+
+async function seedStarterDocumentTypes() {
+  for (const name of STARTER_DOCUMENT_TYPES) {
+    await prisma.documentType.upsert({ where: { name }, update: {}, create: { name } });
+  }
+}
+
+async function seedStarterPersonTypes() {
+  for (const name of STARTER_PERSON_TYPES) {
+    await prisma.personType.upsert({ where: { name }, update: {}, create: { name } });
+  }
+}
 
 async function upsertAdminRole() {
   const existing = await prisma.role.findUnique({ where: { name: ADMIN_ROLE_NAME } });
@@ -96,6 +129,8 @@ async function main() {
 
   const adminRole = await upsertAdminRole();
   await grantBootstrapPermissions(adminRole.id);
+  await seedStarterDocumentTypes();
+  await seedStarterPersonTypes();
   const passwordHash = await bcrypt.hash(password, 10);
 
   await prisma.user.upsert({

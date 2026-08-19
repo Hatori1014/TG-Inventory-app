@@ -89,6 +89,20 @@ export const NAV_SECTIONS: NavSection[] = [
         description: 'Registrá y administrá proveedores.',
         roles: ['Administrador'],
       },
+      {
+        label: 'Tipos de documento',
+        path: '/document-types',
+        icon: 'ph-identification-card',
+        description: 'Catálogo de tipos de documento (cédula, NIT, etc.).',
+        roles: ['Administrador'],
+      },
+      {
+        label: 'Tipos de persona',
+        path: '/person-types',
+        icon: 'ph-users',
+        description: 'Catálogo de tipos de persona (natural, jurídica).',
+        roles: ['Administrador'],
+      },
     ],
   },
   {

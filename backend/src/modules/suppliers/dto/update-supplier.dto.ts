@@ -15,6 +15,14 @@ export class UpdateSupplierDto {
 
   @IsOptional()
   @IsString()
+  documentTypeId?: string;
+
+  @IsOptional()
+  @IsString()
+  personTypeId?: string;
+
+  @IsOptional()
+  @IsString()
   @IsNotEmpty()
   @MaxLength(150)
   contact?: string;

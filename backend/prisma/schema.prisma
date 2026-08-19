@@ -255,22 +255,70 @@ enum SupplierStatus {
   inactive
 }
 
+enum DocumentTypeStatus {
+  active
+  inactive
+}
+
+// HU-04, at the user's explicit request: an administrable catalog (TT-23
+// pattern, like Category/Unit) instead of a hardcoded enum — CC/CE/NIT is
+// a fixed starter set (seeded), but not closed: an admin can add more
+// (e.g. Pasaporte) from the /document-types screen without a deploy.
+model DocumentType {
+  id        String             @id @default(uuid())
+  name      String             @unique
+  status    DocumentTypeStatus @default(active)
+  suppliers Supplier[]
+
+  @@map("document_type")
+}
+
+enum PersonTypeStatus {
+  active
+  inactive
+}
+
+// HU-04, at the user's explicit request: Natural/Jurídica as an
+// administrable catalog, same reasoning as DocumentType above.
+model PersonType {
+  id        String           @id @default(uuid())
+  name      String           @unique
+  status    PersonTypeStatus @default(active)
+  suppliers Supplier[]
+
+  @@map("person_type")
+}
+
 model Supplier {
-  id        String          @id @default(uuid())
-  name      String
-  // HU-04: no duplicate taxId among ACTIVE suppliers — enforced by a
-  // partial unique index (`WHERE status = 'active'`) added by migration
+  id             String          @id @default(uuid())
+  name           String
+  // HU-04: no duplicate taxId among ACTIVE suppliers **of the same
+  // document type** — a Cédula and a NIT with the same digits are two
+  // different real-world identifiers, not a collision. Enforced by a
+  // partial unique index on (document_type_id, tax_id) filtered
+  // `WHERE status = 'active'`, added by migration
   // 20260819040000_add_supplier_tax_id_active_unique. Prisma's schema DSL
   // has no partial-index syntax, so it can't be declared here as
   // `@@unique` — CreateSupplierUseCase/UpdateSupplierUseCase check it
-  // explicitly; the DB index is only the race-condition safety net.
-  taxId     String?         @map("tax_id")
-  contact   String?
-  phone     String?
-  email     String?
-  status    SupplierStatus  @default(active)
-  purchases Purchase[]
+  // explicitly; the DB index is only the race-condition safety net (and
+  // only covers races where documentTypeId is set — see the migration's
+  // comment for why a race with it omitted relies on the app check alone,
+  // same accepted gap as HU-06's parentId). Both documentTypeId and taxId
+  // are optional (only `name` is required per HU-04's criteria), so the
+  // check/index only fire when both are set.
+  taxId          String?         @map("tax_id")
+  documentTypeId String?         @map("document_type_id")
+  documentType   DocumentType?   @relation(fields: [documentTypeId], references: [id])
+  personTypeId   String?         @map("person_type_id")
+  personType     PersonType?     @relation(fields: [personTypeId], references: [id])
+  contact        String?
+  phone          String?
+  email          String?
+  status         SupplierStatus  @default(active)
+  purchases      Purchase[]
 
+  @@index([documentTypeId])
+  @@index([personTypeId])
   @@map("supplier")
 }
 
