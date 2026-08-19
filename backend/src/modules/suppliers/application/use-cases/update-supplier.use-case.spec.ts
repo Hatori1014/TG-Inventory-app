@@ -10,6 +10,10 @@ describe('UpdateSupplierUseCase', () => {
     id: '1',
     name: 'Acme Corp',
     taxId: 'NIT-123',
+    documentTypeId: 'doc-nit',
+    documentType: { id: 'doc-nit', name: 'NIT', status: 'active' as const },
+    personTypeId: null,
+    personType: null,
     contact: null,
     phone: null,
     email: null,
@@ -49,17 +53,21 @@ describe('UpdateSupplierUseCase', () => {
     expect(result.status).toBe('inactive');
   });
 
-  it('allows keeping its own tax ID without triggering its own duplicate check', async () => {
+  it('allows keeping its own tax ID and document type without triggering its own duplicate check', async () => {
     repository.findById.mockResolvedValue(existingSupplier);
     repository.findActiveByTaxId.mockResolvedValue(existingSupplier);
     repository.update.mockResolvedValue({ ...existingSupplier, contact: 'Jane Doe' });
 
-    await useCase.execute('1', { taxId: 'NIT-123', contact: 'Jane Doe' });
+    await useCase.execute('1', { taxId: 'NIT-123', documentTypeId: 'doc-nit', contact: 'Jane Doe' });
 
-    expect(repository.update).toHaveBeenCalledWith('1', { taxId: 'NIT-123', contact: 'Jane Doe' });
+    expect(repository.update).toHaveBeenCalledWith('1', {
+      taxId: 'NIT-123',
+      documentTypeId: 'doc-nit',
+      contact: 'Jane Doe',
+    });
   });
 
-  it('throws ConflictException when the new tax ID collides with another active supplier', async () => {
+  it('throws ConflictException when the new tax ID collides with another active supplier of the same document type', async () => {
     repository.findById.mockResolvedValue(existingSupplier);
     repository.findActiveByTaxId.mockResolvedValue({ ...existingSupplier, id: 'other', taxId: 'NIT-999' });
 
@@ -73,10 +81,18 @@ describe('UpdateSupplierUseCase', () => {
     repository.findActiveByTaxId.mockResolvedValue({ ...existingSupplier, id: 'other' });
 
     await expect(useCase.execute('1', { status: 'active' })).rejects.toThrow(ConflictException);
-    expect(repository.findActiveByTaxId).toHaveBeenCalledWith('NIT-123');
+    expect(repository.findActiveByTaxId).toHaveBeenCalledWith('NIT-123', 'doc-nit');
   });
 
-  it('does not check for a collision when deactivating even if the tax ID field is also sent', async () => {
+  it('checks for a collision under the new document type when only documentTypeId changes', async () => {
+    repository.findById.mockResolvedValue(existingSupplier);
+    repository.findActiveByTaxId.mockResolvedValue({ ...existingSupplier, id: 'other', documentTypeId: 'doc-cc' });
+
+    await expect(useCase.execute('1', { documentTypeId: 'doc-cc' })).rejects.toThrow(ConflictException);
+    expect(repository.findActiveByTaxId).toHaveBeenCalledWith('NIT-123', 'doc-cc');
+  });
+
+  it('does not check for a collision when deactivating even if taxId is also sent', async () => {
     repository.findById.mockResolvedValue(existingSupplier);
     repository.update.mockResolvedValue({ ...existingSupplier, status: 'inactive' });
 
@@ -91,5 +107,12 @@ describe('UpdateSupplierUseCase', () => {
     repository.update.mockRejectedValue({ code: 'P2002' });
 
     await expect(useCase.execute('1', { taxId: 'NIT-999' })).rejects.toThrow(ConflictException);
+  });
+
+  it('throws BadRequestException when the new documentTypeId/personTypeId does not exist (P2003)', async () => {
+    repository.findById.mockResolvedValue(existingSupplier);
+    repository.update.mockRejectedValue({ code: 'P2003' });
+
+    await expect(useCase.execute('1', { personTypeId: 'missing' })).rejects.toThrow(BadRequestException);
   });
 });

@@ -15,7 +15,7 @@
     <thead>
       <tr>
         <th>Nombre</th>
-        <th>NIT</th>
+        <th>Documento</th>
         <th>Contacto</th>
         <th>Teléfono</th>
         <th>Estado</th>
@@ -36,7 +36,16 @@
                 <div class="suppliers-desc">{{ supplier.email }}</div>
               }
             </td>
-            <td class="suppliers-col-muted">{{ supplier.taxId || '—' }}</td>
+            <td class="suppliers-col-muted">
+              @if (supplier.taxId) {
+                {{ supplier.taxId }}
+                @if (supplier.documentType) {
+                  <span class="suppliers-desc">{{ supplier.documentType.name }}</span>
+                }
+              } @else {
+                —
+              }
+            </td>
             <td class="suppliers-col-muted">{{ supplier.contact || '—' }}</td>
             <td class="suppliers-col-muted">{{ supplier.phone || '—' }}</td>
             <td>

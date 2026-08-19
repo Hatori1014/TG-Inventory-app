@@ -44,6 +44,23 @@ export const routes: Routes = [
           import('./features/suppliers/suppliers.routes').then((m) => m.SUPPLIERS_ROUTES),
       },
       {
+        // DocumentType/PersonType support Supplier — same gate as
+        // suppliers itself, same reasoning as categories/units support
+        // Product but follow products' own (open) gate.
+        path: 'document-types',
+        canActivate: [roleGuard],
+        data: { roles: ['Administrador'] },
+        loadChildren: () =>
+          import('./features/suppliers/suppliers.routes').then((m) => m.DOCUMENT_TYPES_ROUTES),
+      },
+      {
+        path: 'person-types',
+        canActivate: [roleGuard],
+        data: { roles: ['Administrador'] },
+        loadChildren: () =>
+          import('./features/suppliers/suppliers.routes').then((m) => m.PERSON_TYPES_ROUTES),
+      },
+      {
         path: 'roles',
         canActivate: [roleGuard],
         data: { roles: ['Administrador'] },

@@ -52,6 +52,8 @@ describe('ShellComponent', () => {
       '/inventory/batches',
       '/inventory/stock',
       '/suppliers',
+      '/document-types',
+      '/person-types',
       '/locations',
       '/roles',
       '/users',

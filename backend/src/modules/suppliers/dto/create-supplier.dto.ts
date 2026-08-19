@@ -14,6 +14,14 @@ export class CreateSupplierDto {
 
   @IsOptional()
   @IsString()
+  documentTypeId?: string;
+
+  @IsOptional()
+  @IsString()
+  personTypeId?: string;
+
+  @IsOptional()
+  @IsString()
   @IsNotEmpty()
   @MaxLength(150)
   contact?: string;

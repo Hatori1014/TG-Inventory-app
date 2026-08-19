@@ -50,3 +50,40 @@ Feature: Manage suppliers
     And they deactivate that supplier
     Then the supplier is updated successfully
     And the response shows the supplier as inactive
+
+  Scenario: Buyer registers a supplier with a document type and person type
+    Given a user "buyer@tg-group.local" with password "correct-password" and role "Comprador"
+    And the role "Comprador" has permission "suppliers" "create"
+    And an existing document type "NIT"
+    And an existing person type "Jurídica"
+    When they log in with email "buyer@tg-group.local" and password "correct-password"
+    And they register a supplier named "Beta SA" with tax ID "NIT-123" using that document type and person type
+    Then the supplier is created successfully
+    And the response includes the document type name "NIT"
+    And the response includes the person type name "Jurídica"
+
+  Scenario: The same tax ID under two different document types is not a duplicate
+    Given a user "buyer@tg-group.local" with password "correct-password" and role "Comprador"
+    And the role "Comprador" has permission "suppliers" "create"
+    And an existing document type "Cédula de ciudadanía"
+    And an existing document type "NIT"
+    And an existing active supplier "Juan Pérez" with tax ID "123456" and document type "Cédula de ciudadanía"
+    When they log in with email "buyer@tg-group.local" and password "correct-password"
+    And they register a supplier named "Comercializadora 123456 SAS" with tax ID "123456" using the "NIT" document type
+    Then the supplier is created successfully
+
+  Scenario: Administrator creates a new document type
+    Given a user "admin@tg-group.local" with password "correct-password" and role "Administrador"
+    And the role "Administrador" has permission "document-types" "create"
+    When they log in with email "admin@tg-group.local" and password "correct-password"
+    And they create a document type named "Pasaporte"
+    Then the document type is created successfully
+    And the response includes the document type name "Pasaporte"
+
+  Scenario: Administrator creates a new person type
+    Given a user "admin@tg-group.local" with password "correct-password" and role "Administrador"
+    And the role "Administrador" has permission "person-types" "create"
+    When they log in with email "admin@tg-group.local" and password "correct-password"
+    And they create a person type named "Natural"
+    Then the person type is created successfully
+    And the response includes the person type name "Natural"
