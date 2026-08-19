@@ -33,6 +33,38 @@ export class FakePurchaseRepository {
     this.locations.set(id, { name, status });
   }
 
+  // HU-05 — for scenarios that need a specific purchasedAt to prove sort
+  // order deterministically (registerPurchase() always stamps `now()`,
+  // too close together across two calls in the same test to be reliable).
+  seedPurchase(supplierId: string, purchasedAt: Date, totalAmount = 0): string {
+    const supplier = this.suppliers.get(supplierId);
+    const id = randomUUID();
+    this.purchases.set(id, {
+      id,
+      supplierId,
+      supplier: { id: supplierId, name: supplier?.name ?? supplierId },
+      userId: 'seed-user',
+      purchasedAt,
+      status: 'received',
+      items: totalAmount
+        ? [
+            {
+              id: randomUUID(),
+              productId: 'seed-product',
+              product: { id: 'seed-product', name: 'Seed Product' },
+              locationId: 'seed-location',
+              location: { id: 'seed-location', name: 'Seed Location' },
+              batchId: null,
+              batch: null,
+              quantity: 1,
+              unitPrice: totalAmount,
+            },
+          ]
+        : [],
+    } as unknown as PurchaseWithRelations);
+    return id;
+  }
+
   getStockFor(productId: string, locationId: string, batchId: string | null = null): number {
     return this.stock.get(this.stockKey(productId, locationId, batchId)) ?? 0;
   }
@@ -62,6 +94,10 @@ export class FakePurchaseRepository {
     if (filters?.supplierId) {
       all = all.filter((p) => p.supplierId === filters.supplierId);
     }
+    // Same order as the real repository (HU-05: "orden descendente por
+    // fecha") — a Map preserves insertion order, not chronological order,
+    // so this needs an explicit sort.
+    all = all.sort((a, b) => b.purchasedAt.getTime() - a.purchasedAt.getTime());
     return { items: all.slice(skip, skip + take), total: all.length };
   }
 
