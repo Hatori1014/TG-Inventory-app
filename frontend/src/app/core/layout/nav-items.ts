@@ -90,6 +90,13 @@ export const NAV_SECTIONS: NavSection[] = [
         roles: ['Administrador'],
       },
       {
+        label: 'Compras',
+        path: '/purchases',
+        icon: 'ph-shopping-cart-simple',
+        description: 'Registrá compras a proveedores y consultá el histórico.',
+        roles: ['Administrador'],
+      },
+      {
         label: 'Tipos de documento',
         path: '/document-types',
         icon: 'ph-identification-card',

@@ -63,6 +63,11 @@ const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'person-types', action: 'read' },
   { module: 'person-types', action: 'create' },
   { module: 'person-types', action: 'update' },
+  // HU-13 — all three /purchases endpoints (plan section 7.4) are
+  // "Comprador" minimum, GET included — no :update seeded, PATCH isn't
+  // part of this HU's criteria (a purchase is never edited, only created).
+  { module: 'purchases', action: 'read' },
+  { module: 'purchases', action: 'create' },
 ];
 
 // HU-04, at the user's explicit request: unlike Category/Unit (left empty
