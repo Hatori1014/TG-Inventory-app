@@ -258,6 +258,12 @@ enum SupplierStatus {
 model Supplier {
   id        String          @id @default(uuid())
   name      String
+  // HU-04: no duplicate taxId among ACTIVE suppliers — enforced by a
+  // partial unique index (`WHERE status = 'active'`) added by migration
+  // 20260819040000_add_supplier_tax_id_active_unique. Prisma's schema DSL
+  // has no partial-index syntax, so it can't be declared here as
+  // `@@unique` — CreateSupplierUseCase/UpdateSupplierUseCase check it
+  // explicitly; the DB index is only the race-condition safety net.
   taxId     String?         @map("tax_id")
   contact   String?
   phone     String?

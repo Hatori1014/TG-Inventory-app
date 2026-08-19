@@ -13,8 +13,9 @@ import { UsersModule } from './modules/users/users.module';
 import { ProductsModule } from './modules/products/products.module';
 import { LocationsModule } from './modules/locations/locations.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
+import { SuppliersModule } from './modules/suppliers/suppliers.module';
 // As iterations progress (plan section 6), each new business module
-// (suppliers, purchases, requests, audit) gets imported here.
+// (purchases, requests, audit) gets imported here.
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { InventoryModule } from './modules/inventory/inventory.module';
     ProductsModule,
     LocationsModule,
     InventoryModule,
+    SuppliersModule,
   ],
   providers: [
     // TT-15 — one process shared by every module; an uncaught error in one
