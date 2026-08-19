@@ -21,6 +21,15 @@ export const SUPPLIERS_ROUTES: Routes = [
     loadComponent: () =>
       import('./supplier-form/supplier-form.component').then((m) => m.SupplierFormComponent),
   },
+  {
+    // HU-05 — plan section 7.4 lists this under "Módulo: Proveedores",
+    // same gate as the rest of SUPPLIERS_ROUTES.
+    path: ':id/purchases',
+    loadComponent: () =>
+      import('./supplier-purchase-history/supplier-purchase-history.component').then(
+        (m) => m.SupplierPurchaseHistoryComponent,
+      ),
+  },
 ];
 
 export const DOCUMENT_TYPES_ROUTES: Routes = [

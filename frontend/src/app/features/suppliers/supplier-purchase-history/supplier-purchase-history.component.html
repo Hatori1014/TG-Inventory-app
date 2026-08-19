@@ -1,0 +1,60 @@
+<div class="history-page-header">
+  <div>
+    <a routerLink="/suppliers" class="history-back-link">&larr; Proveedores</a>
+    <h1>Compras de {{ supplierName() || '...' }}</h1>
+  </div>
+  <span class="history-page-route">/suppliers/{{ supplierId }}/purchases</span>
+</div>
+
+<div class="history-table-card">
+  <div class="history-table-header">
+    <h2>{{ total() }} compras</h2>
+  </div>
+
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th class="history-col-right">Ítems</th>
+        <th class="history-col-right">Total</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="4" class="history-empty">Cargando...</td>
+        </tr>
+      } @else {
+        @for (purchase of purchases(); track purchase.id) {
+          <tr>
+            <td>{{ purchase.purchasedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td class="history-col-right history-col-muted">{{ purchase.items.length }}</td>
+            <td class="history-col-right history-col-muted">{{ purchase.totalAmount | number: '1.2-2' }}</td>
+            <td>
+              <span class="history-badge" [class.history-badge--ok]="purchase.status === 'received'">
+                {{ purchase.status === 'received' ? 'Recibida' : 'Registrada' }}
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="history-empty">Este proveedor todavía no tiene compras registradas.</td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+
+  <div class="history-pagination">
+    <span>Página {{ page() }} de {{ totalPages() }} · {{ total() }} compras</span>
+    <div class="history-pagination-controls">
+      <button type="button" class="history-page-btn" [disabled]="page() <= 1" (click)="previousPage()" aria-label="Página anterior">
+        <i class="ph ph-caret-left"></i>
+      </button>
+      <button type="button" class="history-page-btn" [disabled]="page() >= totalPages()" (click)="nextPage()" aria-label="Página siguiente">
+        <i class="ph ph-caret-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
