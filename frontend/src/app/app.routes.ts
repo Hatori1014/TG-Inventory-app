@@ -118,8 +118,19 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/inventory/inventory.routes').then((m) => m.INVENTORY_ROUTES),
       },
-      // [PENDING: alerts, purchases, requests — added in their corresponding
-      // iterations]
+      {
+        // Master plan section 7.4 marks all three /purchases endpoints
+        // "Comprador" minimum, same gate as suppliers/document-types/
+        // person-types — "Comprador" isn't seeded as a role, so this
+        // points at "Administrador" like those, backend @RequirePermission()
+        // is the real gate.
+        path: 'purchases',
+        canActivate: [roleGuard],
+        data: { roles: ['Administrador'] },
+        loadChildren: () =>
+          import('./features/purchases/purchases.routes').then((m) => m.PURCHASES_ROUTES),
+      },
+      // [PENDING: alerts, requests — added in their corresponding iterations]
     ],
   },
 ];
