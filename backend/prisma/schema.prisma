@@ -393,3 +393,17 @@ model IdempotencyKey {
 
   @@map("idempotency_key")
 }
+
+// ADR-32 — POST /auth/logout support: a JWT is stateless (ADR-24), so
+// invalidating one before its natural expiry means storing its jti here
+// until then. JwtStrategy checks every authenticated request against this
+// table. No cleanup job needed — same reasoning as IdempotencyKey: rows
+// become irrelevant once expiresAt passes, since the JWT itself would fail
+// signature/expiry validation by then regardless of this table's contents.
+model RevokedToken {
+  jti       String   @id
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("revoked_token")
+}

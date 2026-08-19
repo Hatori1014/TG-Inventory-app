@@ -1,9 +1,32 @@
-<h1>Nuevo rol</h1>
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <input type="text" formControlName="name" placeholder="Nombre del rol" />
-  <input type="text" formControlName="description" placeholder="Descripción (opcional)" />
-  @if (errorMessage) {
-    <p role="alert">{{ errorMessage }}</p>
-  }
-  <button type="submit" [disabled]="form.invalid || isSubmitting">Crear rol</button>
-</form>
+<div class="role-form-page-header">
+  <h1>Nuevo rol</h1>
+  <span class="role-form-page-route">/roles</span>
+</div>
+
+<div class="role-form-card">
+  <h2 class="role-form-title">Nuevo rol</h2>
+  <p class="role-form-subtitle">
+    El rol se crea sin permisos y se le asignan después; nombre y descripción no se editan desde la matriz.
+  </p>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="role-field">
+      <label for="role-name">Nombre *</label>
+      <input id="role-name" type="text" formControlName="name" placeholder="Ej. Admin Inventario" />
+    </div>
+
+    <div class="role-field">
+      <label for="role-description">Descripción</label>
+      <input id="role-description" type="text" formControlName="description" placeholder="Opcional" />
+    </div>
+
+    @if (errorMessage) {
+      <p class="role-form-error" role="alert">{{ errorMessage }}</p>
+    }
+
+    <div class="role-form-actions">
+      <a routerLink="/roles" class="role-cancel-btn">Cancelar</a>
+      <button type="submit" class="role-submit-btn" [disabled]="form.invalid || isSubmitting">Crear rol</button>
+    </div>
+  </form>
+</div>

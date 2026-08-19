@@ -1,69 +1,188 @@
-<h1>Registrar movimiento de inventario</h1>
-<a routerLink="/inventory/batches">Gestionar lotes</a>
-<a routerLink="/inventory/stock">Consultar stock actual</a>
+<div class="movement-page-header">
+  <h1>Registrar movimiento</h1>
+  <span class="movement-page-route">/inventory</span>
+</div>
 
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <select formControlName="productId" (change)="onProductChange()">
-    <option value="" disabled>Seleccioná un producto</option>
-    @for (product of products(); track product.id) {
-      <option [value]="product.id">{{ product.name }}</option>
-    }
-  </select>
+<div class="movement-layout">
+  <div class="movement-card">
+    <h2 class="movement-card-title">Registrar movimiento</h2>
+    <p class="movement-card-subtitle">
+      Un solo formulario para los cuatro tipos. Los campos cambian según el tipo elegido, no hay pestañas
+      separadas.
+    </p>
 
-  <select formControlName="type">
-    <option value="in">Entrada</option>
-    <option value="out">Salida</option>
-    <option value="adjustment">Ajuste</option>
-    <option value="transfer">Traslado</option>
-  </select>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="movement-field">
+        <label>Tipo de movimiento</label>
+        <div class="movement-type-pills">
+          @for (t of movementTypes; track t.id) {
+            <button
+              type="button"
+              class="movement-type-pill"
+              [class.movement-type-pill--active]="form.value.type === t.id"
+              (click)="selectType(t.id)"
+            >
+              <i class="ph {{ t.icon }}"></i>
+              {{ t.label }}
+            </button>
+          }
+        </div>
+      </div>
 
-  <select formControlName="locationId">
-    <option value="" disabled>
-      {{ form.value.type === 'transfer' ? 'Ubicación de origen' : 'Ubicación' }}
-    </option>
-    @for (location of locations(); track location.id) {
-      <option [value]="location.id">{{ location.name }}</option>
-    }
-  </select>
+      <div class="movement-grid">
+        <div class="movement-field movement-field--full">
+          <label for="movement-product">Producto *</label>
+          <select id="movement-product" formControlName="productId" (change)="onProductChange()">
+            <option value="" disabled>Seleccioná un producto</option>
+            @for (product of products(); track product.id) {
+              <option [value]="product.id">{{ product.name }}</option>
+            }
+          </select>
+        </div>
 
-  @if (form.value.type === 'transfer') {
-    <select formControlName="destinationLocationId">
-      <option value="" disabled>Ubicación de destino</option>
-      @for (location of locations(); track location.id) {
-        <option [value]="location.id">{{ location.name }}</option>
+        <div class="movement-field">
+          <label for="movement-location">{{ locationLabel() }} *</label>
+          <select id="movement-location" formControlName="locationId">
+            <option value="" disabled>Seleccioná una ubicación</option>
+            @for (location of locations(); track location.id) {
+              <option [value]="location.id">{{ location.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="movement-field">
+          <label for="movement-quantity">Cantidad *</label>
+          <input
+            id="movement-quantity"
+            type="number"
+            formControlName="quantity"
+            min="0.0001"
+            step="any"
+          />
+          <div class="movement-hint">Siempre positiva. El tipo define el signo en el libro mayor.</div>
+        </div>
+
+        @if (form.value.type === 'transfer') {
+          <div class="movement-field movement-field--full movement-field--highlight">
+            <label for="movement-destination">Ubicación de destino *</label>
+            <select id="movement-destination" formControlName="destinationLocationId">
+              <option value="" disabled>Seleccioná la ubicación de destino</option>
+              @for (location of locations(); track location.id) {
+                <option [value]="location.id">{{ location.name }}</option>
+              }
+            </select>
+            <div class="movement-hint movement-hint--highlight">
+              Solo en traslado. El backend escribe dos filas en el libro mayor: transfer_out en el origen y
+              transfer_in en el destino.
+            </div>
+          </div>
+        }
+
+        @if (form.value.type === 'adjustment') {
+          <div class="movement-field movement-field--full movement-field--highlight">
+            <label>Dirección del ajuste *</label>
+            <div class="movement-direction-toggle">
+              <label
+                class="movement-direction-option"
+                [class.movement-direction-option--active]="form.value.direction === 'increase'"
+              >
+                <input type="radio" formControlName="direction" value="increase" />
+                <i class="ph ph-plus-circle"></i>
+                Incremento
+              </label>
+              <label
+                class="movement-direction-option"
+                [class.movement-direction-option--active]="form.value.direction === 'decrease'"
+              >
+                <input type="radio" formControlName="direction" value="decrease" />
+                <i class="ph ph-minus-circle"></i>
+                Decremento
+              </label>
+            </div>
+            <div class="movement-hint movement-hint--highlight">
+              Solo en ajuste. Un decremento sin stock suficiente se rechaza, igual que una salida.
+            </div>
+          </div>
+        }
+
+        @if (selectedProductRequiresBatch()) {
+          <div class="movement-field movement-field--full">
+            <label for="movement-batch">Lote *</label>
+            <div class="movement-batch-row">
+              <select id="movement-batch" formControlName="batchId">
+                <option value="" disabled>Seleccioná un lote</option>
+                @for (batch of batches(); track batch.id) {
+                  <option [value]="batch.id">
+                    {{ batch.batchNumber }}{{ batch.expiresAt ? ' — vence ' + batch.expiresAt : '' }}
+                  </option>
+                }
+              </select>
+              <a routerLink="/inventory/batches" class="movement-batch-link">Gestionar lotes</a>
+            </div>
+            @if (batches().length === 0) {
+              <div class="movement-hint">
+                Este producto no tiene lotes cargados todavía —
+                <a routerLink="/inventory/batches">creá uno primero</a>.
+              </div>
+            }
+          </div>
+        }
+
+        <div class="movement-field movement-field--full">
+          <label for="movement-notes">Notas</label>
+          <textarea id="movement-notes" formControlName="notes" placeholder="Opcional, hasta 500 caracteres"></textarea>
+        </div>
+      </div>
+
+      @if (errorMessage) {
+        <p class="movement-error" role="alert">{{ errorMessage }}</p>
       }
-    </select>
-  }
-
-  @if (form.value.type === 'adjustment') {
-    <select formControlName="direction">
-      <option value="increase">Aumentar stock</option>
-      <option value="decrease">Disminuir stock</option>
-    </select>
-  }
-
-  @if (selectedProductRequiresBatch()) {
-    <select formControlName="batchId">
-      <option value="" disabled>Seleccioná un lote (este producto lo requiere)</option>
-      @for (batch of batches(); track batch.id) {
-        <option [value]="batch.id">{{ batch.batchNumber }}</option>
+      @if (successMessage) {
+        <p class="movement-success">{{ successMessage }}</p>
       }
-    </select>
-    @if (batches().length === 0) {
-      <p>Este producto no tiene lotes cargados todavía — <a routerLink="/inventory/batches">creá uno primero</a>.</p>
-    }
-  }
 
-  <input type="number" formControlName="quantity" placeholder="Cantidad" min="0.0001" step="any" />
-  <textarea formControlName="notes" placeholder="Notas (opcional)"></textarea>
+      <div class="movement-actions">
+        <button type="button" class="movement-btn-secondary" (click)="form.reset({ type: 'in', quantity: 0, direction: 'increase' })">
+          Limpiar
+        </button>
+        <button type="submit" class="movement-btn-primary" [disabled]="form.invalid || isSubmitting">
+          {{ submitLabel() }}
+        </button>
+      </div>
+    </form>
+  </div>
 
-  @if (errorMessage) {
-    <p role="alert">{{ errorMessage }}</p>
-  }
-  @if (successMessage) {
-    <p>{{ successMessage }}</p>
-  }
+  <div class="movement-sidebar">
+    <div class="movement-sidebar-panel">
+      <div class="movement-sidebar-label">Qué se escribe</div>
+      <div class="movement-sidebar-row">
+        <span>Tipo enviado</span>
+        <span class="movement-sidebar-mono">{{ form.value.type }}</span>
+      </div>
+      <div class="movement-sidebar-row">
+        <span>Filas en el libro</span>
+        <span>{{ ledgerRows() }}</span>
+      </div>
+      <div class="movement-sidebar-row">
+        <span>Stock del origen</span>
+        <span [class]="deltaColorClass()">{{ deltaPreview() }}</span>
+      </div>
+      <p class="movement-sidebar-note">
+        El movimiento y el stock derivado se guardan en la misma transacción; el libro mayor es inmutable, un
+        error se corrige con un ajuste, nunca editando la fila.
+      </p>
+    </div>
 
-  <button type="submit" [disabled]="form.invalid || isSubmitting">Registrar</button>
-  <a routerLink="/dashboard">Volver</a>
-</form>
+    <div class="movement-sidebar-panel">
+      <div class="movement-sidebar-label">Atajos</div>
+      <a routerLink="/inventory/stock" class="movement-sidebar-link">
+        <i class="ph ph-list-magnifying-glass"></i>
+        Consultar stock actual
+      </a>
+      <a routerLink="/inventory/batches" class="movement-sidebar-link">
+        <i class="ph ph-stack"></i>
+        Gestionar lotes
+      </a>
+    </div>
+  </div>
+</div>

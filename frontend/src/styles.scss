@@ -1,10 +1,70 @@
-// Global styles. Prebuilt Material theme for now (functional shell,
-// TT-nav-shell) — swapped for the custom blue palette from
-// docs/esp/ui-ux-design-brief.md once the Claude Design mockups land.
-@import '@angular/material/prebuilt-themes/indigo-pink.css';
+// Global styles. TT-24 phase 0 — real theme, replacing the placeholder
+// prebuilt indigo-pink Material theme from the nav-shell pass. Source of
+// truth for the exact hex values: docs/esp/ui-ux-design-brief.md section 2
+// and the Claude Design mockup (docs/Design/TG Inventory UI.dc.html).
+@use '@angular/material' as mat;
 
-html, body {
+// Design tokens as CSS custom properties (brief section 7 — dark-mode-ready
+// from the start, HU-30 stays a class swap on <body> later, not a rewrite).
+// Individual components read these directly for exact colors/gradients the
+// generated Material palette can't express on its own (e.g. the sidenav's
+// diagonal gradient) — mat.all-component-themes below only needs to get
+// interactive/structural Material internals (ripples, focus, overlays) into
+// the right neighborhood, not pixel-perfect brand color.
+:root {
+  --color-primary-900: #0b3c6b;
+  --color-primary-700: #0f4c81;
+  --color-primary-500: #1e6fb5;
+  --color-primary-300: #6fb1e8;
+  --color-primary-100: #cfe8fb;
+  --color-surface: #ffffff;
+  --color-background: #f5f8fc;
+
+  --color-success: #2e7d32;
+  --color-success-bg: #e6f2e7;
+  --color-warning: #ed6c02;
+  --color-warning-bg: #fdeddd;
+  --color-error: #d32f2f;
+  --color-error-bg: #fdeded;
+  --color-info: #1e6fb5;
+  --color-info-bg: #cfe8fb;
+
+  --color-text: #1f2a37;
+  --color-text-secondary: #43596e;
+  --color-text-muted: #7089a0;
+  --color-border: #dce8f4;
+  --color-border-strong: #c9dcec;
+}
+
+@include mat.core();
+
+// Closest built-in M2 palette to the brief's blues, only used for Material's
+// own internal mechanics (ripple color, focus rings, overlay tint) — every
+// component this phase touches sets its actual visible color from the
+// tokens above, not from this theme.
+$tg-inventory-primary: mat.m2-define-palette(mat.$m2-blue-palette, 900, 700, A700);
+$tg-inventory-theme: mat.m2-define-light-theme(
+  (
+    color: (
+      primary: $tg-inventory-primary,
+      accent: $tg-inventory-primary,
+    ),
+    density: 0,
+  )
+);
+
+@include mat.all-component-themes($tg-inventory-theme);
+
+html,
+body {
   height: 100%;
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+i.ph {
+  display: inline-block;
+  line-height: 1;
 }

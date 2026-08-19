@@ -1,31 +1,77 @@
-<h1>Productos</h1>
-<a routerLink="new">Nuevo producto</a>
-<a routerLink="/categories">Categorías</a>
-<a routerLink="/units">Unidades</a>
+<div class="products-page-header">
+  <h1>Productos</h1>
+  <span class="products-page-route">/products</span>
+</div>
 
-@if (loading()) {
-  <p>Cargando...</p>
-} @else {
-  <table>
+<div class="products-table-card">
+  <div class="products-table-header">
+    <h2>Productos</h2>
+    <div class="products-header-actions">
+      <a routerLink="/categories" class="products-link-btn">Categorías</a>
+      <a routerLink="/units" class="products-link-btn">Unidades</a>
+      <a routerLink="new" class="products-new-btn">+ Nuevo producto</a>
+    </div>
+  </div>
+
+  <table class="products-table">
     <thead>
       <tr>
         <th>Nombre</th>
-        <th>Unidad</th>
         <th>Categoría</th>
+        <th>Unidad</th>
+        <th>Lote</th>
         <th>Estado</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
-      @for (product of products(); track product.id) {
+      @if (loading()) {
         <tr>
-          <td>{{ product.name }}</td>
-          <td>{{ product.unit.name }}</td>
-          <td>{{ product.category?.name || '—' }}</td>
-          <td>{{ product.status === 'active' ? 'Activo' : 'Descontinuado' }}</td>
-          <td><a [routerLink]="[product.id, 'edit']">Editar</a></td>
+          <td colspan="6" class="products-empty">Cargando...</td>
         </tr>
+      } @else {
+        @for (product of products(); track product.id) {
+          <tr>
+            <td>
+              <div class="products-name">{{ product.name }}</div>
+              @if (product.description) {
+                <div class="products-desc">{{ product.description }}</div>
+              }
+            </td>
+            <td class="products-col-muted">{{ product.category?.name || '—' }}</td>
+            <td class="products-col-muted">{{ product.unit.name }}</td>
+            <td>
+              <span class="products-badge" [class.products-badge--info]="product.requiresBatch">
+                {{ product.requiresBatch ? 'Requiere' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <span class="products-badge" [class.products-badge--ok]="product.status === 'active'">
+                {{ product.status === 'active' ? 'Activo' : 'Descontinuado' }}
+              </span>
+            </td>
+            <td class="products-col-right">
+              <a [routerLink]="[product.id, 'edit']" class="products-edit-link">Editar</a>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="products-empty">No hay productos registrados.</td>
+          </tr>
+        }
       }
     </tbody>
   </table>
-}
+
+  <div class="products-pagination">
+    <span>Página {{ page() }} de {{ totalPages() }} · {{ total() }} productos</span>
+    <div class="products-pagination-controls">
+      <button type="button" class="products-page-btn" [disabled]="page() <= 1" (click)="previousPage()" aria-label="Página anterior">
+        <i class="ph ph-caret-left"></i>
+      </button>
+      <button type="button" class="products-page-btn" [disabled]="page() >= totalPages()" (click)="nextPage()" aria-label="Página siguiente">
+        <i class="ph ph-caret-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

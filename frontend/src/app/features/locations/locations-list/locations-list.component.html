@@ -1,45 +1,120 @@
-<h1>Ubicaciones</h1>
+<div class="catalog-page-header">
+  <h1>Ubicaciones</h1>
+  <span class="catalog-page-route">/locations</span>
+</div>
 
-<form (ngSubmit)="addLocation()">
-  <input type="text" [(ngModel)]="newName" name="newName" placeholder="Nueva ubicación" />
-  <select [(ngModel)]="newParentId" name="newParentId">
-    <option value="">Sin ubicación padre</option>
-    @for (location of locations(); track location.id) {
-      <option [value]="location.id">{{ location.name }}</option>
-    }
-  </select>
-  <button type="submit" [disabled]="!newName.trim()">Agregar</button>
-</form>
+<p class="catalog-intro">
+  Jerarquía armada en el frontend a partir de <code>parentId</code> — la API devuelve una lista plana, sin árbol.
+</p>
 
-@if (errorMessage) {
-  <p role="alert">{{ errorMessage }}</p>
-}
+<div class="location-layout">
+  <div class="catalog-table-card">
+    <div class="catalog-table-header">
+      <h2>Ubicaciones</h2>
+      <span class="catalog-count">{{ locations().length }} ubicaciones</span>
+    </div>
 
-@if (loading()) {
-  <p>Cargando...</p>
-} @else {
-  <table>
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>Ubicación padre</th>
-        <th>Estado</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (location of locations(); track location.id) {
+    <table class="catalog-table">
+      <thead>
         <tr>
-          <td>{{ location.name }}</td>
-          <td>{{ parentName(location.parentId) }}</td>
-          <td>{{ location.status === 'active' ? 'Activa' : 'Inactiva' }}</td>
-          <td>
-            <button type="button" (click)="toggleStatus(location)">
-              {{ location.status === 'active' ? 'Desactivar' : 'Activar' }}
-            </button>
-          </td>
+          <th>Nombre</th>
+          <th>Ubicación padre</th>
+          <th>Estado</th>
+          <th></th>
         </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td colspan="4" class="catalog-empty">Cargando...</td>
+          </tr>
+        } @else {
+          @for (row of rows(); track row.location.id) {
+            <tr>
+              <td [style.padding-left.px]="16 + row.level * 22">
+                @if (editingId === row.location.id) {
+                  <input
+                    type="text"
+                    class="location-rename-input"
+                    [(ngModel)]="editingName"
+                    name="editingName"
+                    (keyup.enter)="confirmRename(row.location)"
+                    (keyup.escape)="cancelRename()"
+                  />
+                } @else {
+                  <span class="location-name"><i class="ph ph-map-pin-area"></i>{{ row.location.name }}</span>
+                }
+              </td>
+              <td class="catalog-col-muted">{{ parentName(row.location.parentId) }}</td>
+              <td>
+                <span class="catalog-badge" [class.catalog-badge--ok]="row.location.status === 'active'">
+                  {{ row.location.status === 'active' ? 'Activa' : 'Inactiva' }}
+                </span>
+              </td>
+              <td class="catalog-col-right">
+                @if (editingId === row.location.id) {
+                  <button type="button" class="catalog-action-link" (click)="confirmRename(row.location)">
+                    Guardar
+                  </button>
+                  <button
+                    type="button"
+                    class="catalog-action-link catalog-action-link--muted"
+                    (click)="cancelRename()"
+                  >
+                    Cancelar
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="catalog-action-link catalog-action-link--muted"
+                    (click)="startRename(row.location)"
+                  >
+                    Renombrar
+                  </button>
+                  <button type="button" class="catalog-action-link" (click)="toggleStatus(row.location)">
+                    {{ row.location.status === 'active' ? 'Desactivar' : 'Activar' }}
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="catalog-empty">No hay ubicaciones registradas.</td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="location-form-panel">
+    <h2>Nueva ubicación</h2>
+    <p class="location-form-hint">Alta inline, sin salir del listado.</p>
+
+    <form (ngSubmit)="addLocation()" class="location-form">
+      <div class="location-field">
+        <label for="newName">Nombre *</label>
+        <input id="newName" type="text" [(ngModel)]="newName" name="newName" placeholder="Ej. Estante B2" />
+      </div>
+
+      <div class="location-field">
+        <label for="newParentId">Ubicación padre</label>
+        <select id="newParentId" [(ngModel)]="newParentId" name="newParentId">
+          <option value="">Sin padre (raíz)</option>
+          @for (location of locations(); track location.id) {
+            <option [value]="location.id">{{ location.name }}</option>
+          }
+        </select>
+      </div>
+
+      @if (errorMessage) {
+        <div class="location-warning" role="alert">
+          <i class="ph ph-warning-circle"></i>
+          <span>{{ errorMessage }}</span>
+        </div>
       }
-    </tbody>
-  </table>
-}
+
+      <button type="submit" class="location-submit-btn" [disabled]="!newName.trim()">Crear ubicación</button>
+    </form>
+  </div>
+</div>
