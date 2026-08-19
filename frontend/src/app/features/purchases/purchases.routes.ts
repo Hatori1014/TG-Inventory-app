@@ -13,4 +13,12 @@ export const PURCHASES_ROUTES: Routes = [
     loadComponent: () =>
       import('./purchase-form/purchase-form.component').then((m) => m.PurchaseFormComponent),
   },
+  {
+    // HU-14 — plan section 7.4 names GET /reports/price-comparison for
+    // this HU; the frontend route lives under /purchases (not /reports)
+    // since that's where the rest of this feature's screens are.
+    path: 'price-comparison',
+    loadComponent: () =>
+      import('./price-comparison/price-comparison.component').then((m) => m.PriceComparisonComponent),
+  },
 ];

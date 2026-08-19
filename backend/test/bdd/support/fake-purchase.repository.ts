@@ -4,6 +4,10 @@ import { PurchaseWithRelations } from '../../../src/modules/purchases/applicatio
 import {
   CreatePurchaseData,
 } from '../../../src/modules/purchases/infrastructure/purchase.prisma.repository';
+import {
+  ProductPriceHistoryEntry,
+  SupplierPriceEntry,
+} from '../../../src/modules/purchases/domain/price-comparison.util';
 
 // In-memory stand-in for PurchasePrismaRepository — never touches Postgres
 // (CI has no database service). Unlike other Fake repositories in this
@@ -20,6 +24,7 @@ export class FakePurchaseRepository {
   private readonly batchesByProductAndNumber = new Map<string, { id: string; batchNumber: string }>();
   private readonly stock = new Map<string, number>();
   private readonly purchases = new Map<string, PurchaseWithRelations>();
+  private readonly priceEntries: { productId: string; supplierId: string; unitPrice: number; purchasedAt: Date }[] = [];
 
   seedSupplier(id: string, name: string, status: SupplierStatus = 'active'): void {
     this.suppliers.set(id, { name, status });
@@ -69,6 +74,13 @@ export class FakePurchaseRepository {
     return this.stock.get(this.stockKey(productId, locationId, batchId)) ?? 0;
   }
 
+  // HU-14 — like seedPurchase(), bypasses registerPurchase() to seed exact,
+  // deterministic price/date data for the comparison scenarios without the
+  // unrelated location/batch/idempotency machinery a real purchase needs.
+  seedPriceEntry(productId: string, supplierId: string, unitPrice: number, purchasedAt: Date): void {
+    this.priceEntries.push({ productId, supplierId, unitPrice, purchasedAt });
+  }
+
   async findSupplierStatus(id: string): Promise<SupplierStatus | null> {
     return this.suppliers.get(id)?.status ?? null;
   }
@@ -83,6 +95,33 @@ export class FakePurchaseRepository {
 
   async findById(id: string): Promise<PurchaseWithRelations | null> {
     return this.purchases.get(id) ?? null;
+  }
+
+  async findProductName(id: string): Promise<string | null> {
+    return this.products.get(id)?.name ?? null;
+  }
+
+  async findProductPriceHistory(productId: string): Promise<ProductPriceHistoryEntry[]> {
+    return this.priceEntries
+      .filter((entry) => entry.productId === productId)
+      .map((entry) => ({
+        supplierId: entry.supplierId,
+        supplierName: this.suppliers.get(entry.supplierId)?.name ?? entry.supplierId,
+        unitPrice: entry.unitPrice,
+        purchasedAt: entry.purchasedAt,
+      }));
+  }
+
+  async findSuppliersBasicInfo(supplierIds: string[]): Promise<{ id: string; name: string }[]> {
+    return supplierIds
+      .filter((id) => this.suppliers.has(id))
+      .map((id) => ({ id, name: this.suppliers.get(id)?.name ?? id }));
+  }
+
+  async findSupplierPriceHistory(supplierIds: string[]): Promise<SupplierPriceEntry[]> {
+    return this.priceEntries
+      .filter((entry) => supplierIds.includes(entry.supplierId))
+      .map((entry) => ({ supplierId: entry.supplierId, unitPrice: entry.unitPrice, purchasedAt: entry.purchasedAt }));
   }
 
   async findAllPaginated(

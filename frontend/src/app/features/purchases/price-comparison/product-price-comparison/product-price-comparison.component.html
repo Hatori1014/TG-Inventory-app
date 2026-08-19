@@ -1,0 +1,57 @@
+<div class="cmp-controls">
+  <div class="cmp-field">
+    <label for="cmp-product">Producto</label>
+    <select id="cmp-product" [(ngModel)]="selectedProductId" (ngModelChange)="onProductChange()">
+      <option value="" disabled>Seleccioná un producto</option>
+      @for (product of products(); track product.id) {
+        <option [value]="product.id">{{ product.name }}</option>
+      }
+    </select>
+  </div>
+
+  @if (comparison()) {
+    <div class="cmp-toggle" role="group" aria-label="Modo de visualización">
+      <button type="button" [class.cmp-toggle-btn--active]="viewMode() === 'table'" (click)="viewMode.set('table')">
+        Tabla
+      </button>
+      <button type="button" [class.cmp-toggle-btn--active]="viewMode() === 'chart'" (click)="viewMode.set('chart')">
+        Gráfico
+      </button>
+    </div>
+  }
+</div>
+
+@if (loading()) {
+  <p class="cmp-hint">Cargando...</p>
+} @else if (errorMessage()) {
+  <p class="cmp-error">{{ errorMessage() }}</p>
+} @else if (!selectedProductId()) {
+  <p class="cmp-hint">Seleccioná un producto para ver la comparativa de precios entre proveedores.</p>
+} @else if (comparison() && comparison()!.suppliers.length === 0) {
+  <p class="cmp-hint">Ningún proveedor ha vendido este producto todavía.</p>
+} @else if (comparison()) {
+  <div class="cmp-chart-wrap" [class.cmp-hidden]="viewMode() !== 'chart'">
+    <canvas #canvas></canvas>
+  </div>
+
+  @if (viewMode() === 'table') {
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Proveedor</th>
+          <th class="cmp-col-right">Precio más reciente</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (supplier of comparison()!.suppliers; track supplier.supplierId; let first = $first) {
+          <tr [class.cmp-row--cheapest]="first">
+            <td>{{ supplier.supplierName }}</td>
+            <td class="cmp-col-right cmp-col-muted">{{ supplier.latestUnitPrice | number: '1.2-2' }}</td>
+            <td class="cmp-col-muted">{{ supplier.latestPurchasedAt | date: 'dd/MM/yyyy' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+}

@@ -4,6 +4,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { withOptimisticLock } from '../../../common/utils/optimistic-lock.util';
 import { createMovementAndApplyStock, VersionConflictError } from '../../../common/utils/inventory-ledger.util';
 import { purchaseWithRelations, PurchaseWithRelations } from '../application/purchase-response.mapper';
+import { ProductPriceHistoryEntry, SupplierPriceEntry } from '../domain/price-comparison.util';
 
 export interface CreatePurchaseItemData {
   productId: string;
@@ -55,6 +56,52 @@ export class PurchasePrismaRepository {
       select: { status: true },
     });
     return location?.status ?? null;
+  }
+
+  // HU-14 — same duplication rationale as findProductRequiresBatch above:
+  // a trivial single-table read, not the reusable "motor".
+  async findProductName(productId: string): Promise<string | null> {
+    const product = await this.prisma.product.findUnique({ where: { id: productId }, select: { name: true } });
+    return product?.name ?? null;
+  }
+
+  // View 1 (plan section 7.4: "comparar el precio de un mismo producto
+  // entre distintos proveedores") — every purchase ever made of this
+  // product, across every supplier; buildProductPriceComparison() (domain
+  // layer) reduces this to one row per supplier, latest price only.
+  async findProductPriceHistory(productId: string): Promise<ProductPriceHistoryEntry[]> {
+    const items = await this.prisma.purchaseItem.findMany({
+      where: { productId },
+      select: {
+        unitPrice: true,
+        purchase: { select: { supplierId: true, purchasedAt: true, supplier: { select: { name: true } } } },
+      },
+    });
+    return items.map((item) => ({
+      supplierId: item.purchase.supplierId,
+      supplierName: item.purchase.supplier.name,
+      unitPrice: Number(item.unitPrice),
+      purchasedAt: item.purchase.purchasedAt,
+    }));
+  }
+
+  async findSuppliersBasicInfo(supplierIds: string[]): Promise<{ id: string; name: string }[]> {
+    return this.prisma.supplier.findMany({ where: { id: { in: supplierIds } }, select: { id: true, name: true } });
+  }
+
+  // View 2, DoR resolved by the user: not scoped to a single product — every
+  // purchase item across every product these suppliers have ever sold.
+  // buildMonthlyAveragePriceComparison() (domain layer) groups by month.
+  async findSupplierPriceHistory(supplierIds: string[]): Promise<SupplierPriceEntry[]> {
+    const items = await this.prisma.purchaseItem.findMany({
+      where: { purchase: { supplierId: { in: supplierIds } } },
+      select: { unitPrice: true, purchase: { select: { supplierId: true, purchasedAt: true } } },
+    });
+    return items.map((item) => ({
+      supplierId: item.purchase.supplierId,
+      unitPrice: Number(item.unitPrice),
+      purchasedAt: item.purchase.purchasedAt,
+    }));
   }
 
   async findById(id: string): Promise<PurchaseWithRelations | null> {

@@ -1,0 +1,70 @@
+<div class="cmp-controls">
+  <div class="cmp-field cmp-field--wide">
+    <label>Proveedores (elegí entre 2 y 3)</label>
+    <div class="cmp-checkbox-list">
+      @for (supplier of suppliers(); track supplier.id) {
+        <label class="cmp-checkbox">
+          <input
+            type="checkbox"
+            [checked]="isSelected(supplier.id)"
+            [disabled]="!isSelected(supplier.id) && selectedSupplierIds().length >= 3"
+            (change)="toggleSupplier(supplier.id)"
+          />
+          {{ supplier.name }}
+        </label>
+      }
+    </div>
+  </div>
+
+  <button type="button" class="cmp-compare-btn" [disabled]="!canCompare()" (click)="compare()">Comparar</button>
+
+  @if (comparison()) {
+    <div class="cmp-toggle" role="group" aria-label="Modo de visualización">
+      <button type="button" [class.cmp-toggle-btn--active]="viewMode() === 'table'" (click)="viewMode.set('table')">
+        Tabla
+      </button>
+      <button type="button" [class.cmp-toggle-btn--active]="viewMode() === 'chart'" (click)="viewMode.set('chart')">
+        Gráfico
+      </button>
+    </div>
+  }
+</div>
+
+@if (loading()) {
+  <p class="cmp-hint">Cargando...</p>
+} @else if (errorMessage()) {
+  <p class="cmp-error">{{ errorMessage() }}</p>
+} @else if (!comparison()) {
+  <p class="cmp-hint">Elegí entre 2 y 3 proveedores y presioná "Comparar" para ver el promedio mensual de precios.</p>
+} @else if (comparison()!.rows.length === 0) {
+  <p class="cmp-hint">Ninguno de los proveedores seleccionados tiene compras registradas todavía.</p>
+} @else {
+  <div class="cmp-chart-wrap" [class.cmp-hidden]="viewMode() !== 'chart'">
+    <canvas #canvas></canvas>
+  </div>
+
+  @if (viewMode() === 'table') {
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Mes</th>
+          @for (supplier of comparison()!.suppliers; track supplier.supplierId) {
+            <th class="cmp-col-right">{{ supplier.supplierName }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of comparison()!.rows; track row.month) {
+          <tr>
+            <td>{{ row.month }}</td>
+            @for (supplier of comparison()!.suppliers; track supplier.supplierId) {
+              <td class="cmp-col-right cmp-col-muted">
+                {{ row.averageBySupplier[supplier.supplierId] !== null ? (row.averageBySupplier[supplier.supplierId] | number: '1.2-2') : '—' }}
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+}

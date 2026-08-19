@@ -60,6 +60,7 @@ describe('DashboardComponent', () => {
       '/purchases',
       '/document-types',
       '/person-types',
+      '/purchases/price-comparison',
       '/locations',
       '/roles',
       '/users',

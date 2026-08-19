@@ -55,6 +55,7 @@ describe('ShellComponent', () => {
       '/purchases',
       '/document-types',
       '/person-types',
+      '/purchases/price-comparison',
       '/locations',
       '/roles',
       '/users',
