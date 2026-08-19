@@ -27,6 +27,11 @@ const ADMIN_ROLE_NAME = 'Administrador';
 // HU-09 — unlike GET /inventory/stock, both /inventory/batches endpoints
 // (plan section 7.4) are "Admin Inventario" — GET included — so
 // inventory:read is seeded here, its first use.
+// HU-04 — all three /suppliers endpoints (plan section 7.4) are "Comprador"
+// minimum, GET included — same "read also gated" shape as HU-06/HU-09.
+// "Comprador" isn't seeded as a role here, same as "Admin Inventario"
+// never was: PermissionsGuard checks the permission, not a role name — an
+// admin can create that role for real via the /roles screen (TT-24 phase 9).
 const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'roles', action: 'read' },
   { module: 'roles', action: 'create' },
@@ -45,6 +50,9 @@ const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   { module: 'locations', action: 'update' },
   { module: 'inventory', action: 'create' },
   { module: 'inventory', action: 'read' },
+  { module: 'suppliers', action: 'read' },
+  { module: 'suppliers', action: 'create' },
+  { module: 'suppliers', action: 'update' },
 ];
 
 async function upsertAdminRole() {

@@ -78,6 +78,20 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    // HU-04, first MVP2 screen — grows with Compras (HU-13/05) and
+    // Comparativa de precios (HU-14) as those HUs land.
+    label: 'Compras',
+    items: [
+      {
+        label: 'Proveedores',
+        path: '/suppliers',
+        icon: 'ph-truck',
+        description: 'Registrá y administrá proveedores.',
+        roles: ['Administrador'],
+      },
+    ],
+  },
+  {
     label: 'Administración',
     items: [
       {

@@ -1,14 +1,21 @@
 import { Routes } from '@angular/router';
 
-// Pattern to replicate for locations, products, inventory, alerts,
-// purchases, requests and users-roles when their iteration comes up
-// (plan section 6).
+// HU-04 — first MVP2 screen, same list+form split as products (HU-28)/users
+// (HU-03): one form component, two modes by :id presence.
 export const SUPPLIERS_ROUTES: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./suppliers-list/suppliers-list.component').then(
-        (m) => m.SuppliersListComponent,
-      ),
+      import('./suppliers-list/suppliers-list.component').then((m) => m.SuppliersListComponent),
+  },
+  {
+    path: 'new',
+    loadComponent: () =>
+      import('./supplier-form/supplier-form.component').then((m) => m.SupplierFormComponent),
+  },
+  {
+    path: ':id/edit',
+    loadComponent: () =>
+      import('./supplier-form/supplier-form.component').then((m) => m.SupplierFormComponent),
   },
 ];

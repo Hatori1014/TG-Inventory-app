@@ -29,8 +29,17 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
+        // Master plan section 7.4 marks all three /suppliers endpoints
+        // "Comprador" minimum, GET included — same shape as HU-06/07/09's
+        // "Admin Inventario". Neither role is actually seeded (only
+        // "Administrador" is, see seed.ts) — PermissionsGuard checks the
+        // permission, not a role name, so the real gate is the backend's
+        // @RequirePermission(). This route-level gate is just a frontend
+        // nicety and, same as those other cases, points at the one role
+        // that actually exists today.
         path: 'suppliers',
         canActivate: [roleGuard],
+        data: { roles: ['Administrador'] },
         loadChildren: () =>
           import('./features/suppliers/suppliers.routes').then((m) => m.SUPPLIERS_ROUTES),
       },
