@@ -110,6 +110,13 @@ export const NAV_SECTIONS: NavSection[] = [
         description: 'Catálogo de tipos de persona (natural, jurídica).',
         roles: ['Administrador'],
       },
+      {
+        label: 'Comparativa de precios',
+        path: '/purchases/price-comparison',
+        icon: 'ph-chart-line',
+        description: 'Compará precios de compra entre proveedores.',
+        roles: ['Administrador'],
+      },
     ],
   },
   {
