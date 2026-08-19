@@ -1,61 +1,115 @@
-<h1>{{ isEditMode ? 'Editar producto' : 'Nuevo producto' }}</h1>
+<div class="product-form-page-header">
+  <h1>{{ isEditMode ? 'Editar producto' : 'Nuevo producto' }}</h1>
+  <span class="product-form-page-route">/products</span>
+</div>
 
 @if (loading()) {
-  <p>Cargando...</p>
+  <p class="product-form-loading">Cargando...</p>
 } @else {
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <input type="text" formControlName="name" placeholder="Nombre" />
-    <textarea formControlName="description" placeholder="Descripción (opcional)"></textarea>
+  <div class="product-form-card">
+    <h2 class="product-form-title">{{ isEditMode ? 'Editar producto' : 'Nuevo producto' }}</h2>
+    <p class="product-form-subtitle">Mismo formulario para crear y editar. Categoría y unidad se pueden crear sin salir de acá.</p>
 
-    <div>
-      <select formControlName="unitId">
-        <option value="" disabled>Seleccioná una unidad</option>
-        @for (unit of units(); track unit.id) {
-          <option [value]="unit.id">{{ unit.name }}</option>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="product-field">
+        <label for="product-name">Nombre *</label>
+        <input id="product-name" type="text" formControlName="name" />
+      </div>
+
+      <div class="product-field">
+        <label for="product-description">Descripción</label>
+        <textarea id="product-description" formControlName="description" placeholder="Opcional"></textarea>
+      </div>
+
+      <div class="product-field">
+        <label for="product-unit">Unidad *</label>
+        <div class="product-inline-row">
+          <select id="product-unit" formControlName="unitId">
+            <option value="" disabled>Seleccioná una unidad</option>
+            @for (unit of units(); track unit.id) {
+              <option [value]="unit.id">{{ unit.name }}</option>
+            }
+          </select>
+          <button type="button" class="product-create-btn" (click)="showNewUnit.set(!showNewUnit())">+ Crear</button>
+        </div>
+        @if (showNewUnit()) {
+          <div class="product-inline-create">
+            <input
+              type="text"
+              [(ngModel)]="newUnitName"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Nombre de la unidad"
+            />
+            <button type="button" class="product-save-btn" (click)="createUnitInline()">Guardar</button>
+            <button type="button" class="product-cancel-inline-btn" (click)="showNewUnit.set(false)">Cancelar</button>
+          </div>
         }
-      </select>
-      <button type="button" (click)="showNewUnit.set(!showNewUnit())">+ Crear nueva unidad</button>
-      @if (showNewUnit()) {
+      </div>
+
+      <div class="product-field">
+        <label for="product-category">Categoría</label>
+        <div class="product-inline-row">
+          <select id="product-category" formControlName="categoryId">
+            <option value="">Sin categoría</option>
+            @for (category of categories(); track category.id) {
+              <option [value]="category.id">{{ category.name }}</option>
+            }
+          </select>
+          <button type="button" class="product-create-btn" (click)="showNewCategory.set(!showNewCategory())">+ Crear</button>
+        </div>
+        @if (showNewCategory()) {
+          <div class="product-inline-create">
+            <input
+              type="text"
+              [(ngModel)]="newCategoryName"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Nombre de la categoría"
+            />
+            <button type="button" class="product-save-btn" (click)="createCategoryInline()">Guardar</button>
+            <button type="button" class="product-cancel-inline-btn" (click)="showNewCategory.set(false)">Cancelar</button>
+          </div>
+        }
+      </div>
+
+      <label class="product-checkbox-block">
+        <input type="checkbox" formControlName="requiresBatch" />
         <div>
-          <input type="text" [(ngModel)]="newUnitName" [ngModelOptions]="{ standalone: true }" placeholder="Nombre de la unidad" />
-          <button type="button" (click)="createUnitInline()">Guardar</button>
+          <div class="product-checkbox-title">Requiere lote</div>
+          <div class="product-checkbox-desc">
+            Todo movimiento de este producto pedirá lote y habilita su pantalla de lotes.
+          </div>
+        </div>
+      </label>
+
+      @if (isEditMode) {
+        <div class="product-field">
+          <label>Estado</label>
+          <div class="product-status-toggle">
+            <label class="product-status-option" [class.product-status-option--active]="form.value.status === 'active'">
+              <input type="radio" formControlName="status" value="active" />
+              Activo
+            </label>
+            <label
+              class="product-status-option"
+              [class.product-status-option--active]="form.value.status === 'discontinued'"
+            >
+              <input type="radio" formControlName="status" value="discontinued" />
+              Descontinuado
+            </label>
+          </div>
         </div>
       }
-    </div>
 
-    <div>
-      <select formControlName="categoryId">
-        <option value="">Sin categoría</option>
-        @for (category of categories(); track category.id) {
-          <option [value]="category.id">{{ category.name }}</option>
-        }
-      </select>
-      <button type="button" (click)="showNewCategory.set(!showNewCategory())">+ Crear nueva categoría</button>
-      @if (showNewCategory()) {
-        <div>
-          <input type="text" [(ngModel)]="newCategoryName" [ngModelOptions]="{ standalone: true }" placeholder="Nombre de la categoría" />
-          <button type="button" (click)="createCategoryInline()">Guardar</button>
-        </div>
+      @if (errorMessage) {
+        <p class="product-form-error" role="alert">{{ errorMessage }}</p>
       }
-    </div>
 
-    @if (isEditMode) {
-      <select formControlName="status">
-        <option value="active">Activo</option>
-        <option value="discontinued">Descontinuado</option>
-      </select>
-    }
-
-    <label>
-      <input type="checkbox" formControlName="requiresBatch" />
-      Requiere lote/vencimiento (producto perecedero)
-    </label>
-
-    @if (errorMessage) {
-      <p role="alert">{{ errorMessage }}</p>
-    }
-
-    <button type="submit" [disabled]="form.invalid || isSubmitting">Guardar</button>
-    <a routerLink="/products">Cancelar</a>
-  </form>
+      <div class="product-form-actions">
+        <a routerLink="/products" class="product-cancel-btn">Cancelar</a>
+        <button type="submit" class="product-submit-btn" [disabled]="form.invalid || isSubmitting">
+          {{ isEditMode ? 'Guardar cambios' : 'Crear producto' }}
+        </button>
+      </div>
+    </form>
+  </div>
 }

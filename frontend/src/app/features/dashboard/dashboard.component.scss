@@ -1,0 +1,129 @@
+.dashboard-banner {
+  padding: 20px;
+  border-radius: 10px;
+  background: linear-gradient(120deg, var(--color-primary-900), #12558e);
+  box-shadow:
+    0 2px 4px rgba(11, 60, 107, 0.1),
+    0 18px 40px -24px rgba(11, 60, 107, 0.6);
+  margin-bottom: 18px;
+}
+
+.dashboard-banner-label {
+  font: 500 10px Roboto, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9cc6e8;
+}
+
+.dashboard-banner-title {
+  font: 500 24px Roboto, sans-serif;
+  color: #fff;
+  margin: 6px 0 4px;
+}
+
+.dashboard-banner-intro {
+  margin: 0;
+  font-size: 13.5px;
+  color: #c6ddf0;
+  max-width: 70ch;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 959.98px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 599.98px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 17px 18px;
+  border-radius: 10px;
+  background: linear-gradient(165deg, #ffffff, #f4f9fe);
+  border: 1px solid var(--color-border);
+  box-shadow:
+    0 1px 2px rgba(11, 60, 107, 0.06),
+    0 10px 24px -16px rgba(11, 60, 107, 0.3);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-primary-300);
+    box-shadow:
+      0 2px 4px rgba(11, 60, 107, 0.1),
+      0 14px 30px -18px rgba(11, 60, 107, 0.45);
+  }
+}
+
+.dashboard-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--color-primary-100);
+  display: grid;
+  place-items: center;
+  flex: none;
+
+  i.ph {
+    font-size: 17px;
+    color: var(--color-primary-700);
+  }
+}
+
+.dashboard-card-label {
+  font: 500 17px Roboto, sans-serif;
+  color: var(--color-primary-900);
+}
+
+.dashboard-card-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.dashboard-card-route {
+  font: 400 11.5px ui-monospace, Menlo, monospace;
+  color: var(--color-text-muted);
+}
+
+.dashboard-note {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--color-primary-100);
+  border: 1px solid #a9d3f2;
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+
+  i.ph {
+    font-size: 18px;
+    color: var(--color-primary-700);
+    margin-top: 1px;
+  }
+}
+
+.dashboard-note-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-primary-900);
+}
+
+.dashboard-note-body {
+  font-size: 12.5px;
+  color: #255c8c;
+}

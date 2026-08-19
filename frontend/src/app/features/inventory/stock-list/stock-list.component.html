@@ -1,49 +1,95 @@
-<h1>Stock actual</h1>
-<a routerLink="/dashboard">Volver</a>
+<div class="stock-page-header">
+  <h1>Stock actual</h1>
+  <span class="stock-page-route">/inventory/stock</span>
+</div>
 
-<div>
-  <select [(ngModel)]="filterProductId" (ngModelChange)="reload()">
-    <option value="">Todos los productos</option>
-    @for (product of products(); track product.id) {
-      <option [value]="product.id">{{ product.name }}</option>
-    }
-  </select>
+<div class="stock-filters">
+  <div class="stock-filter">
+    <label for="stock-filter-product">Filtrar por producto</label>
+    <select id="stock-filter-product" [(ngModel)]="filterProductId" (ngModelChange)="applyFilters()">
+      <option value="">Todos los productos</option>
+      @for (product of products(); track product.id) {
+        <option [value]="product.id">{{ product.name }}</option>
+      }
+    </select>
+  </div>
 
-  <select [(ngModel)]="filterLocationId" (ngModelChange)="reload()">
-    <option value="">Todas las ubicaciones</option>
-    @for (location of locations(); track location.id) {
-      <option [value]="location.id">{{ location.name }}</option>
-    }
-  </select>
+  <div class="stock-filter">
+    <label for="stock-filter-location">Filtrar por ubicación</label>
+    <select id="stock-filter-location" [(ngModel)]="filterLocationId" (ngModelChange)="applyFilters()">
+      <option value="">Todas las ubicaciones</option>
+      @for (location of locations(); track location.id) {
+        <option [value]="location.id">{{ location.name }}</option>
+      }
+    </select>
+  </div>
+
+  <button type="button" class="stock-clear-btn" (click)="clearFilters()">Limpiar filtros</button>
 </div>
 
 @if (errorMessage) {
-  <p role="alert">{{ errorMessage }}</p>
+  <p class="stock-error" role="alert">{{ errorMessage }}</p>
 }
 
-@if (loading()) {
-  <p>Cargando...</p>
-} @else {
-  <table>
+<div class="stock-table-card">
+  <table class="stock-table">
     <thead>
       <tr>
         <th>Producto</th>
         <th>Ubicación</th>
-        <th>Cantidad</th>
+        <th>Lote</th>
+        <th class="stock-col-right">Cantidad</th>
       </tr>
     </thead>
     <tbody>
-      @for (row of stock(); track row.id) {
+      @if (loading()) {
         <tr>
-          <td>{{ row.product.name }}</td>
-          <td>{{ row.location.name }}</td>
-          <td>{{ row.quantity }}</td>
+          <td colspan="4" class="stock-empty">Cargando...</td>
         </tr>
-      } @empty {
-        <tr>
-          <td colspan="3">No hay stock registrado para este filtro.</td>
-        </tr>
+      } @else {
+        @for (row of stock(); track row.id) {
+          <tr>
+            <td>{{ row.product.name }}</td>
+            <td class="stock-col-muted">{{ row.location.name }}</td>
+            <td class="stock-col-batch">{{ row.batchId ?? '—' }}</td>
+            <td class="stock-col-right stock-col-qty">{{ row.quantity }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="stock-empty">No hay stock registrado para este filtro.</td>
+          </tr>
+        }
       }
     </tbody>
   </table>
-}
+
+  <div class="stock-pagination">
+    <span>Página {{ page() }} de {{ totalPages() }} · {{ total() }} registros</span>
+    <div class="stock-pagination-controls">
+      <span>Filas por página</span>
+      <select [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)">
+        <option [ngValue]="20">20</option>
+        <option [ngValue]="50">50</option>
+        <option [ngValue]="100">100</option>
+      </select>
+      <button
+        type="button"
+        class="stock-page-btn"
+        [disabled]="page() <= 1"
+        (click)="previousPage()"
+        aria-label="Página anterior"
+      >
+        <i class="ph ph-caret-left"></i>
+      </button>
+      <button
+        type="button"
+        class="stock-page-btn"
+        [disabled]="page() >= totalPages()"
+        (click)="nextPage()"
+        aria-label="Página siguiente"
+      >
+        <i class="ph ph-caret-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ValidateUserCredentialsUseCase } from '../../../users/application/use-cases/validate-user-credentials.use-case';
@@ -28,9 +29,13 @@ export class LoginUseCase {
     }
 
     const payload = { sub: user.id, email: user.email, name: user.name, role: user.role };
+    // ADR-32 — a unique jti per token is what makes POST /auth/logout able
+    // to target this specific token in RevokedToken, without affecting any
+    // other session the same user has open elsewhere.
+    const jti = randomUUID();
 
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload, { jwtid: jti }),
       user,
     };
   }

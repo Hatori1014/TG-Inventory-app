@@ -30,7 +30,13 @@ export class AuthService {
       .pipe(tap((response) => this.persistSession(response)));
   }
 
+  // ADR-32 — best-effort: the local session clears immediately regardless
+  // of the backend call's outcome, so a network blip never traps the user
+  // in a logged-in-looking state. The server-side revoke (blocklisting this
+  // token's jti) is what makes a stolen token unusable after logout — worth
+  // attempting, but not worth blocking the UI on.
   logout(): void {
+    this.http.post(`${environment.apiUrl}/auth/logout`, {}).subscribe({ error: () => {} });
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     this.currentUser.set(null);
   }

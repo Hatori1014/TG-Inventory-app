@@ -1,0 +1,31 @@
+<div class="dashboard-banner">
+  <div class="dashboard-banner-label">Sesión iniciada</div>
+  <h1 class="dashboard-banner-title">Bienvenida, {{ firstName() }}</h1>
+  <p class="dashboard-banner-intro">
+    Estos son los módulos que tu rol puede abrir. El menú de la izquierda muestra lo mismo, así que no hay
+    rutas a las que llegues y reboten con un 403.
+  </p>
+</div>
+
+<div class="dashboard-grid">
+  @for (item of accesos(); track item.path) {
+    <a [routerLink]="item.path" class="dashboard-card">
+      <div class="dashboard-card-head">
+        <span class="dashboard-card-icon"><i class="ph {{ item.icon }}"></i></span>
+        <span class="dashboard-card-label">{{ item.label }}</span>
+      </div>
+      <span class="dashboard-card-desc">{{ item.description }}</span>
+      <span class="dashboard-card-route">{{ item.path }}</span>
+    </a>
+  }
+</div>
+
+<div class="dashboard-note">
+  <i class="ph ph-info"></i>
+  <div>
+    <div class="dashboard-note-title">Sin indicadores todavía</div>
+    <div class="dashboard-note-body">
+      MVP1 no tiene historias de reporting, así que el dashboard es un panel de accesos y no de métricas.
+    </div>
+  </div>
+</div>

@@ -1,37 +1,83 @@
-<h1>Unidades de medida</h1>
+<div class="catalog-page-header">
+  <h1>Unidades de manejo</h1>
+  <span class="catalog-page-route">/units</span>
+</div>
 
-<form (ngSubmit)="addUnit()">
-  <input type="text" [(ngModel)]="newName" name="newName" placeholder="Nueva unidad" />
-  <button type="submit" [disabled]="!newName.trim()">Agregar</button>
-</form>
+<p class="catalog-intro">
+  Alta inline y activar o desactivar, sin pantalla de formulario aparte. Categorías y unidades son dos rutas
+  distintas con el mismo patrón.
+</p>
 
-@if (errorMessage) {
-  <p role="alert">{{ errorMessage }}</p>
-}
+<div class="catalog-table-card">
+  <div class="catalog-table-header">
+    <h2>Unidades de manejo</h2>
+    <span class="catalog-count">{{ units().length }} unidades</span>
+  </div>
 
-@if (loading()) {
-  <p>Cargando...</p>
-} @else {
-  <table>
+  <table class="catalog-table">
     <thead>
       <tr>
         <th>Nombre</th>
+        <th class="catalog-col-right">Productos</th>
         <th>Estado</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
-      @for (unit of units(); track unit.id) {
+      @if (loading()) {
         <tr>
-          <td>{{ unit.name }}</td>
-          <td>{{ unit.status === 'active' ? 'Activa' : 'Inactiva' }}</td>
-          <td>
-            <button type="button" (click)="toggleStatus(unit)">
-              {{ unit.status === 'active' ? 'Desactivar' : 'Activar' }}
-            </button>
-          </td>
+          <td colspan="4" class="catalog-empty">Cargando...</td>
         </tr>
+      } @else {
+        @for (unit of units(); track unit.id) {
+          <tr>
+            <td>{{ unit.name }}</td>
+            <td class="catalog-col-right catalog-col-muted">{{ productCountFor(unit.id) }}</td>
+            <td>
+              <span class="catalog-badge" [class.catalog-badge--ok]="unit.status === 'active'">
+                {{ unit.status === 'active' ? 'Activa' : 'Inactiva' }}
+              </span>
+            </td>
+            <td class="catalog-col-right">
+              <button type="button" class="catalog-action-link" (click)="toggleStatus(unit)">
+                {{ unit.status === 'active' ? 'Desactivar' : 'Activar' }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="catalog-empty">No hay unidades registradas.</td>
+          </tr>
+        }
       }
+      <tr class="catalog-add-row">
+        <td>
+          <form (ngSubmit)="addUnit()">
+            <input
+              type="text"
+              [(ngModel)]="newName"
+              name="newName"
+              placeholder="Nueva unidad, ej. Galón"
+            />
+          </form>
+        </td>
+        <td></td>
+        <td class="catalog-add-hint">Se crea activa</td>
+        <td class="catalog-col-right">
+          <button type="button" class="catalog-add-btn" [disabled]="!newName.trim()" (click)="addUnit()">
+            Agregar
+          </button>
+        </td>
+      </tr>
     </tbody>
   </table>
-}
+
+  @if (errorMessage) {
+    <div class="catalog-error" role="alert">{{ errorMessage }}</div>
+  }
+
+  <div class="catalog-footer-note">
+    Desactivar no borra: los productos que ya la usan la conservan, pero deja de ofrecerse al crear productos
+    nuevos.
+  </div>
+</div>

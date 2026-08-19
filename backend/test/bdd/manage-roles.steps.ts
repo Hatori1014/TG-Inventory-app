@@ -57,7 +57,7 @@ defineFeature(feature, (test) => {
       .overrideProvider(PERMISSION_REPOSITORY)
       .useValue(fakePermissionRepository)
       .overrideProvider(PrismaService)
-      .useValue({ rolePermission: { findFirst } })
+      .useValue({ rolePermission: { findFirst }, revokedToken: { findUnique: jest.fn().mockResolvedValue(null) } })
       .compile();
 
     app = moduleRef.createNestApplication();
