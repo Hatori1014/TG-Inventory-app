@@ -19,4 +19,14 @@ export const REQUESTS_ROUTES: Routes = [
     loadComponent: () =>
       import('./request-form/request-form.component').then((m) => m.RequestFormComponent),
   },
+  {
+    // HU-16 — separate component from the purchase request-form: no
+    // supplier, no draft, and its own "disabled if no stock" select UX
+    // that doesn't apply to purchases.
+    path: 'new-consumption',
+    loadComponent: () =>
+      import('./consumption-request-form/consumption-request-form.component').then(
+        (m) => m.ConsumptionRequestFormComponent,
+      ),
+  },
 ];

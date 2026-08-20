@@ -26,6 +26,7 @@ describe('CreateRequestUseCase', () => {
       findSupplierStatus: jest.fn(),
       findProductName: jest.fn(),
       findLocationStatus: jest.fn(),
+      findAvailableStock: jest.fn(),
       create: jest.fn(),
     } as unknown as jest.Mocked<RequestPrismaRepository>;
     useCase = new CreateRequestUseCase(repository);
@@ -122,6 +123,74 @@ describe('CreateRequestUseCase', () => {
         expect.objectContaining({ status: 'pending', supplierId: 'supplier-1', requesterId: 'user-1' }),
       );
       expect(result.id).toBe('request-1');
+    });
+  });
+
+  describe('consumption requests', () => {
+    const consumptionRequest = { ...requestWithRelations, type: 'consumption', supplierId: null, supplier: null };
+
+    it('rejects saveAsDraft', async () => {
+      repository.findProductName.mockResolvedValue('Arroz');
+      repository.findLocationStatus.mockResolvedValue('active');
+
+      const dto: CreateRequestDto = { type: 'consumption', saveAsDraft: true, items: oneItem };
+
+      await expect(useCase.execute('user-1', dto)).rejects.toThrow(BadRequestException);
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects a supplierId', async () => {
+      repository.findProductName.mockResolvedValue('Arroz');
+      repository.findLocationStatus.mockResolvedValue('active');
+
+      const dto: CreateRequestDto = { type: 'consumption', supplierId: 'supplier-1', items: oneItem };
+
+      await expect(useCase.execute('user-1', dto)).rejects.toThrow(BadRequestException);
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects when there are no items', async () => {
+      const dto: CreateRequestDto = { type: 'consumption' };
+
+      await expect(useCase.execute('user-1', dto)).rejects.toThrow(BadRequestException);
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects when an item requests more than the available stock', async () => {
+      repository.findProductName.mockResolvedValue('Arroz');
+      repository.findLocationStatus.mockResolvedValue('active');
+      repository.findAvailableStock.mockResolvedValue(3);
+
+      const dto: CreateRequestDto = { type: 'consumption', items: oneItem };
+
+      await expect(useCase.execute('user-1', dto)).rejects.toThrow(BadRequestException);
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('creates the request as pending when the stock is sufficient', async () => {
+      repository.findProductName.mockResolvedValue('Arroz');
+      repository.findLocationStatus.mockResolvedValue('active');
+      repository.findAvailableStock.mockResolvedValue(5);
+      repository.create.mockResolvedValue(consumptionRequest as never);
+
+      const dto: CreateRequestDto = { type: 'consumption', items: oneItem };
+      const result = await useCase.execute('user-1', dto);
+
+      expect(repository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'consumption', status: 'pending', requesterId: 'user-1' }),
+      );
+      expect(result.id).toBe('request-1');
+    });
+
+    it('allows requesting exactly the available stock', async () => {
+      repository.findProductName.mockResolvedValue('Arroz');
+      repository.findLocationStatus.mockResolvedValue('active');
+      repository.findAvailableStock.mockResolvedValue(5);
+      repository.create.mockResolvedValue(consumptionRequest as never);
+
+      const dto: CreateRequestDto = { type: 'consumption', items: oneItem };
+
+      await expect(useCase.execute('user-1', dto)).resolves.toBeDefined();
     });
   });
 });

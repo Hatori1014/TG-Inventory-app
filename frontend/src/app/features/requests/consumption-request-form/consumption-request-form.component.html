@@ -1,0 +1,88 @@
+<div class="crf-page-header">
+  <h1>Nueva solicitud de consumo</h1>
+  <span class="crf-page-route">/requests</span>
+</div>
+
+<div class="crf-card">
+  <h2 class="crf-title">Retiro de inventario</h2>
+  <p class="crf-subtitle">
+    Elegí el producto y después la ubicación — las que no tienen stock disponible de ese producto aparecen
+    deshabilitadas.
+  </p>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="crf-items" formArrayName="items">
+      <div class="crf-items-header">
+        <span>Ítems</span>
+        <button type="button" class="crf-add-item-btn" (click)="addItem()">+ Agregar ítem</button>
+      </div>
+
+      @for (item of items.controls; track item; let i = $index) {
+        <div class="crf-item-row" [formGroupName]="i">
+          <div class="crf-item-fields">
+            <div class="crf-field">
+              <label>Producto *</label>
+              <select formControlName="productId">
+                <option value="" disabled>Seleccioná un producto</option>
+                @for (product of products(); track product.id) {
+                  <option [value]="product.id">{{ product.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="crf-field">
+              <label>Ubicación *</label>
+              <select formControlName="locationId">
+                <option value="" disabled>Seleccioná una ubicación</option>
+                @for (location of locations(); track location.id) {
+                  <option [value]="location.id" [disabled]="!locationHasStock(i, location.id)">
+                    {{ location.name }}
+                    @if (item.value.productId) {
+                      ({{ availableQuantity(item.value.productId, location.id) }} disponibles)
+                    }
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="crf-field crf-field--narrow">
+              <label>Cantidad *</label>
+              <input type="number" step="0.0001" min="0.0001" formControlName="quantity" />
+            </div>
+          </div>
+
+          @if (exceedsAvailableStock(i)) {
+            <p class="crf-item-warning">La cantidad pedida supera el stock disponible en esa ubicación.</p>
+          }
+
+          <div class="crf-item-footer">
+            <button
+              type="button"
+              class="crf-remove-item-btn"
+              [disabled]="items.length <= 1"
+              (click)="removeItem(i)"
+            >
+              Quitar
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="crf-field">
+      <label for="crf-notes">Notas</label>
+      <textarea id="crf-notes" formControlName="notes" rows="2" placeholder="Opcional"></textarea>
+    </div>
+
+    @if (errorMessage) {
+      <p class="crf-error" role="alert">{{ errorMessage }}</p>
+    }
+
+    <div class="crf-actions">
+      <a routerLink="/requests" class="crf-cancel-btn">Cancelar</a>
+      <button type="submit" class="crf-submit-btn" [disabled]="form.invalid || hasAnyExcess || isSubmitting">
+        Enviar solicitud
+      </button>
+    </div>
+  </form>
+</div>

@@ -50,6 +50,18 @@ export class RequestPrismaRepository {
     return location?.status ?? null;
   }
 
+  // HU-16 — sums across every batch at this exact (productId, locationId)
+  // pair, same "SUM, not a single row" reasoning as HU-12's alerts (a
+  // requiresBatch product's stock at one location can be split across
+  // several LocationStock rows, one per batch).
+  async findAvailableStock(productId: string, locationId: string): Promise<number> {
+    const result = await this.prisma.locationStock.aggregate({
+      where: { productId, locationId },
+      _sum: { quantity: true },
+    });
+    return Number(result._sum.quantity ?? 0);
+  }
+
   async create(data: CreateRequestData): Promise<RequestWithRelations> {
     return this.prisma.request.create({
       data: {

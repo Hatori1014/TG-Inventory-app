@@ -11,9 +11,18 @@ export class FakeRequestRepository {
   private readonly products = new Map<string, string>();
   private readonly locations = new Map<string, { name: string; status: LocationStatus }>();
   private readonly requests = new Map<string, RequestWithRelations>();
+  private readonly stock = new Map<string, number>();
 
   seedSupplier(id: string, name: string, status: SupplierStatus = 'active'): void {
     this.suppliers.set(id, { name, status });
+  }
+
+  // HU-16 — a test-only helper to set how much of a product is available
+  // at a location, without going through the real movement machinery
+  // (same reasoning as every other seedStock()-style helper in this
+  // suite).
+  seedStock(productId: string, locationId: string, quantity: number): void {
+    this.stock.set(`${productId}|${locationId}`, quantity);
   }
 
   seedProduct(id: string, name: string): void {
@@ -34,6 +43,10 @@ export class FakeRequestRepository {
 
   async findLocationStatus(locationId: string): Promise<LocationStatus | null> {
     return this.locations.get(locationId)?.status ?? null;
+  }
+
+  async findAvailableStock(productId: string, locationId: string): Promise<number> {
+    return this.stock.get(`${productId}|${locationId}`) ?? 0;
   }
 
   async create(data: CreateRequestData): Promise<RequestWithRelations> {
