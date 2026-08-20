@@ -56,6 +56,8 @@ describe('DashboardComponent', () => {
       '/inventory',
       '/inventory/batches',
       '/inventory/stock',
+      '/inventory/minimum-stock',
+      '/alerts',
       '/suppliers',
       '/purchases',
       '/document-types',
@@ -73,6 +75,6 @@ describe('DashboardComponent', () => {
     fixture.detectChanges();
 
     const paths = fixture.componentInstance.accesos().map((item) => item.path);
-    expect(paths).toEqual(['/products', '/categories', '/units', '/inventory/stock']);
+    expect(paths).toEqual(['/products', '/categories', '/units', '/inventory/stock', '/alerts']);
   });
 });

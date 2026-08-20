@@ -130,7 +130,16 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/purchases/purchases.routes').then((m) => m.PURCHASES_ROUTES),
       },
-      // [PENDING: alerts, requests — added in their corresponding iterations]
+      {
+        // HU-12 — plan section 7.4: GET /alerts is "cualquier autenticado",
+        // same criterion as HU-10's /inventory/stock — no data.roles here,
+        // just being logged in. Top-level route (not nested under
+        // /inventory) to match the backend's own top-level URL.
+        path: 'alerts',
+        canActivate: [roleGuard],
+        loadComponent: () => import('./features/inventory/alerts/alerts.component').then((m) => m.AlertsComponent),
+      },
+      // [PENDING: requests — added in its corresponding iteration]
     ],
   },
 ];

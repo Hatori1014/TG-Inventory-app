@@ -83,7 +83,6 @@ model Location {
   children       Location[]          @relation("hierarchy")
   status         LocationStatus      @default(active)
   stock          LocationStock[]
-  minimumStock   MinimumStock[]
   movements      InventoryMovement[]
   purchaseItems  PurchaseItem[]
   requestItems   RequestItem[]
@@ -148,7 +147,7 @@ model Product {
   status        ProductStatus       @default(active)
   batches       Batch[]
   stock         LocationStock[]
-  minimumStock  MinimumStock[]
+  minimumStock  MinimumStock?
   movements     InventoryMovement[]
   purchaseItems PurchaseItem[]
   requestItems  RequestItem[]
@@ -196,15 +195,17 @@ model LocationStock {
   @@map("location_stock")
 }
 
+// HU-11 — a single threshold per product, not per product+location (DoR
+// resolved by the user, diverges from the original MER which scoped this
+// per product+location): the alert (HU-12) compares this against the SUM
+// of LocationStock.quantity across every location/batch of that product,
+// not any one location's quantity in isolation.
 model MinimumStock {
   id               String    @id @default(uuid())
-  productId        String    @map("product_id")
+  productId        String    @unique @map("product_id")
   product          Product   @relation(fields: [productId], references: [id])
-  locationId       String    @map("location_id")
-  location         Location  @relation(fields: [locationId], references: [id])
   minimumQuantity  Decimal   @map("minimum_quantity") @db.Decimal(14, 4)
 
-  @@unique([productId, locationId])
   @@map("minimum_stock")
 }
 

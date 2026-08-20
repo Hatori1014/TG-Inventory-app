@@ -1,0 +1,108 @@
+<div class="catalog-page-header">
+  <h1>Stock mínimo</h1>
+  <span class="catalog-page-route">/inventory/minimum-stock</span>
+</div>
+
+<p class="catalog-intro">
+  El mínimo es por producto, no por ubicación — la alerta compara la suma del stock de ese producto en todas las
+  ubicaciones contra este valor.
+</p>
+
+<div class="catalog-table-card">
+  <div class="catalog-table-header">
+    <h2>Umbrales definidos</h2>
+    <span class="catalog-count">{{ minimums().length }} productos</span>
+  </div>
+
+  <table class="catalog-table">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th class="catalog-col-right">Mínimo</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="3" class="catalog-empty">Cargando...</td>
+        </tr>
+      } @else {
+        @for (minimumStock of minimums(); track minimumStock.id) {
+          <tr>
+            <td>{{ minimumStock.productName }}</td>
+            <td class="catalog-col-right">
+              @if (editingId === minimumStock.id) {
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  class="minimum-edit-input"
+                  [(ngModel)]="editingQuantity"
+                  name="editingQuantity"
+                  (keyup.enter)="confirmEdit(minimumStock)"
+                  (keyup.escape)="cancelEdit()"
+                />
+              } @else {
+                <span class="catalog-col-muted">{{ minimumStock.minimumQuantity }}</span>
+              }
+            </td>
+            <td class="catalog-col-right">
+              @if (editingId === minimumStock.id) {
+                <button type="button" class="catalog-action-link catalog-action-link--muted" (click)="confirmEdit(minimumStock)">
+                  Guardar
+                </button>
+                <button type="button" class="catalog-action-link catalog-action-link--muted" (click)="cancelEdit()">
+                  Cancelar
+                </button>
+              } @else {
+                <button type="button" class="catalog-action-link catalog-action-link--muted" (click)="startEdit(minimumStock)">
+                  Editar
+                </button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="3" class="catalog-empty">No hay mínimos definidos todavía.</td>
+          </tr>
+        }
+      }
+      <tr class="catalog-add-row">
+        <td>
+          <select [(ngModel)]="newProductId" name="newProductId">
+            <option value="" disabled>Seleccioná un producto</option>
+            @for (product of productsWithoutMinimum(); track product.id) {
+              <option [value]="product.id">{{ product.name }}</option>
+            }
+          </select>
+        </td>
+        <td class="catalog-col-right">
+          <input
+            type="number"
+            min="0"
+            step="1"
+            class="minimum-edit-input"
+            [(ngModel)]="newQuantity"
+            name="newQuantity"
+            placeholder="0"
+          />
+        </td>
+        <td class="catalog-col-right">
+          <button
+            type="button"
+            class="catalog-add-btn"
+            [disabled]="!newProductId || newQuantity === null || newQuantity < 0"
+            (click)="addMinimum()"
+          >
+            Agregar
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  @if (errorMessage) {
+    <div class="catalog-error" role="alert">{{ errorMessage }}</div>
+  }
+</div>

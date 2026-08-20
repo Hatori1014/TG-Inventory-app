@@ -68,6 +68,11 @@ const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   // part of this HU's criteria (a purchase is never edited, only created).
   { module: 'purchases', action: 'read' },
   { module: 'purchases', action: 'create' },
+  // HU-11 — first real consumer of inventory:update: PATCH
+  // /inventory/minimum-stock/:id is "Admin Inventario", same module as the
+  // existing inventory:create/:read (POST /inventory/movements, HU-09's
+  // batches, GET /inventory/minimum-stock listing added alongside this HU).
+  { module: 'inventory', action: 'update' },
 ];
 
 // HU-04, at the user's explicit request: unlike Category/Unit (left empty
