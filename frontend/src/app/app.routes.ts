@@ -139,7 +139,15 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         loadComponent: () => import('./features/inventory/alerts/alerts.component').then((m) => m.AlertsComponent),
       },
-      // [PENDING: requests — added in its corresponding iteration]
+      {
+        // HU-15 — plan section 7.4 marks /requests "Solicitante" minimum,
+        // same "not actually seeded" reasoning as suppliers/purchases —
+        // backend @RequirePermission() is the real gate.
+        path: 'requests',
+        canActivate: [roleGuard],
+        data: { roles: ['Administrador'] },
+        loadChildren: () => import('./features/requests/requests.routes').then((m) => m.REQUESTS_ROUTES),
+      },
     ],
   },
 ];

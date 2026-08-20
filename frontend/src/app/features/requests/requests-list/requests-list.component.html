@@ -1,0 +1,68 @@
+<div class="requests-page-header">
+  <h1>Mis solicitudes</h1>
+  <span class="requests-page-route">/requests</span>
+</div>
+
+<div class="requests-table-card">
+  <div class="requests-table-header">
+    <h2>{{ total() }} solicitudes</h2>
+    <div class="requests-header-actions">
+      <a routerLink="new" class="requests-new-btn">+ Nueva solicitud</a>
+    </div>
+  </div>
+
+  <table class="requests-table">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Tipo</th>
+        <th>Proveedor</th>
+        <th class="requests-col-right">Ítems</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="6" class="requests-empty">Cargando...</td>
+        </tr>
+      } @else {
+        @for (req of requests(); track req.id) {
+          <tr>
+            <td>{{ req.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ req.type === 'purchase' ? 'Compra' : 'Consumo' }}</td>
+            <td class="requests-col-muted">{{ req.supplierName || '—' }}</td>
+            <td class="requests-col-right requests-col-muted">{{ req.items.length }}</td>
+            <td>
+              <span class="requests-badge" [class.requests-badge--draft]="req.status === 'draft'">
+                {{ statusLabel(req.status) }}
+              </span>
+            </td>
+            <td class="requests-col-right">
+              @if (req.status === 'draft') {
+                <a [routerLink]="[req.id, 'edit']" class="requests-edit-link">Continuar</a>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="requests-empty">No hay solicitudes registradas.</td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+
+  <div class="requests-pagination">
+    <span>Página {{ page() }} de {{ totalPages() }} · {{ total() }} solicitudes</span>
+    <div class="requests-pagination-controls">
+      <button type="button" class="requests-page-btn" [disabled]="page() <= 1" (click)="previousPage()" aria-label="Página anterior">
+        <i class="ph ph-caret-left"></i>
+      </button>
+      <button type="button" class="requests-page-btn" [disabled]="page() >= totalPages()" (click)="nextPage()" aria-label="Página siguiente">
+        <i class="ph ph-caret-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

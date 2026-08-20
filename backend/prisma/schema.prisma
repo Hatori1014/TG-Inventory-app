@@ -319,6 +319,7 @@ model Supplier {
   email          String?
   status         SupplierStatus  @default(active)
   purchases      Purchase[]
+  requests       Request[]
 
   @@index([documentTypeId])
   @@index([personTypeId])
@@ -381,11 +382,26 @@ enum RequestType {
   consumption
 }
 
+// HU-15/16/17 — DoR resolved with the user, diverges from the original
+// 4-value enum. Purchase requests use the fuller cycle: draft (saved, not
+// submitted) -> pending -> in_review (some approvals collected, quorum not
+// reached) -> approved (quorum reached) -> pending_inventory_integration
+// (an inventory admin still has to turn it into a real Purchase, HU-13) ->
+// closed (either integrated, or rejected at any point before "approved" —
+// purchase has no separate "rejected" terminal state, rejection lands
+// directly on closed with Request.rejectionReason set, HU-17's migration).
+// Consumption requests only ever use pending -> approved (the movement
+// applies immediately) or rejected -> closed (HU-17's migration adds the
+// automatic closed follow-on). Not every value applies to every type —
+// enforced in application code (RequestType), not by the DB.
 enum RequestStatus {
+  draft
   pending
+  in_review
   approved
   rejected
-  completed
+  pending_inventory_integration
+  closed
 }
 
 model Request {
@@ -393,6 +409,12 @@ model Request {
   type         RequestType
   requesterId  String                @map("requester_id")
   requester    User                  @relation("requester", fields: [requesterId], references: [id])
+  // HU-15, DoR resolved by the user: the requester picks the supplier when
+  // creating a purchase request (not the approver, not at integration
+  // time) — mirrors Purchase.supplierId, one supplier per request. Never
+  // set for type = consumption.
+  supplierId   String?               @map("supplier_id")
+  supplier     Supplier?             @relation(fields: [supplierId], references: [id])
   approverId   String?               @map("approver_id")
   approver     User?                 @relation("approver", fields: [approverId], references: [id])
   status       RequestStatus         @default(pending)
@@ -404,6 +426,7 @@ model Request {
 
   @@index([requesterId])
   @@index([approverId])
+  @@index([supplierId])
   @@map("request")
 }
 
