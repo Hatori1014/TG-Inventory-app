@@ -1,7 +1,6 @@
-// Mirrors the backend DTOs (plan section 7.4, HU-15) — keep in sync by
+// Mirrors the backend DTOs (plan section 7.4, HU-15/16) — keep in sync by
 // hand until it's worth sharing a types package between backend/ and
-// frontend/. Only 'purchase' is buildable from the frontend yet — HU-16
-// adds 'consumption'.
+// frontend/.
 export interface RequestItem {
   id: string;
   productId: string;
@@ -34,7 +33,7 @@ export interface CreateRequestItemRequest {
 }
 
 export interface CreateRequestRequest {
-  type: 'purchase';
+  type: 'purchase' | 'consumption';
   supplierId?: string;
   items?: CreateRequestItemRequest[];
   notes?: string;

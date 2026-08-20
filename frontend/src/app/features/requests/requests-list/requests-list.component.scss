@@ -60,6 +60,12 @@
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+
+  &.requests-new-btn--secondary {
+    border-color: var(--color-primary-300);
+    background: #f7fbff;
+    color: var(--color-primary-700);
+  }
 }
 
 .requests-table {
