@@ -133,6 +133,20 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    // HU-15, first MVP4 screen — grows with consumo (HU-16) y
+    // aprobación (HU-17) as those HUs land.
+    label: 'Solicitudes',
+    items: [
+      {
+        label: 'Mis solicitudes',
+        path: '/requests',
+        icon: 'ph-clipboard-text',
+        description: 'Creá y seguí tus solicitudes de compra.',
+        roles: ['Administrador'],
+      },
+    ],
+  },
+  {
     label: 'Administración',
     items: [
       {
