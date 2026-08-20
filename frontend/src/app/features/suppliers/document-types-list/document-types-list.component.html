@@ -1,0 +1,82 @@
+<div class="catalog-page-header">
+  <h1>Tipos de documento</h1>
+  <span class="catalog-page-route">/document-types</span>
+</div>
+
+<p class="catalog-intro">
+  Alta inline y activar o desactivar, sin pantalla de formulario aparte — mismo patrón que Categorías/Unidades.
+</p>
+
+<div class="catalog-table-card">
+  <div class="catalog-table-header">
+    <h2>Tipos de documento</h2>
+    <span class="catalog-count">{{ documentTypes().length }} tipos</span>
+  </div>
+
+  <table class="catalog-table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th class="catalog-col-right">Proveedores</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="4" class="catalog-empty">Cargando...</td>
+        </tr>
+      } @else {
+        @for (documentType of documentTypes(); track documentType.id) {
+          <tr>
+            <td>{{ documentType.name }}</td>
+            <td class="catalog-col-right catalog-col-muted">{{ supplierCountFor(documentType.id) }}</td>
+            <td>
+              <span class="catalog-badge" [class.catalog-badge--ok]="documentType.status === 'active'">
+                {{ documentType.status === 'active' ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="catalog-col-right">
+              <button type="button" class="catalog-action-link" (click)="toggleStatus(documentType)">
+                {{ documentType.status === 'active' ? 'Desactivar' : 'Activar' }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="catalog-empty">No hay tipos de documento registrados.</td>
+          </tr>
+        }
+      }
+      <tr class="catalog-add-row">
+        <td>
+          <form (ngSubmit)="addDocumentType()">
+            <input
+              type="text"
+              [(ngModel)]="newName"
+              name="newName"
+              placeholder="Nuevo tipo, ej. Pasaporte"
+            />
+          </form>
+        </td>
+        <td></td>
+        <td class="catalog-add-hint">Se crea activo</td>
+        <td class="catalog-col-right">
+          <button type="button" class="catalog-add-btn" [disabled]="!newName.trim()" (click)="addDocumentType()">
+            Agregar
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  @if (errorMessage) {
+    <div class="catalog-error" role="alert">{{ errorMessage }}</div>
+  }
+
+  <div class="catalog-footer-note">
+    Desactivar no borra: los proveedores que ya lo usan lo conservan, pero deja de ofrecerse al registrar
+    proveedores nuevos.
+  </div>
+</div>

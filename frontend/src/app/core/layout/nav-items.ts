@@ -78,6 +78,48 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    // HU-04, first MVP2 screen — grows with Compras (HU-13/05) and
+    // Comparativa de precios (HU-14) as those HUs land.
+    label: 'Compras',
+    items: [
+      {
+        label: 'Proveedores',
+        path: '/suppliers',
+        icon: 'ph-truck',
+        description: 'Registrá y administrá proveedores.',
+        roles: ['Administrador'],
+      },
+      {
+        label: 'Compras',
+        path: '/purchases',
+        icon: 'ph-shopping-cart-simple',
+        description: 'Registrá compras a proveedores y consultá el histórico.',
+        roles: ['Administrador'],
+      },
+      {
+        label: 'Tipos de documento',
+        path: '/document-types',
+        icon: 'ph-identification-card',
+        description: 'Catálogo de tipos de documento (cédula, NIT, etc.).',
+        roles: ['Administrador'],
+      },
+      {
+        label: 'Tipos de persona',
+        path: '/person-types',
+        icon: 'ph-users',
+        description: 'Catálogo de tipos de persona (natural, jurídica).',
+        roles: ['Administrador'],
+      },
+      {
+        label: 'Comparativa de precios',
+        path: '/purchases/price-comparison',
+        icon: 'ph-chart-line',
+        description: 'Compará precios de compra entre proveedores.',
+        roles: ['Administrador'],
+      },
+    ],
+  },
+  {
     label: 'Administración',
     items: [
       {

@@ -29,10 +29,36 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
+        // Master plan section 7.4 marks all three /suppliers endpoints
+        // "Comprador" minimum, GET included — same shape as HU-06/07/09's
+        // "Admin Inventario". Neither role is actually seeded (only
+        // "Administrador" is, see seed.ts) — PermissionsGuard checks the
+        // permission, not a role name, so the real gate is the backend's
+        // @RequirePermission(). This route-level gate is just a frontend
+        // nicety and, same as those other cases, points at the one role
+        // that actually exists today.
         path: 'suppliers',
         canActivate: [roleGuard],
+        data: { roles: ['Administrador'] },
         loadChildren: () =>
           import('./features/suppliers/suppliers.routes').then((m) => m.SUPPLIERS_ROUTES),
+      },
+      {
+        // DocumentType/PersonType support Supplier — same gate as
+        // suppliers itself, same reasoning as categories/units support
+        // Product but follow products' own (open) gate.
+        path: 'document-types',
+        canActivate: [roleGuard],
+        data: { roles: ['Administrador'] },
+        loadChildren: () =>
+          import('./features/suppliers/suppliers.routes').then((m) => m.DOCUMENT_TYPES_ROUTES),
+      },
+      {
+        path: 'person-types',
+        canActivate: [roleGuard],
+        data: { roles: ['Administrador'] },
+        loadChildren: () =>
+          import('./features/suppliers/suppliers.routes').then((m) => m.PERSON_TYPES_ROUTES),
       },
       {
         path: 'roles',
@@ -92,8 +118,19 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/inventory/inventory.routes').then((m) => m.INVENTORY_ROUTES),
       },
-      // [PENDING: alerts, purchases, requests — added in their corresponding
-      // iterations]
+      {
+        // Master plan section 7.4 marks all three /purchases endpoints
+        // "Comprador" minimum, same gate as suppliers/document-types/
+        // person-types — "Comprador" isn't seeded as a role, so this
+        // points at "Administrador" like those, backend @RequirePermission()
+        // is the real gate.
+        path: 'purchases',
+        canActivate: [roleGuard],
+        data: { roles: ['Administrador'] },
+        loadChildren: () =>
+          import('./features/purchases/purchases.routes').then((m) => m.PURCHASES_ROUTES),
+      },
+      // [PENDING: alerts, requests — added in their corresponding iterations]
     ],
   },
 ];

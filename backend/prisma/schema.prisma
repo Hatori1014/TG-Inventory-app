@@ -85,6 +85,7 @@ model Location {
   stock          LocationStock[]
   minimumStock   MinimumStock[]
   movements      InventoryMovement[]
+  purchaseItems  PurchaseItem[]
   requestItems   RequestItem[]
 
   // HU-06: unique name per parent. Postgres treats each NULL parent_id as
@@ -166,6 +167,7 @@ model Batch {
   receivedAt   DateTime            @default(now()) @map("received_at")
   stock        LocationStock[]
   movements    InventoryMovement[]
+  purchaseItems PurchaseItem[]
 
   @@index([productId])
   @@map("batch")
@@ -255,16 +257,70 @@ enum SupplierStatus {
   inactive
 }
 
-model Supplier {
-  id        String          @id @default(uuid())
-  name      String
-  taxId     String?         @map("tax_id")
-  contact   String?
-  phone     String?
-  email     String?
-  status    SupplierStatus  @default(active)
-  purchases Purchase[]
+enum DocumentTypeStatus {
+  active
+  inactive
+}
 
+// HU-04, at the user's explicit request: an administrable catalog (TT-23
+// pattern, like Category/Unit) instead of a hardcoded enum — CC/CE/NIT is
+// a fixed starter set (seeded), but not closed: an admin can add more
+// (e.g. Pasaporte) from the /document-types screen without a deploy.
+model DocumentType {
+  id        String             @id @default(uuid())
+  name      String             @unique
+  status    DocumentTypeStatus @default(active)
+  suppliers Supplier[]
+
+  @@map("document_type")
+}
+
+enum PersonTypeStatus {
+  active
+  inactive
+}
+
+// HU-04, at the user's explicit request: Natural/Jurídica as an
+// administrable catalog, same reasoning as DocumentType above.
+model PersonType {
+  id        String           @id @default(uuid())
+  name      String           @unique
+  status    PersonTypeStatus @default(active)
+  suppliers Supplier[]
+
+  @@map("person_type")
+}
+
+model Supplier {
+  id             String          @id @default(uuid())
+  name           String
+  // HU-04: no duplicate taxId among ACTIVE suppliers **of the same
+  // document type** — a Cédula and a NIT with the same digits are two
+  // different real-world identifiers, not a collision. Enforced by a
+  // partial unique index on (document_type_id, tax_id) filtered
+  // `WHERE status = 'active'`, added by migration
+  // 20260819040000_add_supplier_tax_id_active_unique. Prisma's schema DSL
+  // has no partial-index syntax, so it can't be declared here as
+  // `@@unique` — CreateSupplierUseCase/UpdateSupplierUseCase check it
+  // explicitly; the DB index is only the race-condition safety net (and
+  // only covers races where documentTypeId is set — see the migration's
+  // comment for why a race with it omitted relies on the app check alone,
+  // same accepted gap as HU-06's parentId). Both documentTypeId and taxId
+  // are optional (only `name` is required per HU-04's criteria), so the
+  // check/index only fire when both are set.
+  taxId          String?         @map("tax_id")
+  documentTypeId String?         @map("document_type_id")
+  documentType   DocumentType?   @relation(fields: [documentTypeId], references: [id])
+  personTypeId   String?         @map("person_type_id")
+  personType     PersonType?     @relation(fields: [personTypeId], references: [id])
+  contact        String?
+  phone          String?
+  email          String?
+  status         SupplierStatus  @default(active)
+  purchases      Purchase[]
+
+  @@index([documentTypeId])
+  @@index([personTypeId])
   @@map("supplier")
 }
 
@@ -295,11 +351,25 @@ model PurchaseItem {
   purchase   Purchase  @relation(fields: [purchaseId], references: [id])
   productId  String    @map("product_id")
   product    Product   @relation(fields: [productId], references: [id])
+  // HU-13, at the user's explicit request: destination location chosen per
+  // item, not once for the whole purchase (a single delivery can restock
+  // more than one location). batchId is set by RegisterPurchaseUseCase —
+  // never accepted as a raw id from the client: the request DTO carries a
+  // human-entered batchNumber, looked up (and created if missing) within
+  // the same transaction as the movement, same "receiving creates the lot"
+  // workflow real purchasing follows (contrast with HU-08/09's batchId,
+  // which references a batch that must already exist).
+  locationId String    @map("location_id")
+  location   Location  @relation(fields: [locationId], references: [id])
+  batchId    String?   @map("batch_id")
+  batch      Batch?    @relation(fields: [batchId], references: [id])
   quantity   Decimal   @db.Decimal(14, 4)
   unitPrice  Decimal   @map("unit_price") @db.Decimal(14, 2) // input for HU-14
 
   @@index([purchaseId])
   @@index([productId])
+  @@index([locationId])
+  @@index([batchId])
   @@map("purchase_item")
 }
 

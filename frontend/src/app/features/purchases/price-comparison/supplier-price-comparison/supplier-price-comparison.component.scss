@@ -1,0 +1,138 @@
+.cmp-controls {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.cmp-field--wide {
+  flex: 1 1 100%;
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: #5a7189;
+    margin-bottom: 6px;
+  }
+}
+
+.cmp-checkbox-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.cmp-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 13.5px Roboto, sans-serif;
+  color: var(--color-text);
+
+  input:disabled + & {
+    color: var(--color-text-muted);
+  }
+}
+
+.cmp-compare-btn {
+  cursor: pointer;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 6px;
+  border: 1px solid var(--color-primary-700);
+  background: linear-gradient(180deg, var(--color-primary-500), var(--color-primary-700));
+  color: #fff;
+  font: 500 13px Roboto, sans-serif;
+
+  &:disabled {
+    cursor: not-allowed;
+    border-color: #c9dcec;
+    background: #eef3f9;
+    color: #8fa3b5;
+  }
+}
+
+.cmp-toggle {
+  display: inline-flex;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  overflow: hidden;
+
+  button {
+    cursor: pointer;
+    height: 38px;
+    padding: 0 14px;
+    border: 0;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    font: 500 12.5px Roboto, sans-serif;
+
+    & + button {
+      border-left: 1px solid var(--color-border-strong);
+    }
+  }
+}
+
+.cmp-toggle-btn--active {
+  background: linear-gradient(180deg, var(--color-primary-500), var(--color-primary-700)) !important;
+  color: #fff !important;
+}
+
+.cmp-hint {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.cmp-error {
+  color: var(--color-error);
+  font-size: 13px;
+}
+
+.cmp-chart-wrap {
+  max-width: 720px;
+  margin-bottom: 16px;
+}
+
+.cmp-hidden {
+  display: none;
+}
+
+.cmp-table {
+  width: 100%;
+  max-width: 720px;
+  border-collapse: collapse;
+  font-size: 14px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+
+  thead tr {
+    background: linear-gradient(180deg, #f7fbff, #eff6fd);
+  }
+
+  th {
+    text-align: left;
+    font: 500 10.5px Roboto, sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-primary-700);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  td {
+    padding: 11px 16px;
+    border-bottom: 1px solid #eef3f9;
+    background: var(--color-surface);
+  }
+}
+
+.cmp-col-muted {
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cmp-col-right {
+  text-align: right;
+}

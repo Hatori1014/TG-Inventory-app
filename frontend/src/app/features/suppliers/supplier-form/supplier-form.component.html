@@ -1,0 +1,123 @@
+<div class="supplier-form-page-header">
+  <h1>{{ isEditMode ? 'Editar proveedor' : 'Nuevo proveedor' }}</h1>
+  <span class="supplier-form-page-route">/suppliers</span>
+</div>
+
+@if (loading()) {
+  <p class="supplier-form-loading">Cargando...</p>
+} @else {
+  <div class="supplier-form-card">
+    <h2 class="supplier-form-title">{{ isEditMode ? 'Editar proveedor' : 'Nuevo proveedor' }}</h2>
+    <p class="supplier-form-subtitle">Nombre es obligatorio. El número de documento no se puede repetir entre proveedores activos del mismo tipo de documento.</p>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="supplier-field">
+        <label for="supplier-name">Nombre *</label>
+        <input id="supplier-name" type="text" formControlName="name" />
+      </div>
+
+      <div class="supplier-field">
+        <label for="supplier-tax-id">Número de documento</label>
+        <input id="supplier-tax-id" type="text" formControlName="taxId" placeholder="Opcional" />
+      </div>
+
+      <div class="supplier-field">
+        <label for="supplier-document-type">Tipo de documento</label>
+        <div class="supplier-inline-row">
+          <select id="supplier-document-type" formControlName="documentTypeId">
+            <option value="">Sin especificar</option>
+            @for (documentType of documentTypes(); track documentType.id) {
+              <option [value]="documentType.id">{{ documentType.name }}</option>
+            }
+          </select>
+          <button type="button" class="supplier-create-btn" (click)="showNewDocumentType.set(!showNewDocumentType())">+ Crear</button>
+        </div>
+        @if (showNewDocumentType()) {
+          <div class="supplier-inline-create">
+            <input
+              type="text"
+              [(ngModel)]="newDocumentTypeName"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Nombre del tipo de documento"
+            />
+            <button type="button" class="supplier-save-btn" (click)="createDocumentTypeInline()">Guardar</button>
+            <button type="button" class="supplier-cancel-inline-btn" (click)="showNewDocumentType.set(false)">Cancelar</button>
+          </div>
+        }
+      </div>
+
+      <div class="supplier-field">
+        <label for="supplier-person-type">Tipo de persona</label>
+        <div class="supplier-inline-row">
+          <select id="supplier-person-type" formControlName="personTypeId">
+            <option value="">Sin especificar</option>
+            @for (personType of personTypes(); track personType.id) {
+              <option [value]="personType.id">{{ personType.name }}</option>
+            }
+          </select>
+          <button type="button" class="supplier-create-btn" (click)="showNewPersonType.set(!showNewPersonType())">+ Crear</button>
+        </div>
+        @if (showNewPersonType()) {
+          <div class="supplier-inline-create">
+            <input
+              type="text"
+              [(ngModel)]="newPersonTypeName"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Nombre del tipo de persona"
+            />
+            <button type="button" class="supplier-save-btn" (click)="createPersonTypeInline()">Guardar</button>
+            <button type="button" class="supplier-cancel-inline-btn" (click)="showNewPersonType.set(false)">Cancelar</button>
+          </div>
+        }
+      </div>
+
+      <div class="supplier-field">
+        <label for="supplier-contact">Persona de contacto</label>
+        <input id="supplier-contact" type="text" formControlName="contact" placeholder="Opcional" />
+      </div>
+
+      <div class="supplier-field">
+        <label for="supplier-phone">Teléfono</label>
+        <input id="supplier-phone" type="text" formControlName="phone" placeholder="Opcional" />
+      </div>
+
+      <div class="supplier-field">
+        <label for="supplier-email">Correo</label>
+        <input id="supplier-email" type="email" formControlName="email" placeholder="Opcional" />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <span class="supplier-field-error">Correo inválido.</span>
+        }
+      </div>
+
+      @if (isEditMode) {
+        <div class="supplier-field">
+          <label>Estado</label>
+          <div class="supplier-status-toggle">
+            <label class="supplier-status-option" [class.supplier-status-option--active]="form.value.status === 'active'">
+              <input type="radio" formControlName="status" value="active" />
+              Activo
+            </label>
+            <label
+              class="supplier-status-option"
+              [class.supplier-status-option--active]="form.value.status === 'inactive'"
+            >
+              <input type="radio" formControlName="status" value="inactive" />
+              Inactivo
+            </label>
+          </div>
+        </div>
+      }
+
+      @if (errorMessage) {
+        <p class="supplier-form-error" role="alert">{{ errorMessage }}</p>
+      }
+
+      <div class="supplier-form-actions">
+        <a routerLink="/suppliers" class="supplier-cancel-btn">Cancelar</a>
+        <button type="submit" class="supplier-submit-btn" [disabled]="form.invalid || isSubmitting">
+          {{ isEditMode ? 'Guardar cambios' : 'Crear proveedor' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

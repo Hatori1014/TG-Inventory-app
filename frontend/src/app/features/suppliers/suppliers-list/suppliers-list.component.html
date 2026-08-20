@@ -1,2 +1,81 @@
-<h1>Proveedores</h1>
-<p>[PENDIENTE: tabla de proveedores — Iteración 5]</p>
+<div class="suppliers-page-header">
+  <h1>Proveedores</h1>
+  <span class="suppliers-page-route">/suppliers</span>
+</div>
+
+<div class="suppliers-table-card">
+  <div class="suppliers-table-header">
+    <h2>{{ total() }} proveedores</h2>
+    <div class="suppliers-header-actions">
+      <a routerLink="new" class="suppliers-new-btn">+ Nuevo proveedor</a>
+    </div>
+  </div>
+
+  <table class="suppliers-table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Documento</th>
+        <th>Contacto</th>
+        <th>Teléfono</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="6" class="suppliers-empty">Cargando...</td>
+        </tr>
+      } @else {
+        @for (supplier of suppliers(); track supplier.id) {
+          <tr>
+            <td>
+              <div class="suppliers-name">{{ supplier.name }}</div>
+              @if (supplier.email) {
+                <div class="suppliers-desc">{{ supplier.email }}</div>
+              }
+            </td>
+            <td class="suppliers-col-muted">
+              @if (supplier.taxId) {
+                {{ supplier.taxId }}
+                @if (supplier.documentType) {
+                  <span class="suppliers-desc">{{ supplier.documentType.name }}</span>
+                }
+              } @else {
+                —
+              }
+            </td>
+            <td class="suppliers-col-muted">{{ supplier.contact || '—' }}</td>
+            <td class="suppliers-col-muted">{{ supplier.phone || '—' }}</td>
+            <td>
+              <span class="suppliers-badge" [class.suppliers-badge--ok]="supplier.status === 'active'">
+                {{ supplier.status === 'active' ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="suppliers-col-right">
+              <a [routerLink]="[supplier.id, 'purchases']" class="suppliers-edit-link">Ver compras</a>
+              <a [routerLink]="[supplier.id, 'edit']" class="suppliers-edit-link">Editar</a>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="suppliers-empty">No hay proveedores registrados.</td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+
+  <div class="suppliers-pagination">
+    <span>Página {{ page() }} de {{ totalPages() }} · {{ total() }} proveedores</span>
+    <div class="suppliers-pagination-controls">
+      <button type="button" class="suppliers-page-btn" [disabled]="page() <= 1" (click)="previousPage()" aria-label="Página anterior">
+        <i class="ph ph-caret-left"></i>
+      </button>
+      <button type="button" class="suppliers-page-btn" [disabled]="page() >= totalPages()" (click)="nextPage()" aria-label="Página siguiente">
+        <i class="ph ph-caret-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
