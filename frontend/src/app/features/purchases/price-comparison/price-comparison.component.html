@@ -1,0 +1,22 @@
+<div class="pc-page-header">
+  <h1>Comparativa de precios</h1>
+  <span class="pc-page-route">/reports/price-comparison</span>
+</div>
+
+<div class="pc-tabs" role="tablist">
+  <button type="button" role="tab" [class.pc-tab--active]="activeTab() === 'product'" (click)="activeTab.set('product')">
+    Por producto
+  </button>
+  <button type="button" role="tab" [class.pc-tab--active]="activeTab() === 'supplier'" (click)="activeTab.set('supplier')">
+    Por proveedores
+  </button>
+</div>
+
+<div class="pc-card">
+  <div [class.pc-hidden]="activeTab() !== 'product'">
+    <app-product-price-comparison />
+  </div>
+  <div [class.pc-hidden]="activeTab() !== 'supplier'">
+    <app-supplier-price-comparison />
+  </div>
+</div>

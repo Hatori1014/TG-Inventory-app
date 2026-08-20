@@ -1,8 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { InventoryMovement, LocationStatus, LocationStock, Prisma } from '@prisma/client';
+import { InventoryMovement, LocationStatus, LocationStock } from '@prisma/client';
 import { PrismaService } from '../../../database/prisma.service';
 import { withOptimisticLock } from '../../../common/utils/optimistic-lock.util';
+import {
+  createMovementAndApplyStock,
+  InsufficientStockError,
+  VersionConflictError,
+} from '../../../common/utils/inventory-ledger.util';
 import { StockWithNames } from '../application/stock-response.mapper';
+
+// Re-exported so existing call sites (register-movement/transfer use-cases
+// and their specs) don't need to change their import path — the real
+// definitions moved to common/utils/inventory-ledger.util.ts (HU-13),
+// shared with the purchases module, which can't import this file directly
+// (ADR-18 module boundaries).
+export { InsufficientStockError };
 
 export interface RegisterMovementInput {
   productId: string;
@@ -24,18 +36,6 @@ export interface RegisterTransferInput {
   userId: string;
   notes?: string;
 }
-
-// Signals a lost optimistic-lock race (ADR-20) from inside the transaction
-// callback, so Prisma rolls back the whole transaction — including the
-// InventoryMovement row(s) — instead of leaving an orphaned movement behind
-// a stock update that never landed. withOptimisticLock retries on `null`.
-class VersionConflictError extends Error {}
-
-// HU-08: a decrease (out/transfer_out/adjustment-decrease) that would leave
-// LocationStock.quantity negative. Unlike VersionConflictError, this is
-// never retried — the use-cases catch it and turn it into a 409 the caller
-// should not blindly resubmit as-is.
-export class InsufficientStockError extends Error {}
 
 @Injectable()
 export class InventoryPrismaRepository {
@@ -71,92 +71,30 @@ export class InventoryPrismaRepository {
     return batch?.productId ?? null;
   }
 
-  // Shared by registerMovement and registerTransfer — the actual
-  // find-or-create + optimistic-locked update, including the insufficient-
-  // stock floor. Checking `existingStock.quantity` up front (rather than
-  // only after a version conflict) is safe under concurrency: a concurrent
-  // writer that changes the real quantity also bumps `version`, so our
-  // updateMany below loses the race, throws VersionConflictError, and
-  // withOptimisticLock retries this whole method with a fresh read — the
-  // floor check re-runs against current data on every attempt.
-  private async applyStockChange(
-    tx: Prisma.TransactionClient,
-    input: { productId: string; locationId: string; batchId?: string; delta: number },
-  ): Promise<LocationStock> {
-    // findFirst, not findUnique: the generated compound-unique input for
-    // productId_locationId_batchId requires batchId: string (no null
-    // allowed), even though the column itself is nullable and the DB
-    // unique index treats it correctly (same reasoning as
-    // LocationPrismaRepository.findByParentAndName in HU-06).
-    const existingStock = await tx.locationStock.findFirst({
-      where: {
-        productId: input.productId,
-        locationId: input.locationId,
-        batchId: input.batchId ?? null,
-      },
-    });
-
-    if (!existingStock) {
-      if (input.delta < 0) {
-        throw new InsufficientStockError();
-      }
-      return tx.locationStock.create({
-        data: {
-          productId: input.productId,
-          locationId: input.locationId,
-          batchId: input.batchId,
-          quantity: input.delta,
-        },
-      });
-    }
-
-    if (input.delta < 0 && Number(existingStock.quantity) + input.delta < 0) {
-      throw new InsufficientStockError();
-    }
-
-    const updateResult = await tx.locationStock.updateMany({
-      where: { id: existingStock.id, version: existingStock.version },
-      data: { quantity: { increment: input.delta }, version: { increment: 1 } },
-    });
-
-    if (updateResult.count === 0) {
-      throw new VersionConflictError();
-    }
-
-    return tx.locationStock.findUniqueOrThrow({ where: { id: existingStock.id } });
-  }
-
   // convenciones.md: "nunca se actualiza LocationStock directo — siempre a
   // través de un registro en InventoryMovement en la misma transacción."
   // The movement is the ledger (source of truth); LocationStock is a derived
-  // cache updated alongside it, guarded by TT-17's version column.
+  // cache updated alongside it, guarded by TT-17's version column. The
+  // actual write (create movement + find-or-create/optimistic-update stock)
+  // is createMovementAndApplyStock() (common/utils/inventory-ledger.util.ts,
+  // HU-13) — shared with the purchases module, not reimplemented here.
   async registerMovement(
     input: RegisterMovementInput,
   ): Promise<{ movement: InventoryMovement; stock: LocationStock }> {
     return withOptimisticLock(async () => {
       try {
-        return await this.prisma.$transaction(async (tx) => {
-          const movement = await tx.inventoryMovement.create({
-            data: {
-              productId: input.productId,
-              locationId: input.locationId,
-              batchId: input.batchId,
-              type: input.type,
-              quantity: input.quantity,
-              userId: input.userId,
-              notes: input.notes,
-            },
-          });
-
-          const stock = await this.applyStockChange(tx, {
+        return await this.prisma.$transaction((tx) =>
+          createMovementAndApplyStock(tx, {
             productId: input.productId,
             locationId: input.locationId,
             batchId: input.batchId,
+            type: input.type,
+            quantity: input.quantity,
             delta: input.delta,
-          });
-
-          return { movement, stock };
-        });
+            userId: input.userId,
+            notes: input.notes,
+          }),
+        );
       } catch (error) {
         if (error instanceof VersionConflictError) {
           return null;
@@ -182,40 +120,26 @@ export class InventoryPrismaRepository {
     return withOptimisticLock(async () => {
       try {
         return await this.prisma.$transaction(async (tx) => {
-          const outMovement = await tx.inventoryMovement.create({
-            data: {
-              productId: input.productId,
-              locationId: input.sourceLocationId,
-              batchId: input.batchId,
-              type: 'transfer_out',
-              quantity: input.quantity,
-              userId: input.userId,
-              notes: input.notes,
-            },
-          });
-          const sourceStock = await this.applyStockChange(tx, {
+          const { movement: outMovement, stock: sourceStock } = await createMovementAndApplyStock(tx, {
             productId: input.productId,
             locationId: input.sourceLocationId,
             batchId: input.batchId,
+            type: 'transfer_out',
+            quantity: input.quantity,
             delta: -input.quantity,
+            userId: input.userId,
+            notes: input.notes,
           });
 
-          const inMovement = await tx.inventoryMovement.create({
-            data: {
-              productId: input.productId,
-              locationId: input.destinationLocationId,
-              batchId: input.batchId,
-              type: 'transfer_in',
-              quantity: input.quantity,
-              userId: input.userId,
-              notes: input.notes,
-            },
-          });
-          const destinationStock = await this.applyStockChange(tx, {
+          const { movement: inMovement, stock: destinationStock } = await createMovementAndApplyStock(tx, {
             productId: input.productId,
             locationId: input.destinationLocationId,
             batchId: input.batchId,
+            type: 'transfer_in',
+            quantity: input.quantity,
             delta: input.quantity,
+            userId: input.userId,
+            notes: input.notes,
           });
 
           return { outMovement, inMovement, sourceStock, destinationStock };

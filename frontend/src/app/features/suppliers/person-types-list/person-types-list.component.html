@@ -1,0 +1,82 @@
+<div class="catalog-page-header">
+  <h1>Tipos de persona</h1>
+  <span class="catalog-page-route">/person-types</span>
+</div>
+
+<p class="catalog-intro">
+  Alta inline y activar o desactivar, sin pantalla de formulario aparte — mismo patrón que Categorías/Unidades.
+</p>
+
+<div class="catalog-table-card">
+  <div class="catalog-table-header">
+    <h2>Tipos de persona</h2>
+    <span class="catalog-count">{{ personTypes().length }} tipos</span>
+  </div>
+
+  <table class="catalog-table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th class="catalog-col-right">Proveedores</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="4" class="catalog-empty">Cargando...</td>
+        </tr>
+      } @else {
+        @for (personType of personTypes(); track personType.id) {
+          <tr>
+            <td>{{ personType.name }}</td>
+            <td class="catalog-col-right catalog-col-muted">{{ supplierCountFor(personType.id) }}</td>
+            <td>
+              <span class="catalog-badge" [class.catalog-badge--ok]="personType.status === 'active'">
+                {{ personType.status === 'active' ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="catalog-col-right">
+              <button type="button" class="catalog-action-link" (click)="toggleStatus(personType)">
+                {{ personType.status === 'active' ? 'Desactivar' : 'Activar' }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="catalog-empty">No hay tipos de persona registrados.</td>
+          </tr>
+        }
+      }
+      <tr class="catalog-add-row">
+        <td>
+          <form (ngSubmit)="addPersonType()">
+            <input
+              type="text"
+              [(ngModel)]="newName"
+              name="newName"
+              placeholder="Nuevo tipo, ej. Consorcio"
+            />
+          </form>
+        </td>
+        <td></td>
+        <td class="catalog-add-hint">Se crea activo</td>
+        <td class="catalog-col-right">
+          <button type="button" class="catalog-add-btn" [disabled]="!newName.trim()" (click)="addPersonType()">
+            Agregar
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  @if (errorMessage) {
+    <div class="catalog-error" role="alert">{{ errorMessage }}</div>
+  }
+
+  <div class="catalog-footer-note">
+    Desactivar no borra: los proveedores que ya lo usan lo conservan, pero deja de ofrecerse al registrar
+    proveedores nuevos.
+  </div>
+</div>
