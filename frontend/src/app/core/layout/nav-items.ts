@@ -75,6 +75,19 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: 'ph-list-magnifying-glass',
         description: 'Consultá existencias por producto y ubicación.',
       },
+      {
+        label: 'Stock mínimo',
+        path: '/inventory/minimum-stock',
+        icon: 'ph-warning',
+        description: 'Definí el umbral mínimo de stock por producto.',
+        roles: ['Administrador'],
+      },
+      {
+        label: 'Alertas',
+        path: '/alerts',
+        icon: 'ph-bell-ringing',
+        description: 'Panel de productos por debajo de su mínimo.',
+      },
     ],
   },
   {

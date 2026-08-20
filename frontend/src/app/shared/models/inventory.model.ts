@@ -41,3 +41,25 @@ export interface StockItem {
   batchId: string | null;
   quantity: number;
 }
+
+// HU-11 — one minimum per product, not per product+location (DoR resolved
+// by the user, diverges from the original MER): the alert (HU-12) sums
+// stock across every location/batch of that product against this single
+// threshold.
+export interface MinimumStock {
+  id: string;
+  productId: string;
+  productName: string;
+  minimumQuantity: number;
+}
+
+// HU-12 — GET /alerts, not paginated (see ListAlertsUseCase on the
+// backend for the scale-based reasoning). deficit is totalQuantity -
+// minimumQuantity, always <= 0 for anything returned here.
+export interface StockAlert {
+  productId: string;
+  productName: string;
+  minimumQuantity: number;
+  totalQuantity: number;
+  deficit: number;
+}

@@ -27,4 +27,14 @@ export const INVENTORY_ROUTES: Routes = [
     canActivate: [roleGuard],
     loadComponent: () => import('./stock-list/stock-list.component').then((m) => m.StockListComponent),
   },
+  {
+    // HU-11 — plan section 7.4 marks all /inventory/minimum-stock
+    // endpoints "Admin Inventario", GET included — same tier as 'batches',
+    // not the looser 'stock'.
+    path: 'minimum-stock',
+    canActivate: [roleGuard],
+    data: { roles: ['Administrador'] },
+    loadComponent: () =>
+      import('./minimum-stock-list/minimum-stock-list.component').then((m) => m.MinimumStockListComponent),
+  },
 ];
