@@ -1,0 +1,19 @@
+-- Real bug found while checking staging migration history before HU-16:
+-- Neon staging's _prisma_migrations table has an orphaned entry,
+-- "20260819040000_add_supplier_tax_id_active_unique" (the narrower,
+-- pre-scope-expansion migration that briefly existed under that name
+-- before it was renamed/edited in place to
+-- "20260819040000_add_supplier_document_person_type_catalogs", per that
+-- migration's own comment history) — it was applied to staging once
+-- before the rename, then the renamed migration was applied again
+-- afterward as a brand-new name, leaving BOTH indexes live:
+--   supplier_tax_id_active_key                    UNIQUE (tax_id) WHERE active
+--   supplier_document_type_id_tax_id_active_key    UNIQUE (document_type_id, tax_id) WHERE active
+-- The first one is strictly narrower and silently re-enforces "no
+-- duplicate taxId among actives" regardless of document type — exactly
+-- the rule HU-04's scope expansion explicitly removed ("misma cédula y
+-- NIT con los mismos dígitos no es un choque"). Local dev never had this
+-- problem (it only ever saw the renamed migration). IF EXISTS makes this
+-- safe to run anywhere, including environments that never had the stale
+-- index in the first place.
+DROP INDEX IF EXISTS "supplier_tax_id_active_key";
