@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { RequirePermission } from '../../common/decorators/require-permission.decorator';
+import { CurrentUser, AuthenticatedRequestUser } from '../../common/decorators/current-user.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
 import { CreateRoleUseCase } from './application/use-cases/create-role.use-case';
@@ -29,8 +30,11 @@ export class RolesController {
 
   @RequirePermission('roles', 'create')
   @Post()
-  create(@Body() dto: CreateRoleDto): Promise<RoleResponseDto> {
-    return this.createRoleUseCase.execute(dto);
+  create(
+    @Body() dto: CreateRoleDto,
+    @CurrentUser() user: AuthenticatedRequestUser,
+  ): Promise<RoleResponseDto> {
+    return this.createRoleUseCase.execute(dto, user.id);
   }
 
   // Only replaces the role's permission set — name/description are not
@@ -40,8 +44,9 @@ export class RolesController {
   updatePermissions(
     @Param('id') id: string,
     @Body() dto: UpdateRolePermissionsDto,
+    @CurrentUser() user: AuthenticatedRequestUser,
   ): Promise<RoleResponseDto> {
-    return this.updateRolePermissionsUseCase.execute(id, dto.permissionIds);
+    return this.updateRolePermissionsUseCase.execute(id, dto.permissionIds, user.id);
   }
 
   // Default-role feature, at the user's explicit request: logical delete
@@ -49,7 +54,10 @@ export class RolesController {
   // first. The default role itself can never be deleted (409).
   @RequirePermission('roles', 'delete')
   @Delete(':id')
-  delete(@Param('id') id: string): Promise<DeleteRoleResult> {
-    return this.deleteRoleUseCase.execute(id);
+  delete(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedRequestUser,
+  ): Promise<DeleteRoleResult> {
+    return this.deleteRoleUseCase.execute(id, user.id);
   }
 }

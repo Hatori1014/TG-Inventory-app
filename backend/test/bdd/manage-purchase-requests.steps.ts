@@ -75,7 +75,7 @@ defineFeature(feature, (test) => {
       .useValue({
         rolePermission: { findFirst },
         idempotencyKey,
-        revokedToken: { findUnique: jest.fn().mockResolvedValue(null) },
+        revokedToken: { findUnique: jest.fn().mockResolvedValue(null) }, auditEvent: { create: jest.fn().mockResolvedValue({}) },
       })
       .compile();
 

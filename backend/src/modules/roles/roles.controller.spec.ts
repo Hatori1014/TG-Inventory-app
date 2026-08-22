@@ -33,6 +33,8 @@ describe('RolesController', () => {
     controller = moduleRef.get(RolesController);
   });
 
+  const actor = { id: 'actor-1', email: 'admin@tg-group.local', name: 'Admin', role: 'Administrador' };
+
   it('list() delegates to ListRolesUseCase with the query', async () => {
     const expected = { items: [], total: 0, page: 1, pageSize: 20 };
     listRolesUseCase.execute.mockResolvedValue(expected);
@@ -44,34 +46,34 @@ describe('RolesController', () => {
     expect(result).toBe(expected);
   });
 
-  it('create() delegates to CreateRoleUseCase with the DTO', async () => {
+  it('create() delegates to CreateRoleUseCase with the DTO and the acting user', async () => {
     const expected = { id: '1', name: 'Comprador', description: null, permissions: [], isDefault: false };
     createRoleUseCase.execute.mockResolvedValue(expected);
 
     const dto = { name: 'Comprador' };
-    const result = await controller.create(dto);
+    const result = await controller.create(dto, actor);
 
-    expect(createRoleUseCase.execute).toHaveBeenCalledWith(dto);
+    expect(createRoleUseCase.execute).toHaveBeenCalledWith(dto, actor.id);
     expect(result).toBe(expected);
   });
 
-  it('updatePermissions() delegates to UpdateRolePermissionsUseCase with id and permissionIds', async () => {
+  it('updatePermissions() delegates to UpdateRolePermissionsUseCase with id, permissionIds, and the acting user', async () => {
     const expected = { id: '1', name: 'Comprador', description: null, permissions: [], isDefault: false };
     updateRolePermissionsUseCase.execute.mockResolvedValue(expected);
 
-    const result = await controller.updatePermissions('1', { permissionIds: ['p1', 'p2'] });
+    const result = await controller.updatePermissions('1', { permissionIds: ['p1', 'p2'] }, actor);
 
-    expect(updateRolePermissionsUseCase.execute).toHaveBeenCalledWith('1', ['p1', 'p2']);
+    expect(updateRolePermissionsUseCase.execute).toHaveBeenCalledWith('1', ['p1', 'p2'], actor.id);
     expect(result).toBe(expected);
   });
 
-  it('delete() delegates to DeleteRoleUseCase with the id', async () => {
+  it('delete() delegates to DeleteRoleUseCase with the id and the acting user', async () => {
     const expected = { reassignedUsers: 2 };
     deleteRoleUseCase.execute.mockResolvedValue(expected);
 
-    const result = await controller.delete('role-1');
+    const result = await controller.delete('role-1', actor);
 
-    expect(deleteRoleUseCase.execute).toHaveBeenCalledWith('role-1');
+    expect(deleteRoleUseCase.execute).toHaveBeenCalledWith('role-1', actor.id);
     expect(result).toBe(expected);
   });
 });

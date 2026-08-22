@@ -67,6 +67,7 @@ describe('DashboardComponent', () => {
       '/locations',
       '/roles',
       '/users',
+      '/audit',
     ]);
   });
 

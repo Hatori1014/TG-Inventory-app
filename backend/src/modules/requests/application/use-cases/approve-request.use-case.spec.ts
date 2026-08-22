@@ -7,10 +7,12 @@ import {
   RequestNotFoundError,
   SelfApprovalError,
 } from '../../domain/request-approval.errors';
+import { RecordAuditEventUseCase } from '../../../audit/application/use-cases/record-audit-event.use-case';
 
 describe('ApproveRequestUseCase', () => {
   let useCase: ApproveRequestUseCase;
   let repository: jest.Mocked<RequestPrismaRepository>;
+  let recordAuditEvent: jest.Mocked<RecordAuditEventUseCase>;
 
   const resolvedRequest = {
     id: 'request-1',
@@ -32,10 +34,11 @@ describe('ApproveRequestUseCase', () => {
     repository = {
       recordApprovalDecision: jest.fn(),
     } as unknown as jest.Mocked<RequestPrismaRepository>;
-    useCase = new ApproveRequestUseCase(repository);
+    recordAuditEvent = { execute: jest.fn() } as unknown as jest.Mocked<RecordAuditEventUseCase>;
+    useCase = new ApproveRequestUseCase(repository, recordAuditEvent);
   });
 
-  it('casts the vote and returns the updated request when it succeeds on the first attempt', async () => {
+  it('casts the vote, audits it, and returns the updated request when it succeeds on the first attempt', async () => {
     repository.recordApprovalDecision.mockResolvedValue(resolvedRequest as never);
 
     const result = await useCase.execute('request-1', 'approver-1', 'looks good');
@@ -45,6 +48,12 @@ describe('ApproveRequestUseCase', () => {
       approverId: 'approver-1',
       decision: 'approved',
       comment: 'looks good',
+    });
+    expect(recordAuditEvent.execute).toHaveBeenCalledWith({
+      userId: 'approver-1',
+      action: 'request.approve',
+      entity: 'Request',
+      entityId: 'request-1',
     });
     expect(result.id).toBe('request-1');
   });
