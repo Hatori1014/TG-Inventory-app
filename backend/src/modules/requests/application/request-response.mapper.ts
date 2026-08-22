@@ -11,6 +11,10 @@ export const requestWithRelations = Prisma.validator<Prisma.RequestDefaultArgs>(
         location: { select: { id: true, name: true } },
       },
     },
+    approvals: {
+      include: { approver: { select: { id: true, name: true } } },
+      orderBy: { decidedAt: 'asc' },
+    },
   },
 });
 export type RequestWithRelations = Prisma.RequestGetPayload<typeof requestWithRelations>;
@@ -24,6 +28,7 @@ export function toRequestResponseDto(request: RequestWithRelations): RequestResp
     requesterName: request.requester.name,
     supplierId: request.supplierId,
     supplierName: request.supplier?.name ?? null,
+    purchaseId: request.purchaseId,
     createdAt: request.createdAt.toISOString(),
     resolvedAt: request.resolvedAt?.toISOString() ?? null,
     notes: request.notes,
@@ -35,6 +40,14 @@ export function toRequestResponseDto(request: RequestWithRelations): RequestResp
       locationName: item.location.name,
       quantity: Number(item.quantity),
       estimatedPrice: item.estimatedPrice !== null ? Number(item.estimatedPrice) : null,
+    })),
+    approvals: request.approvals.map((approval) => ({
+      id: approval.id,
+      approverId: approval.approverId,
+      approverName: approval.approver.name,
+      decision: approval.decision,
+      comment: approval.comment,
+      decidedAt: approval.decidedAt.toISOString(),
     })),
   };
 }

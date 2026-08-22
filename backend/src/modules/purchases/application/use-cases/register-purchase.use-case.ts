@@ -17,7 +17,7 @@ import { PurchaseItemRequest } from '../../domain/purchase-item-request.value-ob
 export class RegisterPurchaseUseCase {
   constructor(private readonly purchaseRepository: PurchasePrismaRepository) {}
 
-  async execute(dto: CreatePurchaseDto, userId: string): Promise<PurchaseResponseDto> {
+  async execute(dto: CreatePurchaseDto, userId: string, requestId?: string): Promise<PurchaseResponseDto> {
     const supplierStatus = await this.purchaseRepository.findSupplierStatus(dto.supplierId);
     if (!supplierStatus) {
       throw new BadRequestException('supplierId does not exist');
@@ -64,6 +64,7 @@ export class RegisterPurchaseUseCase {
     const purchase = await this.purchaseRepository.registerPurchase({
       supplierId: dto.supplierId,
       userId,
+      requestId,
       items: dto.items.map((item) => ({
         productId: item.productId,
         locationId: item.locationId,

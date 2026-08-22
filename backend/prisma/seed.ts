@@ -80,6 +80,12 @@ const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   // beyond the plan's own endpoint table) reuse requests:create.
   { module: 'requests', action: 'create' },
   { module: 'requests', action: 'read' },
+  // HU-17 — approve/reject is "Aprobador" minimum, integrate is "Admin
+  // Inventario" minimum (plan section 7.4 + the user's explicit design:
+  // these can be different people). Neither role is seeded, same
+  // criterion as "Comprador"/"Solicitante" above.
+  { module: 'requests', action: 'approve' },
+  { module: 'requests', action: 'integrate' },
 ];
 
 // HU-04, at the user's explicit request: unlike Category/Unit (left empty

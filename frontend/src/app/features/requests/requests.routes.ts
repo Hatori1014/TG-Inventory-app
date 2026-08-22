@@ -29,4 +29,12 @@ export const REQUESTS_ROUTES: Routes = [
         (m) => m.ConsumptionRequestFormComponent,
       ),
   },
+  {
+    // HU-17 — view + approve/reject/integrate. Registered after 'new',
+    // 'new-consumption', and ':id/edit' so those literal/more-specific
+    // paths match first.
+    path: ':id',
+    loadComponent: () =>
+      import('./request-detail/request-detail.component').then((m) => m.RequestDetailComponent),
+  },
 ];

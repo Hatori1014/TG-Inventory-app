@@ -14,9 +14,15 @@ const STATUS_LABELS: Record<string, string> = {
   closed: 'Cerrada',
 };
 
-// HU-15 — "propias" only (plan section 7.4's "todas" half is HU-17's,
-// for an approver). draft rows link to the edit form so the requester can
-// finish and submit them; everything else is read-only from here.
+export type RequestsListScope = 'mine' | 'pending-approval' | 'pending-integration';
+
+// HU-15/17 — "propias" (mine) is always shown; "pending-approval" and
+// "pending-integration" (plan section 7.4's "todas" half, HU-17) are shown
+// optimistically as tabs — same "let the backend 403 gate it" convention
+// as the rest of this frontend (the JWT carries a role name, not a
+// permission list, so there's no reliable client-side way to know in
+// advance whether the logged-in user actually holds requests:approve /
+// requests:integrate). A 403 on a tab just shows the empty/error state.
 @Component({
   selector: 'app-requests-list',
   standalone: true,
@@ -30,8 +36,10 @@ export class RequestsListComponent {
   requests = signal<PurchaseRequest[]>([]);
   total = signal(0);
   page = signal(1);
+  scope = signal<RequestsListScope>('mine');
   readonly pageSize = 20;
   loading = signal(true);
+  loadError = signal(false);
 
   readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize)));
 
@@ -43,15 +51,35 @@ export class RequestsListComponent {
     return STATUS_LABELS[status] ?? status;
   }
 
+  setScope(scope: RequestsListScope): void {
+    if (this.scope() === scope) return;
+    this.scope.set(scope);
+    this.page.set(1);
+    this.reload();
+  }
+
   reload(): void {
     this.loading.set(true);
-    this.requestsService.listRequests(this.page(), this.pageSize).subscribe({
+    this.loadError.set(false);
+    const list$ =
+      this.scope() === 'pending-approval'
+        ? this.requestsService.listPendingApproval(this.page(), this.pageSize)
+        : this.scope() === 'pending-integration'
+          ? this.requestsService.listPendingIntegration(this.page(), this.pageSize)
+          : this.requestsService.listRequests(this.page(), this.pageSize);
+
+    list$.subscribe({
       next: (response) => {
         this.requests.set(response.items);
         this.total.set(response.total);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => {
+        this.requests.set([]);
+        this.total.set(0);
+        this.loading.set(false);
+        this.loadError.set(true);
+      },
     });
   }
 

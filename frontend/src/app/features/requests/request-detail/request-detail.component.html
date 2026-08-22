@@ -1,0 +1,145 @@
+<div class="request-detail-page-header">
+  <h1>Detalle de solicitud</h1>
+  <a routerLink="/requests" class="request-detail-back-link">← Volver a solicitudes</a>
+</div>
+
+@if (request(); as req) {
+  <div class="request-detail-card">
+    <div class="request-detail-summary">
+      <div>
+        <span class="request-detail-type">{{ req.type === 'purchase' ? 'Solicitud de compra' : 'Solicitud de consumo' }}</span>
+        <span class="request-detail-badge">{{ statusLabel(req.status) }}</span>
+      </div>
+      <span class="request-detail-date">{{ req.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+    </div>
+
+    <div class="request-detail-meta">
+      <div>
+        <span class="request-detail-meta-label">Solicitante</span>
+        <span>{{ req.requesterName }}</span>
+      </div>
+      @if (req.supplierName) {
+        <div>
+          <span class="request-detail-meta-label">Proveedor</span>
+          <span>{{ req.supplierName }}</span>
+        </div>
+      }
+      @if (req.purchaseId) {
+        <div>
+          <span class="request-detail-meta-label">Compra generada</span>
+          <span>#{{ req.purchaseId.slice(0, 8) }}</span>
+        </div>
+      }
+      @if (req.notes) {
+        <div>
+          <span class="request-detail-meta-label">Notas</span>
+          <span>{{ req.notes }}</span>
+        </div>
+      }
+    </div>
+
+    <table class="request-detail-items">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Ubicación</th>
+          <th class="request-detail-col-right">Cantidad</th>
+          @if (req.type === 'purchase') {
+            <th class="request-detail-col-right">Precio estimado</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of req.items; track item.id) {
+          <tr>
+            <td>{{ item.productName }}</td>
+            <td>{{ item.locationName }}</td>
+            <td class="request-detail-col-right">{{ item.quantity }}</td>
+            @if (req.type === 'purchase') {
+              <td class="request-detail-col-right">{{ item.estimatedPrice ?? '—' }}</td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (req.approvals.length > 0) {
+      <div class="request-detail-approvals">
+        <h3>Historial de aprobación</h3>
+        @for (approval of req.approvals; track approval.id) {
+          <div class="request-detail-approval-row" [class.request-detail-approval-row--rejected]="approval.decision === 'rejected'">
+            <span class="request-detail-approval-decision">
+              {{ approval.decision === 'approved' ? 'Aprobó' : 'Rechazó' }}
+            </span>
+            <span>{{ approval.approverName }}</span>
+            <span class="request-detail-approval-date">{{ approval.decidedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+            @if (approval.comment) {
+              <p class="request-detail-approval-comment">{{ approval.comment }}</p>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    @if (actionError) {
+      <p class="request-detail-error" role="alert">{{ actionError }}</p>
+    }
+
+    @if (canActOnApproval()) {
+      <div class="request-detail-actions">
+        @if (!showRejectForm) {
+          <button type="button" class="request-detail-reject-btn" [disabled]="isSubmitting" (click)="openRejectForm()">
+            Rechazar
+          </button>
+          <button type="button" class="request-detail-approve-btn" [disabled]="isSubmitting" (click)="approve()">
+            Aprobar
+          </button>
+        } @else {
+          <form [formGroup]="rejectForm" class="request-detail-reject-form">
+            <label for="reject-comment">Motivo del rechazo (obligatorio)</label>
+            <textarea id="reject-comment" formControlName="comment" rows="2"></textarea>
+            <div class="request-detail-reject-form-actions">
+              <button type="button" class="request-detail-cancel-btn" [disabled]="isSubmitting" (click)="showRejectForm = false">
+                Cancelar
+              </button>
+              <button type="button" class="request-detail-reject-btn" [disabled]="isSubmitting" (click)="confirmReject()">
+                Confirmar rechazo
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    }
+
+    @if (canIntegrate()) {
+      <div class="request-detail-integrate">
+        <h3>Integrar al inventario</h3>
+        <p class="request-detail-integrate-hint">
+          Completá el precio unitario real (y el número de lote si aplica) para cada ítem recibido.
+        </p>
+        @for (item of integrateItems; track item.requestItemId) {
+          <div class="request-detail-integrate-row">
+            <span class="request-detail-integrate-label">{{ item.label }}</span>
+            <div class="request-detail-integrate-fields">
+              <div>
+                <label>Precio unitario</label>
+                <input type="number" step="0.01" min="0" [(ngModel)]="item.unitPrice" [ngModelOptions]="{ standalone: true }" />
+              </div>
+              <div>
+                <label>Nº de lote (opcional)</label>
+                <input type="text" [(ngModel)]="item.batchNumber" [ngModelOptions]="{ standalone: true }" />
+              </div>
+            </div>
+          </div>
+        }
+        <div class="request-detail-integrate-actions">
+          <button type="button" class="request-detail-approve-btn" [disabled]="isSubmitting" (click)="integrate()">
+            Integrar al inventario
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+} @else if (loading()) {
+  <p class="request-detail-hint">Cargando...</p>
+}
