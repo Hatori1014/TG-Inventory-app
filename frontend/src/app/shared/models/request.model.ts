@@ -11,6 +11,15 @@ export interface RequestItem {
   estimatedPrice: number | null;
 }
 
+export interface RequestApproval {
+  id: string;
+  approverId: string;
+  approverName: string;
+  decision: 'approved' | 'rejected';
+  comment: string | null;
+  decidedAt: string;
+}
+
 export interface PurchaseRequest {
   id: string;
   type: 'purchase' | 'consumption';
@@ -19,10 +28,13 @@ export interface PurchaseRequest {
   requesterName: string;
   supplierId: string | null;
   supplierName: string | null;
+  // HU-17 — set once the request is integrated into a real Purchase.
+  purchaseId: string | null;
   createdAt: string;
   resolvedAt: string | null;
   notes: string | null;
   items: RequestItem[];
+  approvals: RequestApproval[];
 }
 
 export interface CreateRequestItemRequest {
@@ -44,4 +56,11 @@ export interface UpdateRequestRequest {
   supplierId?: string;
   items?: CreateRequestItemRequest[];
   notes?: string;
+}
+
+export interface IntegrateRequestItemRequest {
+  requestItemId: string;
+  unitPrice: number;
+  batchNumber?: string;
+  batchExpiresAt?: string;
 }

@@ -60,4 +60,47 @@ describe('RequestsListComponent', () => {
     req.flush({ items: [], total: 45, page: 2, pageSize: 20 });
     expect(component.page()).toBe(2);
   });
+
+  it('setScope("pending-approval") resets to page 1 and calls the pending-approval endpoint', () => {
+    const component = create();
+    component.page.set(2);
+
+    component.setScope('pending-approval');
+
+    expect(component.page()).toBe(1);
+    const req = httpMock.expectOne((r) => r.url.endsWith('/requests/pending-approval'));
+    req.flush({ items: [], total: 3, page: 1, pageSize: 20 });
+    expect(component.total()).toBe(3);
+  });
+
+  it('setScope("pending-integration") calls the pending-integration endpoint', () => {
+    const component = create();
+
+    component.setScope('pending-integration');
+
+    const req = httpMock.expectOne((r) => r.url.endsWith('/requests/pending-integration'));
+    req.flush({ items: [], total: 1, page: 1, pageSize: 20 });
+    expect(component.total()).toBe(1);
+  });
+
+  it('setScope() with the same scope does nothing', () => {
+    const component = create();
+
+    component.setScope('mine');
+
+    httpMock.expectNone((r) => r.url.includes('/requests'));
+    expect(component.scope()).toBe('mine');
+  });
+
+  it('sets loadError when the list request fails (e.g. 403 for a non-approver)', () => {
+    const component = create();
+
+    component.setScope('pending-approval');
+
+    const req = httpMock.expectOne((r) => r.url.endsWith('/requests/pending-approval'));
+    req.flush({ message: 'Forbidden' }, { status: 403, statusText: 'Forbidden' });
+
+    expect(component.loadError()).toBe(true);
+    expect(component.requests()).toEqual([]);
+  });
 });

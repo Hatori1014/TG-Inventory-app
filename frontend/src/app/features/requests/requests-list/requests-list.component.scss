@@ -16,6 +16,33 @@
   color: var(--color-text-muted);
 }
 
+.requests-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.requests-tab-btn {
+  cursor: pointer;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: 500 12.5px Roboto, sans-serif;
+
+  &:hover {
+    background: #f2f7fd;
+  }
+
+  &--active {
+    border-color: var(--color-primary-700);
+    background: linear-gradient(180deg, var(--color-primary-500), var(--color-primary-700));
+    color: #fff;
+  }
+}
+
 .requests-table-card {
   border-radius: 10px;
   background: var(--color-surface);

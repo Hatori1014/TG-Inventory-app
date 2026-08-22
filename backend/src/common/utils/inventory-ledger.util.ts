@@ -32,6 +32,10 @@ export interface CreateMovementAndApplyStockInput {
   userId: string;
   notes?: string;
   purchaseId?: string;
+  // HU-17 — links a movement back to the Request that triggered it (a
+  // consumption approval's "out", or a purchase's integration "in"), same
+  // traceability purpose as purchaseId above.
+  requestId?: string;
 }
 
 export async function createMovementAndApplyStock(
@@ -48,6 +52,7 @@ export async function createMovementAndApplyStock(
       userId: input.userId,
       notes: input.notes,
       purchaseId: input.purchaseId,
+      requestId: input.requestId,
     },
   });
 

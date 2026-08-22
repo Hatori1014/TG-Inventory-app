@@ -19,6 +19,7 @@ describe('CreateRequestUseCase', () => {
     resolvedAt: null,
     notes: null,
     items: [],
+    approvals: [],
   };
 
   beforeEach(() => {

@@ -67,6 +67,7 @@ describe('UpdateRequestUseCase', () => {
       resolvedAt: null,
       notes: null,
       items: [],
+      approvals: [],
     } as never);
 
     const result = await useCase.execute('request-1', 'user-1', {
