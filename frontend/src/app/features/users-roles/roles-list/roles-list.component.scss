@@ -57,6 +57,18 @@
   align-items: center;
 }
 
+// Bug real reportado por el usuario en móvil: la tabla no tenía ningún
+// manejo de overflow horizontal, así que en pantallas angostas la columna
+// de acción (antes "Editar permisos" en texto) quedaba empujada fuera de
+// la vista sin forma de hacer scroll hasta ella — el link seguía existiendo
+// en el DOM, simplemente nunca era alcanzable. Este wrapper es la red de
+// seguridad; ocultar la columna "Descripción" por debajo de 599.98px (el
+// breakpoint móvil ya usado en shell.component.scss) y el ícono en vez de
+// texto reducen cuánto ancho hace falta en primer lugar.
+.roles-table-scroll {
+  overflow-x: auto;
+}
+
 .roles-table {
   width: 100%;
   border-collapse: collapse;
@@ -100,13 +112,30 @@
   font-variant-numeric: tabular-nums;
 }
 
+.roles-col-description {
+  @media (max-width: 599.98px) {
+    display: none;
+  }
+}
+
 .roles-edit-link {
   cursor: pointer;
-  background: none;
-  border: 0;
-  font: 500 12.5px Roboto, sans-serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
   color: var(--color-primary-700);
-  text-decoration: underline;
+  text-decoration: none;
+
+  &:hover {
+    background: #f2f7fd;
+  }
+
+  i.ph {
+    font-size: 16px;
+  }
 }
 
 .roles-empty {

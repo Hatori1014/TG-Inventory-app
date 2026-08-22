@@ -53,4 +53,28 @@ describe('RolesListComponent', () => {
 
     expect(component.userCountFor('role-unused')).toBe(0);
   });
+
+  // Real mobile bug: the edit action used to be a text link ("Editar
+  // permisos") inside a table with no horizontal-scroll handling, so on a
+  // narrow viewport it was pushed off-screen with nothing to scroll it
+  // into view — the link was in the DOM but unreachable. Now it's an
+  // icon-only link (fits without needing the scroll fallback in the first
+  // place) with an aria-label so it stays accessible.
+  it('renders an accessible edit-permissions link for each role', () => {
+    const fixture = TestBed.createComponent(RolesListComponent);
+    httpMock.expectOne((r) => r.url.endsWith('/roles')).flush({
+      items: [{ id: 'role-admin', name: 'Administrador', description: 'Acceso total', permissions: [] }],
+      total: 1,
+      page: 1,
+      pageSize: 100,
+    });
+    httpMock.expectOne((r) => r.url.endsWith('/users')).flush({ items: [], total: 0, page: 1, pageSize: 100 });
+    fixture.detectChanges();
+
+    const link = fixture.nativeElement.querySelector('a.roles-edit-link');
+    expect(link).toBeTruthy();
+    expect(link.getAttribute('aria-label')).toBe('Editar permisos');
+    expect(link.getAttribute('href')).toContain('role-admin/permissions');
+    expect(link.querySelector('i.ph-pencil-simple')).toBeTruthy();
+  });
 });
