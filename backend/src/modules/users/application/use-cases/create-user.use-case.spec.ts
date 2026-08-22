@@ -17,9 +17,12 @@ describe('CreateUserUseCase', () => {
       findAllPaginated: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      reassignRole: jest.fn(),
+      findRoleStatus: jest.fn(),
     };
     useCase = new CreateUserUseCase(repository);
     jest.clearAllMocks();
+    repository.findRoleStatus.mockResolvedValue('active');
   });
 
   it('hashes the password and creates the user, returning it mapped to a DTO', async () => {
@@ -66,6 +69,16 @@ describe('CreateUserUseCase', () => {
     await expect(
       useCase.execute({ name: 'Buyer', email: 'buyer@tg-group.local', password: 'plain-password', roleId: 'missing' }),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws BadRequestException when roleId refers to a (logically) deleted role', async () => {
+    (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+    repository.findRoleStatus.mockResolvedValue('deleted');
+
+    await expect(
+      useCase.execute({ name: 'Buyer', email: 'buyer@tg-group.local', password: 'plain-password', roleId: 'role-deleted' }),
+    ).rejects.toThrow(BadRequestException);
+    expect(repository.create).not.toHaveBeenCalled();
   });
 
   it('rethrows any other error unchanged', async () => {

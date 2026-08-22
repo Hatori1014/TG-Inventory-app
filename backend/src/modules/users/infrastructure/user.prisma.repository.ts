@@ -71,4 +71,20 @@ export class UserPrismaRepository implements UserRepository {
     });
     return toDomain(row);
   }
+
+  async reassignRole(fromRoleId: string, toRoleId: string): Promise<number> {
+    const result = await this.prisma.user.updateMany({
+      where: { roleId: fromRoleId },
+      data: { roleId: toRoleId },
+    });
+    return result.count;
+  }
+
+  async findRoleStatus(roleId: string): Promise<'active' | 'deleted' | 'not_found'> {
+    const role = await this.prisma.role.findUnique({ where: { id: roleId }, select: { deletedAt: true } });
+    if (!role) {
+      return 'not_found';
+    }
+    return role.deletedAt ? 'deleted' : 'active';
+  }
 }

@@ -5,4 +5,5 @@ export interface RoleResponseDto {
   name: string;
   description: string | null;
   permissions: PermissionResponseDto[];
+  isDefault: boolean;
 }

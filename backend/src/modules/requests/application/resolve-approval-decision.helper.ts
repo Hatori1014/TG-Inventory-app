@@ -11,23 +11,33 @@ import {
   SelfApprovalError,
 } from '../domain/request-approval.errors';
 import { InsufficientStockError } from '../../../common/utils/inventory-ledger.util';
+// HU-23, at the user's explicit request: same ADR-18 pattern, AuditModule.
+import { RecordAuditEventUseCase } from '../../audit/application/use-cases/record-audit-event.use-case';
 
 // Shared by ApproveRequestUseCase/RejectRequestUseCase — both are the same
 // underlying write (RequestPrismaRepository.recordApprovalDecision, wrapped
 // in withOptimisticLock for HU-17's concurrent-approvers race) with the
 // same error translation, differing only in decision/whether a comment is
-// mandatory (enforced by their DTOs, not here).
+// mandatory (enforced by their DTOs, not here). Audited here too, once,
+// instead of in each use-case separately.
 export async function resolveApprovalDecision(
   requestRepository: RequestPrismaRepository,
   requestId: string,
   approverId: string,
   decision: ApprovalDecision,
   comment: string | undefined,
+  recordAuditEvent: RecordAuditEventUseCase,
 ): Promise<RequestResponseDto> {
   try {
     const request = await withOptimisticLock(() =>
       requestRepository.recordApprovalDecision({ requestId, approverId, decision, comment }),
     );
+    await recordAuditEvent.execute({
+      userId: approverId,
+      action: decision === 'approved' ? 'request.approve' : 'request.reject',
+      entity: 'Request',
+      entityId: requestId,
+    });
     return toRequestResponseDto(request);
   } catch (error) {
     if (error instanceof RequestNotFoundError) {

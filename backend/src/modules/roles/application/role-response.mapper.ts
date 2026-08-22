@@ -20,5 +20,6 @@ export function toRoleResponseDto(role: Role): RoleResponseDto {
     name: role.getName(),
     description: role.getDescription(),
     permissions: role.getPermissions().map(toPermissionResponseDto),
+    isDefault: role.getIsDefault(),
   };
 }

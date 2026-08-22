@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { IdempotencyInterceptor } from '../../common/interceptors/idempotency.interceptor';
 import { PurchasesModule } from '../purchases/purchases.module';
+import { AuditModule } from '../audit/audit.module';
 import { RequestsController } from './requests.controller';
 import { CreateRequestUseCase } from './application/use-cases/create-request.use-case';
 import { UpdateRequestUseCase } from './application/use-cases/update-request.use-case';
@@ -21,9 +22,10 @@ import { RequestPrismaRepository } from './infrastructure/request.prisma.reposit
 // in this module's provider list (same pattern as purchases/inventory,
 // TT-18). HU-17 — imports PurchasesModule to reuse RegisterPurchaseUseCase
 // (IntegrateRequestUseCase), the sanctioned cross-module DI path per
-// ADR-18.
+// ADR-18. HU-23 — also imports AuditModule so approve/reject/integrate can
+// audit who acted on a request.
 @Module({
-  imports: [PurchasesModule],
+  imports: [PurchasesModule, AuditModule],
   controllers: [RequestsController],
   providers: [
     PrismaService,

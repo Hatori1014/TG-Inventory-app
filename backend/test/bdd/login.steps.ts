@@ -23,6 +23,10 @@ function fakeRevokedTokenPrisma() {
         return create;
       },
     },
+    // HU-23 — LoginUseCase now audits every attempt; RecordAuditEventUseCase
+    // swallows a failing write, but without this stub it'd hit undefined
+    // and log a spurious error on every scenario in this file.
+    auditEvent: { create: jest.fn().mockResolvedValue({}) },
   };
 }
 

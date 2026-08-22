@@ -14,6 +14,13 @@ export class CreateUserUseCase {
   constructor(@Inject(USER_REPOSITORY) private readonly userRepository: UserRepository) {}
 
   async execute(dto: CreateUserDto): Promise<UserResponseDto> {
+    // The FK constraint alone would let a deleted role's id through (the
+    // row still exists, ADR-22 logical deletion) — reject it explicitly
+    // before even hashing the password.
+    if ((await this.userRepository.findRoleStatus(dto.roleId)) === 'deleted') {
+      throw new BadRequestException(`roleId "${dto.roleId}" refers to a deleted role`);
+    }
+
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
     try {

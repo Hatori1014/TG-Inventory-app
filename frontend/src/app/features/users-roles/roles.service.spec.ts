@@ -43,7 +43,7 @@ describe('RolesService', () => {
   });
 
   it('createRole() POSTs to /roles with the request body', () => {
-    const expected: Role = { id: '1', name: 'Comprador', description: null, permissions: [] };
+    const expected: Role = { id: '1', name: 'Comprador', description: null, permissions: [], isDefault: false };
 
     service.createRole({ name: 'Comprador' }).subscribe();
 
@@ -54,7 +54,7 @@ describe('RolesService', () => {
   });
 
   it('updatePermissions() PATCHes /roles/:id with permissionIds', () => {
-    const expected: Role = { id: '1', name: 'Comprador', description: null, permissions: [] };
+    const expected: Role = { id: '1', name: 'Comprador', description: null, permissions: [], isDefault: false };
 
     service.updatePermissions('1', { permissionIds: ['p1', 'p2'] }).subscribe();
 
@@ -62,5 +62,16 @@ describe('RolesService', () => {
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ permissionIds: ['p1', 'p2'] });
     req.flush(expected);
+  });
+
+  it('deleteRole() DELETEs /roles/:id and returns reassignedUsers', () => {
+    let result: { reassignedUsers: number } | undefined;
+    service.deleteRole('1').subscribe((r) => (result = r));
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/roles/1`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ reassignedUsers: 3 });
+
+    expect(result).toEqual({ reassignedUsers: 3 });
   });
 });

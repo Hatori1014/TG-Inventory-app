@@ -32,6 +32,7 @@ defineFeature(feature, (test) => {
   let response: request.Response;
   let seededRoleId: string;
   let seededPermissionId: string;
+  const roleIdsByName = new Map<string, string>();
 
   beforeEach(async () => {
     process.env.JWT_SECRET = 'bdd-test-secret-at-least-16-chars';
@@ -41,6 +42,7 @@ defineFeature(feature, (test) => {
     fakePermissionRepository = new FakePermissionRepository();
     fakeRoleRepository = new FakeRoleRepository(fakePermissionRepository);
     grantedPermissions = new Set();
+    roleIdsByName.clear();
 
     const findFirst = jest.fn(async ({ where }: RolePermissionWhere) => {
       const key = `${where.role.name}:${where.permission.module}:${where.permission.action}`;
@@ -57,7 +59,12 @@ defineFeature(feature, (test) => {
       .overrideProvider(PERMISSION_REPOSITORY)
       .useValue(fakePermissionRepository)
       .overrideProvider(PrismaService)
-      .useValue({ rolePermission: { findFirst }, revokedToken: { findUnique: jest.fn().mockResolvedValue(null) } })
+      .useValue({
+        rolePermission: { findFirst },
+        revokedToken: { findUnique: jest.fn().mockResolvedValue(null) },
+        // HU-23 — create/delete/updatePermissions now audit every call.
+        auditEvent: { create: jest.fn().mockResolvedValue({}) },
+      })
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -184,6 +191,103 @@ defineFeature(feature, (test) => {
         .post('/roles')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ name });
+    });
+
+    then('they receive a forbidden error', () => {
+      expect(response.status).toBe(403);
+    });
+  });
+
+  const givenUser = (given: any) => {
+    given(/^a user "(.*)" with password "(.*)" and role "(.*)"$/, (email: string, password: string, role: string) => {
+      fakeUserRepository.seed(email, password, role);
+    });
+  };
+
+  const grantPermission = (and: any) => {
+    and(/^the role "(.*)" has permission "(.*)" "(.*)"$/, (role: string, module: string, action: string) => {
+      grantedPermissions.add(`${role}:${module}:${action}`);
+    });
+  };
+
+  const login = (when: any) => {
+    when(/^they log in with email "(.*)" and password "(.*)"$/, async (email: string, password: string) => {
+      const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({ email, password });
+      accessToken = loginResponse.body.accessToken;
+    });
+  };
+
+  // Bridges FakeRoleRepository and FakeUserRepository — they otherwise
+  // maintain separate id spaces (same comment already on FakeUserRepository
+  // about module boundaries) — registering here means a user later seeded
+  // with this role's name resolves to the same roleId in both fakes.
+  const seedRole = (and: any, isDefault: boolean) => {
+    and(new RegExp(`^an existing ${isDefault ? 'default ' : ''}role "(.*)"(?: with no permissions)?$`), (name: string) => {
+      const role = fakeRoleRepository.seed(name, [], null, isDefault);
+      roleIdsByName.set(name, role.getId());
+      fakeUserRepository.registerRole(role.getId(), name);
+    });
+  };
+
+  test('Deleting a role reassigns its users to the default role', ({ given, and, when, then }) => {
+    givenUser(given);
+    grantPermission(and);
+    seedRole(and, true);
+    seedRole(and, false);
+    givenUser(and);
+    login(when);
+
+    and(/^they delete the role "(.*)"$/, async (name: string) => {
+      response = await request(app.getHttpServer())
+        .delete(`/roles/${roleIdsByName.get(name)}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+    });
+
+    then('the role is deleted successfully', () => {
+      expect(response.status).toBe(200);
+    });
+
+    and(/^(\d+) users were reassigned$/, (count: string) => {
+      expect(response.body.reassignedUsers).toBe(Number(count));
+    });
+
+    and(/^the user "(.*)" now has role "(.*)"$/, async (email: string, roleName: string) => {
+      const user = await fakeUserRepository.findByEmail(email);
+      expect(user?.getRoleName()).toBe(roleName);
+    });
+  });
+
+  test('The default role cannot be deleted', ({ given, and, when, then }) => {
+    givenUser(given);
+    grantPermission(and);
+    seedRole(and, true);
+    login(when);
+
+    and(/^they try to delete the role "(.*)"$/, async (name: string) => {
+      response = await request(app.getHttpServer())
+        .delete(`/roles/${roleIdsByName.get(name)}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+    });
+
+    then('they receive a conflict error', () => {
+      expect(response.status).toBe(409);
+    });
+  });
+
+  test('A user without the roles:delete permission cannot delete a role', ({ given, and, when, then }) => {
+    givenUser(given);
+
+    and(/^the role "(.*)" does not have permission "(.*)" "(.*)"$/, () => {
+      // grantedPermissions starts empty — nothing to grant.
+    });
+
+    seedRole(and, false);
+    login(when);
+
+    and(/^they try to delete the role "(.*)"$/, async (name: string) => {
+      response = await request(app.getHttpServer())
+        .delete(`/roles/${roleIdsByName.get(name)}`)
+        .set('Authorization', `Bearer ${accessToken}`);
     });
 
     then('they receive a forbidden error', () => {
