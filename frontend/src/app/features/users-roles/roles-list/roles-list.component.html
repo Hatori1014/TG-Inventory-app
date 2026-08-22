@@ -9,38 +9,47 @@
     <a routerLink="new" class="roles-new-btn">+ Nuevo rol</a>
   </div>
 
-  <table class="roles-table">
-    <thead>
-      <tr>
-        <th>Rol</th>
-        <th>Descripción</th>
-        <th class="roles-col-right">Permisos</th>
-        <th class="roles-col-right">Usuarios</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      @if (loading()) {
+  <div class="roles-table-scroll">
+    <table class="roles-table">
+      <thead>
         <tr>
-          <td colspan="5" class="roles-empty">Cargando...</td>
+          <th>Rol</th>
+          <th class="roles-col-description">Descripción</th>
+          <th class="roles-col-right">Permisos</th>
+          <th class="roles-col-right">Usuarios</th>
+          <th></th>
         </tr>
-      } @else {
-        @for (role of roles(); track role.id) {
+      </thead>
+      <tbody>
+        @if (loading()) {
           <tr>
-            <td class="roles-name">{{ role.name }}</td>
-            <td class="roles-col-muted">{{ role.description || '—' }}</td>
-            <td class="roles-col-right roles-col-muted">{{ role.permissions.length }}</td>
-            <td class="roles-col-right roles-col-muted">{{ userCountFor(role.id) }}</td>
-            <td class="roles-col-right">
-              <a [routerLink]="[role.id, 'permissions']" class="roles-edit-link">Editar permisos</a>
-            </td>
+            <td colspan="5" class="roles-empty">Cargando...</td>
           </tr>
-        } @empty {
-          <tr>
-            <td colspan="5" class="roles-empty">No hay roles registrados.</td>
-          </tr>
+        } @else {
+          @for (role of roles(); track role.id) {
+            <tr>
+              <td class="roles-name">{{ role.name }}</td>
+              <td class="roles-col-muted roles-col-description">{{ role.description || '—' }}</td>
+              <td class="roles-col-right roles-col-muted">{{ role.permissions.length }}</td>
+              <td class="roles-col-right roles-col-muted">{{ userCountFor(role.id) }}</td>
+              <td class="roles-col-right">
+                <a
+                  [routerLink]="[role.id, 'permissions']"
+                  class="roles-edit-link"
+                  aria-label="Editar permisos"
+                  title="Editar permisos"
+                >
+                  <i class="ph ph-pencil-simple"></i>
+                </a>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="roles-empty">No hay roles registrados.</td>
+            </tr>
+          }
         }
-      }
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  </div>
 </div>
