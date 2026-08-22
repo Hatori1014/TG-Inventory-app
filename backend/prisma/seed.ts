@@ -90,6 +90,11 @@ const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   // orphaned users to the default role instead of leaving a dangling
   // roleId.
   { module: 'roles', action: 'delete' },
+  // HU-23 — read-only access to the audit panel (GET /audit-events). No
+  // write permission exists: AuditEvent rows are only ever created by
+  // RecordAuditEventUseCase, called from other modules, never from a
+  // client-facing endpoint.
+  { module: 'audit', action: 'read' },
 ];
 
 // Default-role feature, at the user's explicit request: the role every new

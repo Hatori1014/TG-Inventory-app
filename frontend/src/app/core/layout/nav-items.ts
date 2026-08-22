@@ -170,6 +170,13 @@ export const NAV_SECTIONS: NavSection[] = [
         description: 'Altas, edición y bloqueo de cuentas.',
         roles: ['Administrador'],
       },
+      {
+        label: 'Auditoría',
+        path: '/audit',
+        icon: 'ph-magnifying-glass',
+        description: 'Registro de acciones sensibles: login, cambios de rol, aprobaciones.',
+        roles: ['Administrador'],
+      },
     ],
   },
 ];

@@ -525,14 +525,18 @@ model ApprovalFlow {
   @@map("approval_flow")
 }
 
-// ---------- Audit (post-MVP for the visual interface — HU-23) ----------
+// ---------- Audit (HU-23) ----------
 
 model AuditEvent {
-  id         String   @id @default(uuid())
-  userId     String   @map("user_id")
-  user       User     @relation(fields: [userId], references: [id])
-  action     String
-  entity     String
+  id     String  @id @default(uuid())
+  // Nullable: a failed login against an email that doesn't match any user
+  // has no real userId to attach — the attempted email goes in entityId
+  // instead (see RecordAuditEventUseCase). Every other action always has a
+  // real actor.
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
+  action String
+  entity String
   entityId   String   @map("entity_id")
   occurredAt DateTime @default(now()) @map("occurred_at")
 

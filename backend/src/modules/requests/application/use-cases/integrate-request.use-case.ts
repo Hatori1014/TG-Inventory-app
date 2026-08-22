@@ -9,6 +9,8 @@ import { toRequestResponseDto } from '../request-response.mapper';
 // module's domain/infrastructure directly, not its exported use-cases).
 import { RegisterPurchaseUseCase } from '../../../purchases/application/use-cases/register-purchase.use-case';
 import { CreatePurchaseDto } from '../../../purchases/dto/create-purchase.dto';
+// HU-23, at the user's explicit request: same ADR-18 pattern, AuditModule.
+import { RecordAuditEventUseCase } from '../../../audit/application/use-cases/record-audit-event.use-case';
 
 // HU-17 — PATCH /requests/:id/integrate, the last step of the purchase
 // cycle: the inventory admin (requests:integrate, a different permission
@@ -23,6 +25,7 @@ export class IntegrateRequestUseCase {
   constructor(
     private readonly requestRepository: RequestPrismaRepository,
     private readonly registerPurchaseUseCase: RegisterPurchaseUseCase,
+    private readonly recordAuditEvent: RecordAuditEventUseCase,
   ) {}
 
   async execute(requestId: string, userId: string, dto: IntegrateRequestDto): Promise<RequestResponseDto> {
@@ -62,6 +65,12 @@ export class IntegrateRequestUseCase {
 
     const purchase = await this.registerPurchaseUseCase.execute(createPurchaseDto, userId, requestId);
     const closed = await this.requestRepository.closeAfterIntegration(requestId, purchase.id);
+    await this.recordAuditEvent.execute({
+      userId,
+      action: 'request.integrate',
+      entity: 'Request',
+      entityId: requestId,
+    });
     return toRequestResponseDto(closed);
   }
 }

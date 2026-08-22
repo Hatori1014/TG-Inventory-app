@@ -3,6 +3,8 @@ import { ROLE_REPOSITORY, RoleRepository } from '../../domain/role.repository.in
 // Legitimate cross-module DI (ADR-18): RolesModule imports UsersModule and
 // injects its exported use-case instead of writing to `user` directly.
 import { ReassignUsersRoleUseCase } from '../../../users/application/use-cases/reassign-users-role.use-case';
+// HU-23, at the user's explicit request: same ADR-18 pattern, AuditModule.
+import { RecordAuditEventUseCase } from '../../../audit/application/use-cases/record-audit-event.use-case';
 
 export interface DeleteRoleResult {
   reassignedUsers: number;
@@ -26,9 +28,10 @@ export class DeleteRoleUseCase {
   constructor(
     @Inject(ROLE_REPOSITORY) private readonly roleRepository: RoleRepository,
     private readonly reassignUsersRoleUseCase: ReassignUsersRoleUseCase,
+    private readonly recordAuditEvent: RecordAuditEventUseCase,
   ) {}
 
-  async execute(id: string): Promise<DeleteRoleResult> {
+  async execute(id: string, actorId: string): Promise<DeleteRoleResult> {
     const role = await this.roleRepository.findById(id);
     if (!role) {
       throw new NotFoundException(`Role ${id} not found`);
@@ -44,6 +47,12 @@ export class DeleteRoleUseCase {
 
     const reassignedUsers = await this.reassignUsersRoleUseCase.execute(id, defaultRole.getId());
     await this.roleRepository.softDelete(id);
+    await this.recordAuditEvent.execute({
+      userId: actorId,
+      action: 'role.delete',
+      entity: 'Role',
+      entityId: id,
+    });
     return { reassignedUsers };
   }
 }

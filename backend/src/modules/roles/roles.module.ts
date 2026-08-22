@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { PrismaService } from '../../database/prisma.service';
 import { UsersModule } from '../users/users.module';
+import { AuditModule } from '../audit/audit.module';
 import { RolesController } from './roles.controller';
 import { PermissionsController } from './permissions.controller';
 import { CreateRoleUseCase } from './application/use-cases/create-role.use-case';
@@ -20,8 +21,10 @@ import { PermissionsGuard } from '../../common/guards/permissions.guard';
 // same pattern HU-17 used for PurchasesModule/RequestsModule). No
 // circularity: UsersModule never imports RolesModule (it validates roleId
 // via a P2003 catch instead, ADR-18/HU-03).
+// HU-23 — imports AuditModule so create/delete/update-permissions can
+// audit who changed a role.
 @Module({
-  imports: [UsersModule],
+  imports: [UsersModule, AuditModule],
   controllers: [RolesController, PermissionsController],
   providers: [
     PrismaService,

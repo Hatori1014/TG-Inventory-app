@@ -1,0 +1,77 @@
+<div class="audit-page-header">
+  <h1>Auditoría</h1>
+  <span class="audit-page-route">/audit-events</span>
+</div>
+
+<div class="audit-table-card">
+  <div class="audit-table-header">
+    <h2>{{ total() }} eventos</h2>
+    <div class="audit-header-actions">
+      <select class="audit-entity-select" [(ngModel)]="entityFilter" (ngModelChange)="applyFilter()">
+        <option value="">Todas las entidades</option>
+        @for (entity of entityOptions; track entity) {
+          <option [value]="entity">{{ entity }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="audit-table-scroll">
+    <table class="audit-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Usuario</th>
+          <th>Acción</th>
+          <th>Entidad</th>
+          <th>Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td colspan="5" class="audit-empty">Cargando...</td>
+          </tr>
+        } @else {
+          @for (event of events(); track event.id) {
+            <tr>
+              <td class="audit-col-muted">{{ event.occurredAt | date: 'short' }}</td>
+              <td>{{ event.userLabel || 'Desconocido' }}</td>
+              <td><span class="audit-action-badge">{{ event.action }}</span></td>
+              <td class="audit-col-muted">{{ event.entity }}</td>
+              <td class="audit-col-muted">{{ event.entityId }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="audit-empty">No hay eventos registrados.</td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="audit-pagination">
+    <span>Página {{ page() }} de {{ totalPages() }} · {{ total() }} eventos</span>
+    <div class="audit-pagination-controls">
+      <button
+        type="button"
+        class="audit-page-btn"
+        [disabled]="page() <= 1"
+        (click)="previousPage()"
+        aria-label="Página anterior"
+      >
+        <i class="ph ph-caret-left"></i>
+      </button>
+      <button
+        type="button"
+        class="audit-page-btn"
+        [disabled]="page() >= totalPages()"
+        (click)="nextPage()"
+        aria-label="Página siguiente"
+      >
+        <i class="ph ph-caret-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

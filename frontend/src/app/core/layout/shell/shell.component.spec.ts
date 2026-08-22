@@ -62,6 +62,7 @@ describe('ShellComponent', () => {
       '/locations',
       '/roles',
       '/users',
+      '/audit',
     ]);
   });
 

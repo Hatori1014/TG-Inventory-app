@@ -88,6 +88,8 @@ defineFeature(feature, (test) => {
         rolePermission: { findFirst },
         idempotencyKey,
         revokedToken: { findUnique: jest.fn().mockResolvedValue(null) },
+        // HU-23 — approve/reject/integrate now audit every call.
+        auditEvent: { create: jest.fn().mockResolvedValue({}) },
       })
       .compile();
 

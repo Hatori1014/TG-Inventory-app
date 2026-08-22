@@ -148,6 +148,15 @@ export const routes: Routes = [
         data: { roles: ['Administrador'] },
         loadChildren: () => import('./features/requests/requests.routes').then((m) => m.REQUESTS_ROUTES),
       },
+      {
+        // HU-23 — GET /audit-events requires audit:read (only seeded on
+        // Administrador today), same "route gate points at the one role
+        // that actually exists" reasoning as roles/users/locations.
+        path: 'audit',
+        canActivate: [roleGuard],
+        data: { roles: ['Administrador'] },
+        loadChildren: () => import('./features/audit/audit.routes').then((m) => m.AUDIT_ROUTES),
+      },
     ],
   },
 ];

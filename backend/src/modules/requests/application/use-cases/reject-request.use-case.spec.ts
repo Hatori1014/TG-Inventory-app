@@ -1,9 +1,11 @@
 import { RejectRequestUseCase } from './reject-request.use-case';
 import { RequestPrismaRepository } from '../../infrastructure/request.prisma.repository';
+import { RecordAuditEventUseCase } from '../../../audit/application/use-cases/record-audit-event.use-case';
 
 describe('RejectRequestUseCase', () => {
   let useCase: RejectRequestUseCase;
   let repository: jest.Mocked<RequestPrismaRepository>;
+  let recordAuditEvent: jest.Mocked<RecordAuditEventUseCase>;
 
   const closedRequest = {
     id: 'request-1',
@@ -34,10 +36,11 @@ describe('RejectRequestUseCase', () => {
     repository = {
       recordApprovalDecision: jest.fn(),
     } as unknown as jest.Mocked<RequestPrismaRepository>;
-    useCase = new RejectRequestUseCase(repository);
+    recordAuditEvent = { execute: jest.fn() } as unknown as jest.Mocked<RecordAuditEventUseCase>;
+    useCase = new RejectRequestUseCase(repository, recordAuditEvent);
   });
 
-  it('casts a rejection with the mandatory comment and closes the request', async () => {
+  it('casts a rejection with the mandatory comment, audits it, and closes the request', async () => {
     repository.recordApprovalDecision.mockResolvedValue(closedRequest as never);
 
     const result = await useCase.execute('request-1', 'approver-1', 'budget exceeded');
@@ -47,6 +50,12 @@ describe('RejectRequestUseCase', () => {
       approverId: 'approver-1',
       decision: 'rejected',
       comment: 'budget exceeded',
+    });
+    expect(recordAuditEvent.execute).toHaveBeenCalledWith({
+      userId: 'approver-1',
+      action: 'request.reject',
+      entity: 'Request',
+      entityId: 'request-1',
     });
     expect(result.status).toBe('closed');
     expect(result.approvals[0].comment).toBe('budget exceeded');
