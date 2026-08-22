@@ -18,6 +18,11 @@ export interface CreatePurchaseItemData {
 export interface CreatePurchaseData {
   supplierId: string;
   userId: string;
+  // HU-17 — set when this purchase is created via IntegrateRequestUseCase,
+  // so every InventoryMovement it generates links back to the originating
+  // Request too (same traceability purpose as InventoryMovement.purchaseId
+  // itself). Undefined for a purchase created directly via POST /purchases.
+  requestId?: string;
   items: CreatePurchaseItemData[];
 }
 
@@ -187,6 +192,7 @@ export class PurchasePrismaRepository {
               delta: item.quantity,
               userId: input.userId,
               purchaseId: purchase.id,
+              requestId: input.requestId,
             });
           }
 

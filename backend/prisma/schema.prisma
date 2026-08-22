@@ -61,7 +61,7 @@ model User {
   movements         InventoryMovement[]
   purchases         Purchase[]
   requestsCreated   Request[]             @relation("requester")
-  requestsApproved  Request[]             @relation("approver")
+  requestApprovals  RequestApproval[]
   auditEvents       AuditEvent[]
 
   @@index([roleId])
@@ -83,7 +83,6 @@ model Location {
   children       Location[]          @relation("hierarchy")
   status         LocationStatus      @default(active)
   stock          LocationStock[]
-  minimumStock   MinimumStock[]
   movements      InventoryMovement[]
   purchaseItems  PurchaseItem[]
   requestItems   RequestItem[]
@@ -148,7 +147,7 @@ model Product {
   status        ProductStatus       @default(active)
   batches       Batch[]
   stock         LocationStock[]
-  minimumStock  MinimumStock[]
+  minimumStock  MinimumStock?
   movements     InventoryMovement[]
   purchaseItems PurchaseItem[]
   requestItems  RequestItem[]
@@ -196,15 +195,17 @@ model LocationStock {
   @@map("location_stock")
 }
 
+// HU-11 — a single threshold per product, not per product+location (DoR
+// resolved by the user, diverges from the original MER which scoped this
+// per product+location): the alert (HU-12) compares this against the SUM
+// of LocationStock.quantity across every location/batch of that product,
+// not any one location's quantity in isolation.
 model MinimumStock {
   id               String    @id @default(uuid())
-  productId        String    @map("product_id")
+  productId        String    @unique @map("product_id")
   product          Product   @relation(fields: [productId], references: [id])
-  locationId       String    @map("location_id")
-  location         Location  @relation(fields: [locationId], references: [id])
   minimumQuantity  Decimal   @map("minimum_quantity") @db.Decimal(14, 4)
 
-  @@unique([productId, locationId])
   @@map("minimum_stock")
 }
 
@@ -318,6 +319,7 @@ model Supplier {
   email          String?
   status         SupplierStatus  @default(active)
   purchases      Purchase[]
+  requests       Request[]
 
   @@index([documentTypeId])
   @@index([personTypeId])
@@ -339,6 +341,10 @@ model Purchase {
   status      PurchaseStatus        @default(registered)
   items       PurchaseItem[]
   movements   InventoryMovement[]
+  // HU-17 — back-reference only, no scalar/FK here: Request.purchaseId is
+  // the owning side (set once, when the inventory admin integrates an
+  // approved purchase request).
+  request     Request?
 
   @@index([supplierId, purchasedAt])
   @@index([userId])
@@ -380,11 +386,62 @@ enum RequestType {
   consumption
 }
 
+// HU-15/16/17 — DoR resolved with the user, diverges from the original
+// 4-value enum. Purchase requests use the fuller cycle: draft (saved, not
+// submitted) -> pending -> in_review (some approvals collected, quorum not
+// reached) -> pending_inventory_integration (quorum reached — jumps here
+// directly, "approved" is never a resting value: the user confirmed
+// reaching quorum is fully automatic, no manual step in between) -> closed
+// (integrated by the inventory admin). A rejection from ANY approver, at
+// any point before quorum, closes the request directly too — purchase
+// never rests at "rejected" either, same "no manual step in between"
+// reasoning; which approver rejected and why lives on RequestApproval, not
+// Request.status. Consumption requests only ever use pending -> in_review
+// -> closed: reaching quorum executes the real "out" movement and jumps
+// straight to closed (never rests at "approved"); a rejection also jumps
+// straight to closed (never rests at "rejected"). "approved"/"rejected"
+// stay in this enum only because RequestApprovalDecision needs the same
+// two concepts at the per-approver level — Request.status itself never
+// stores either value under the confirmed design.
 enum RequestStatus {
+  draft
   pending
+  in_review
   approved
   rejected
-  completed
+  pending_inventory_integration
+  closed
+}
+
+// HU-17 — one row per approver who voted on a request, at the user's
+// explicit request: parallel multi-approval (any of the required approvers
+// can cast one of the needed votes, not a strict sequence), so a single
+// Request.approverId/resolvedAt-by-one-person field (the original design)
+// can't represent it. @@unique prevents the same person voting twice on
+// the same request — a second real attempt is a 409, not a second row.
+enum RequestApprovalDecision {
+  approved
+  rejected
+}
+
+model RequestApproval {
+  id         String                  @id @default(uuid())
+  requestId  String                  @map("request_id")
+  request    Request                 @relation(fields: [requestId], references: [id])
+  approverId String                  @map("approver_id")
+  approver   User                    @relation(fields: [approverId], references: [id])
+  decision   RequestApprovalDecision
+  // Optional on approval, mandatory on rejection (enforced by
+  // RejectRequestDto, not the DB — same "app validates, DB just stores"
+  // split as everywhere else in this schema) — the user's explicit
+  // requirement: a rejection must always carry a reason, shown to the
+  // requester when they view their own request.
+  comment    String?
+  decidedAt  DateTime                @default(now()) @map("decided_at")
+
+  @@unique([requestId, approverId])
+  @@index([requestId])
+  @@map("request_approval")
 }
 
 model Request {
@@ -392,17 +449,34 @@ model Request {
   type         RequestType
   requesterId  String                @map("requester_id")
   requester    User                  @relation("requester", fields: [requesterId], references: [id])
-  approverId   String?               @map("approver_id")
-  approver     User?                 @relation("approver", fields: [approverId], references: [id])
+  // HU-15, DoR resolved by the user: the requester picks the supplier when
+  // creating a purchase request (not the approver, not at integration
+  // time) — mirrors Purchase.supplierId, one supplier per request. Never
+  // set for type = consumption.
+  supplierId   String?               @map("supplier_id")
+  supplier     Supplier?             @relation(fields: [supplierId], references: [id])
   status       RequestStatus         @default(pending)
+  // TT-17/ADR-20 optimistic locking — HU-17's parallel approvals are the
+  // first writer here with a real concurrent-update risk (two approvers
+  // racing to be the vote that reaches quorum); withOptimisticLock retries
+  // the whole read-count-decide-write attempt on a version mismatch, same
+  // pattern as LocationStock.
+  version      Int                   @default(0)
+  // HU-17 — set once, by IntegrateRequestUseCase, when the inventory admin
+  // turns an approved purchase request into a real Purchase (reusing
+  // RegisterPurchaseUseCase from HU-13). @unique doubles as a cheap guard
+  // against integrating the same request twice.
+  purchaseId   String?               @unique @map("purchase_id")
+  purchase     Purchase?             @relation(fields: [purchaseId], references: [id])
   createdAt    DateTime              @default(now()) @map("created_at")
   resolvedAt   DateTime?             @map("resolved_at")
   notes        String?
   items        RequestItem[]
   movements    InventoryMovement[]
+  approvals    RequestApproval[]
 
   @@index([requesterId])
-  @@index([approverId])
+  @@index([supplierId])
   @@map("request")
 }
 
@@ -421,13 +495,23 @@ model RequestItem {
   @@map("request_item")
 }
 
-// Configurable — supports 1 or several levels without a schema migration (HU-18, post-MVP)
+// Configurable — supports 1 or several levels without a schema migration
+// (HU-18, post-MVP: real sequential levels). HU-17, at the user's explicit
+// request, only ever writes level = 1 rows for now: parallel quorum among
+// whoever holds requests:approve, not a level-by-level sequence yet.
 model ApprovalFlow {
-  id           String       @id @default(uuid())
-  requestType  RequestType  @map("request_type")
-  level        Int
-  roleId       String       @map("role_id")
-  role         Role         @relation(fields: [roleId], references: [id])
+  id                String       @id @default(uuid())
+  requestType       RequestType  @map("request_type")
+  level             Int
+  roleId            String       @map("role_id")
+  role              Role         @relation(fields: [roleId], references: [id])
+  // HU-17 — first real consumer of this table: how many distinct approvals
+  // are needed before a request of this type resolves. Parametrizable per
+  // the user's explicit request ("a hoy pueden ser 2 a futuro 3 o 1") — no
+  // admin UI to manage ApprovalFlow rows exists yet, so
+  // ApproveRequestUseCase falls back to 2 when no row exists for a given
+  // requestType (documented there, not here).
+  requiredApprovals Int          @default(2) @map("required_approvals")
 
   @@map("approval_flow")
 }

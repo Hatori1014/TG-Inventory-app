@@ -51,11 +51,14 @@ describe('ShellComponent', () => {
       '/inventory',
       '/inventory/batches',
       '/inventory/stock',
+      '/inventory/minimum-stock',
+      '/alerts',
       '/suppliers',
       '/purchases',
       '/document-types',
       '/person-types',
       '/purchases/price-comparison',
+      '/requests',
       '/locations',
       '/roles',
       '/users',
@@ -71,7 +74,7 @@ describe('ShellComponent', () => {
       .sections()
       .flatMap((section) => section.items.map((item) => item.path));
 
-    expect(paths).toEqual(['/dashboard', '/products', '/categories', '/units', '/inventory/stock']);
+    expect(paths).toEqual(['/dashboard', '/products', '/categories', '/units', '/inventory/stock', '/alerts']);
   });
 
   it('logs out and redirects to /login', () => {

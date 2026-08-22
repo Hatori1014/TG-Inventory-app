@@ -19,6 +19,11 @@ import { PurchasePrismaRepository } from './infrastructure/purchase.prisma.repos
 // SupplierPurchaseHistoryController (HU-05) and PriceComparisonController
 // (HU-14) live here, not in suppliers.module.ts, even though their routes
 // are under /suppliers and /reports — see the comment on each controller.
+// HU-17 — RegisterPurchaseUseCase is exported so RequestsModule can import
+// this module and reuse it for "Integrar al inventario" (turning an
+// approved purchase request into a real Purchase) instead of duplicating
+// it — ADR-18's boundaries rule only forbids importing another module's
+// domain/infrastructure directly, not a legitimately exported use-case.
 @Module({
   controllers: [PurchasesController, SupplierPurchaseHistoryController, PriceComparisonController],
   providers: [
@@ -32,5 +37,6 @@ import { PurchasePrismaRepository } from './infrastructure/purchase.prisma.repos
     GetSupplierPriceComparisonUseCase,
     PurchasePrismaRepository,
   ],
+  exports: [RegisterPurchaseUseCase],
 })
 export class PurchasesModule {}
