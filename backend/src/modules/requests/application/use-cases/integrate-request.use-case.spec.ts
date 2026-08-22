@@ -2,11 +2,13 @@ import { BadRequestException, ConflictException, NotFoundException } from '@nest
 import { IntegrateRequestUseCase } from './integrate-request.use-case';
 import { RequestPrismaRepository } from '../../infrastructure/request.prisma.repository';
 import { RegisterPurchaseUseCase } from '../../../purchases/application/use-cases/register-purchase.use-case';
+import { RecordAuditEventUseCase } from '../../../audit/application/use-cases/record-audit-event.use-case';
 
 describe('IntegrateRequestUseCase', () => {
   let useCase: IntegrateRequestUseCase;
   let requestRepository: jest.Mocked<RequestPrismaRepository>;
   let registerPurchaseUseCase: jest.Mocked<RegisterPurchaseUseCase>;
+  let recordAuditEvent: jest.Mocked<RecordAuditEventUseCase>;
 
   const pendingIntegrationRequest = {
     id: 'request-1',
@@ -42,7 +44,8 @@ describe('IntegrateRequestUseCase', () => {
       closeAfterIntegration: jest.fn(),
     } as unknown as jest.Mocked<RequestPrismaRepository>;
     registerPurchaseUseCase = { execute: jest.fn() } as unknown as jest.Mocked<RegisterPurchaseUseCase>;
-    useCase = new IntegrateRequestUseCase(requestRepository, registerPurchaseUseCase);
+    recordAuditEvent = { execute: jest.fn() } as unknown as jest.Mocked<RecordAuditEventUseCase>;
+    useCase = new IntegrateRequestUseCase(requestRepository, registerPurchaseUseCase, recordAuditEvent);
   });
 
   it('throws NotFoundException when the request does not exist', async () => {
@@ -108,6 +111,12 @@ describe('IntegrateRequestUseCase', () => {
       'request-1',
     );
     expect(requestRepository.closeAfterIntegration).toHaveBeenCalledWith('request-1', 'purchase-1');
+    expect(recordAuditEvent.execute).toHaveBeenCalledWith({
+      userId: 'admin-1',
+      action: 'request.integrate',
+      entity: 'Request',
+      entityId: 'request-1',
+    });
     expect(result.status).toBe('closed');
     expect(result.purchaseId).toBe('purchase-1');
   });

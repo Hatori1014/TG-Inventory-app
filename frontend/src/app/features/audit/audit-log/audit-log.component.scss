@@ -1,0 +1,159 @@
+.audit-page-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h1 {
+    font: 500 24px Roboto, sans-serif;
+    color: var(--color-primary-900);
+    margin: 0;
+  }
+}
+
+.audit-page-route {
+  font: 400 12px ui-monospace, Menlo, monospace;
+  color: var(--color-text-muted);
+}
+
+.audit-table-card {
+  border-radius: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow:
+    0 1px 2px rgba(11, 60, 107, 0.06),
+    0 14px 30px -20px rgba(11, 60, 107, 0.35);
+  overflow: hidden;
+}
+
+.audit-table-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #f7fbff, #ffffff);
+  border-bottom: 1px solid #e7eff7;
+
+  h2 {
+    font: 500 18px Roboto, sans-serif;
+    color: var(--color-primary-900);
+    margin: 0;
+  }
+}
+
+.audit-header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.audit-entity-select {
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 400 12.5px Roboto, sans-serif;
+}
+
+// Same fix applied to roles-list (2026-08-22): a plain table with no
+// overflow handling loses its last column off-screen on narrow viewports,
+// with nothing to scroll it back into view.
+.audit-table-scroll {
+  overflow-x: auto;
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  thead tr {
+    background: linear-gradient(180deg, #f7fbff, #eff6fd);
+  }
+
+  th {
+    text-align: left;
+    font: 500 10.5px Roboto, sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-primary-700);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 11px 16px;
+    border-bottom: 1px solid #eef3f9;
+    white-space: nowrap;
+  }
+
+  tbody tr:hover {
+    background: #f7fbff;
+  }
+}
+
+.audit-col-muted {
+  color: var(--color-text-secondary);
+}
+
+.audit-action-badge {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 11px;
+  background: #eef3f9;
+  color: var(--color-text-secondary);
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+.audit-empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 20px 16px;
+}
+
+.audit-pagination {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-top: 1px solid var(--color-border);
+  background: #f7fafd;
+  font-size: 12.5px;
+  color: #5a7189;
+}
+
+.audit-pagination-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.audit-page-btn {
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-primary-700);
+  display: grid;
+  place-items: center;
+
+  i.ph {
+    font-size: 15px;
+  }
+
+  &:hover:not(:disabled) {
+    background: #f2f7fd;
+  }
+
+  &:disabled {
+    cursor: default;
+    color: #b7c6d4;
+  }
+}

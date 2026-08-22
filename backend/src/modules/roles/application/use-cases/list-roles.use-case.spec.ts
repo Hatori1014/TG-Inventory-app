@@ -12,8 +12,10 @@ describe('ListRolesUseCase', () => {
     repository = {
       findAllPaginated: jest.fn(),
       findById: jest.fn(),
+      findDefault: jest.fn(),
       create: jest.fn(),
       replacePermissions: jest.fn(),
+      softDelete: jest.fn(),
     };
     useCase = new ListRolesUseCase(repository);
   });
@@ -33,6 +35,7 @@ describe('ListRolesUseCase', () => {
           name: 'Administrador',
           description: null,
           permissions: [{ id: 'p1', module: 'roles', action: 'read' }],
+          isDefault: false,
         },
       ],
       total: 1,

@@ -8,6 +8,7 @@ import { LoginUseCase } from './application/use-cases/login.use-case';
 import { LogoutUseCase } from './application/use-cases/logout.use-case';
 import { JwtStrategy } from './infrastructure/jwt.strategy';
 import { UsersModule } from '../users/users.module';
+import { AuditModule } from '../audit/audit.module';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { PrismaService } from '../../database/prisma.service';
@@ -26,6 +27,9 @@ import { PrismaService } from '../../database/prisma.service';
     // HU-03/ADR-26 — auth no longer owns a User repository; it consumes
     // UsersModule's exported ValidateUserCredentialsUseCase.
     UsersModule,
+    // HU-23 — LoginUseCase audits both successful and failed logins via
+    // AuditModule's exported RecordAuditEventUseCase (ADR-18 cross-module DI).
+    AuditModule,
   ],
   controllers: [AuthController],
   providers: [

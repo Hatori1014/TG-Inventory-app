@@ -52,7 +52,7 @@ defineFeature(feature, (test) => {
       .overrideProvider(LocationPrismaRepository)
       .useValue(fakeLocationRepository)
       .overrideProvider(PrismaService)
-      .useValue({ rolePermission: { findFirst }, revokedToken: { findUnique: jest.fn().mockResolvedValue(null) } })
+      .useValue({ rolePermission: { findFirst }, revokedToken: { findUnique: jest.fn().mockResolvedValue(null) }, auditEvent: { create: jest.fn().mockResolvedValue({}) } })
       .compile();
 
     app = moduleRef.createNestApplication();

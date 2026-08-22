@@ -45,7 +45,7 @@ defineFeature(feature, (test) => {
       .overrideProvider(PrismaService)
       .useValue({
         rolePermission: { findFirst: jest.fn().mockResolvedValue(null) },
-        revokedToken: { findUnique: jest.fn().mockResolvedValue(null) },
+        revokedToken: { findUnique: jest.fn().mockResolvedValue(null) }, auditEvent: { create: jest.fn().mockResolvedValue({}) },
       })
       .compile();
 
