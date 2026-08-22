@@ -8,6 +8,11 @@ export class Role {
     private readonly name: string,
     private readonly description: string | null,
     private readonly permissions: Permission[],
+    // Default-role feature — the one role every new user starts on and
+    // that "eliminar rol" reassigns orphaned users to; never itself
+    // deletable. Defaults false so every existing call site that builds a
+    // Role without passing it (e.g. domain tests) keeps working.
+    private readonly isDefault: boolean = false,
   ) {}
 
   getId(): string {
@@ -24,6 +29,10 @@ export class Role {
 
   getPermissions(): Permission[] {
     return [...this.permissions];
+  }
+
+  getIsDefault(): boolean {
+    return this.isDefault;
   }
 
   hasPermission(module: string, action: string): boolean {

@@ -97,6 +97,36 @@ export class FakeUserRepository implements UserRepository {
     return updated;
   }
 
+  async reassignRole(fromRoleId: string, toRoleId: string): Promise<number> {
+    const toRoleName = this.knownRoleNames.get(toRoleId) ?? 'Unknown';
+    let count = 0;
+    for (const user of [...this.usersById.values()]) {
+      if (user.getRoleId() !== fromRoleId) {
+        continue;
+      }
+      const updated = new User(
+        user.getId(),
+        user.getName(),
+        user.getEmail(),
+        user.getPasswordHash(),
+        toRoleId,
+        toRoleName,
+        user.getStatus(),
+      );
+      this.usersById.set(updated.getId(), updated);
+      this.usersByEmail.set(updated.getEmail(), updated);
+      count++;
+    }
+    return count;
+  }
+
+  // This Fake only ever registers active role ids (registerRole()/seed()) —
+  // it never has a notion of "deleted", so this only distinguishes known
+  // vs. unknown, same as the P2003 path create()/update() already simulate.
+  async findRoleStatus(roleId: string): Promise<'active' | 'deleted' | 'not_found'> {
+    return this.knownRoleNames.has(roleId) ? 'active' : 'not_found';
+  }
+
   private roleIdForName(roleName: string): string {
     for (const [roleId, name] of this.knownRoleNames.entries()) {
       if (name === roleName) return roleId;

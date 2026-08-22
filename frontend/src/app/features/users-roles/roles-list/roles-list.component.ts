@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { RolesService } from '../roles.service';
 import { UsersService } from '../users.service';
@@ -28,7 +29,20 @@ export class RolesListComponent {
   userCounts = signal<Record<string, number>>({});
   loading = signal(true);
 
+  // Default-role feature — the role pending confirmation, or null when the
+  // popup is closed. Kept as the whole Role (not just an id) so the popup
+  // can show its name/user count without a second lookup.
+  roleToDelete = signal<Role | null>(null);
+  isDeleting = signal(false);
+  deleteError: string | null = null;
+  lastDeleteResult: { roleName: string; reassignedUsers: number } | null = null;
+
   constructor() {
+    this.reload();
+  }
+
+  private reload(): void {
+    this.loading.set(true);
     forkJoin({
       roles: this.rolesService.listRoles(1, 100),
       users: this.usersService.listUsers(1, 100),
@@ -48,5 +62,40 @@ export class RolesListComponent {
 
   userCountFor(roleId: string): number {
     return this.userCounts()[roleId] ?? 0;
+  }
+
+  confirmDelete(role: Role): void {
+    this.deleteError = null;
+    this.lastDeleteResult = null;
+    this.roleToDelete.set(role);
+  }
+
+  cancelDelete(): void {
+    this.roleToDelete.set(null);
+  }
+
+  executeDelete(): void {
+    const role = this.roleToDelete();
+    if (!role) return;
+
+    this.isDeleting.set(true);
+    this.deleteError = null;
+    this.rolesService.deleteRole(role.id).subscribe({
+      next: (result) => {
+        this.isDeleting.set(false);
+        this.roleToDelete.set(null);
+        this.lastDeleteResult = { roleName: role.name, reassignedUsers: result.reassignedUsers };
+        this.reload();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isDeleting.set(false);
+        this.deleteError =
+          error.status === 409
+            ? 'No se puede eliminar el rol por defecto.'
+            : error.status === 403
+              ? 'No tenés permiso para esta acción.'
+              : 'No se pudo eliminar el rol. Intentá de nuevo.';
+      },
+    });
   }
 }

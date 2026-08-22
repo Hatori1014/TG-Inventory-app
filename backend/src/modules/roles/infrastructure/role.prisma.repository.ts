@@ -18,6 +18,7 @@ function toDomain(row: RoleWithPermissions): Role {
     row.permissions.map(
       (rp) => new Permission(rp.permission.module, rp.permission.action, rp.permission.id),
     ),
+    row.isDefault,
   );
 }
 
@@ -35,9 +36,21 @@ export class RolePrismaRepository implements RoleRepository {
     return { items: rows.map(toDomain), total };
   }
 
+  // findFirst, not findUnique: PrismaService's ADR-22 extension only
+  // auto-filters deletedAt on findMany/findFirst/count — a soft-deleted
+  // role must read back as "not found" here too, same as everywhere else.
   async findById(id: string): Promise<Role | null> {
-    const row = await this.prisma.role.findUnique({ where: { id }, include: this.include });
+    const row = await this.prisma.role.findFirst({ where: { id }, include: this.include });
     return row ? toDomain(row) : null;
+  }
+
+  async findDefault(): Promise<Role | null> {
+    const row = await this.prisma.role.findFirst({ where: { isDefault: true }, include: this.include });
+    return row ? toDomain(row) : null;
+  }
+
+  async softDelete(id: string): Promise<void> {
+    await this.prisma.role.update({ where: { id }, data: { deletedAt: new Date() } });
   }
 
   async create(name: string, description?: string): Promise<Role> {

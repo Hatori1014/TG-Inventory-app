@@ -3,6 +3,15 @@
   <span class="roles-page-route">/roles</span>
 </div>
 
+@if (lastDeleteResult) {
+  <div class="roles-notice">
+    Rol "{{ lastDeleteResult.roleName }}" eliminado. {{ lastDeleteResult.reassignedUsers }} usuario(s) reasignado(s) al rol por defecto.
+  </div>
+}
+@if (deleteError && !roleToDelete()) {
+  <div class="roles-notice roles-notice--error">{{ deleteError }}</div>
+}
+
 <div class="roles-table-card">
   <div class="roles-table-header">
     <h2>Roles</h2>
@@ -28,11 +37,16 @@
         } @else {
           @for (role of roles(); track role.id) {
             <tr>
-              <td class="roles-name">{{ role.name }}</td>
+              <td class="roles-name">
+                {{ role.name }}
+                @if (role.isDefault) {
+                  <span class="roles-default-badge">Por defecto</span>
+                }
+              </td>
               <td class="roles-col-muted roles-col-description">{{ role.description || '—' }}</td>
               <td class="roles-col-right roles-col-muted">{{ role.permissions.length }}</td>
               <td class="roles-col-right roles-col-muted">{{ userCountFor(role.id) }}</td>
-              <td class="roles-col-right">
+              <td class="roles-col-right roles-col-actions">
                 <a
                   [routerLink]="[role.id, 'permissions']"
                   class="roles-edit-link"
@@ -41,6 +55,25 @@
                 >
                   <i class="ph ph-pencil-simple"></i>
                 </a>
+                @if (!role.isDefault) {
+                  <button
+                    type="button"
+                    class="roles-delete-link"
+                    aria-label="Eliminar rol"
+                    title="Eliminar rol"
+                    (click)="confirmDelete(role)"
+                  >
+                    <i class="ph ph-trash"></i>
+                  </button>
+                } @else {
+                  <span
+                    class="roles-delete-link roles-delete-link--disabled"
+                    aria-label="El rol por defecto no se puede eliminar"
+                    title="El rol por defecto no se puede eliminar"
+                  >
+                    <i class="ph ph-trash"></i>
+                  </span>
+                }
               </td>
             </tr>
           } @empty {
@@ -53,3 +86,31 @@
     </table>
   </div>
 </div>
+
+@if (roleToDelete(); as role) {
+  <div class="roles-confirm-backdrop" (click)="cancelDelete()">
+    <div class="roles-confirm-dialog" (click)="$event.stopPropagation()">
+      <h3>Eliminar rol "{{ role.name }}"</h3>
+      <p>
+        Esta acción no se puede deshacer.
+        @if (userCountFor(role.id) > 0) {
+          <strong>{{ userCountFor(role.id) }}</strong> usuario(s) con este rol pasarán a tener el rol por defecto
+          ("Solicitante").
+        } @else {
+          Ningún usuario tiene este rol asignado actualmente.
+        }
+      </p>
+      @if (deleteError) {
+        <p class="roles-confirm-error" role="alert">{{ deleteError }}</p>
+      }
+      <div class="roles-confirm-actions">
+        <button type="button" class="roles-confirm-cancel-btn" [disabled]="isDeleting()" (click)="cancelDelete()">
+          Cancelar
+        </button>
+        <button type="button" class="roles-confirm-delete-btn" [disabled]="isDeleting()" (click)="executeDelete()">
+          {{ isDeleting() ? 'Eliminando...' : 'Eliminar rol' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

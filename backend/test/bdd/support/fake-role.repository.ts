@@ -10,22 +10,32 @@ import { FakePermissionRepository } from './fake-permission.repository';
 // resolves them via the `permission` table.
 export class FakeRoleRepository implements RoleRepository {
   private readonly roles = new Map<string, Role>();
+  // ADR-22 — mirrors the real repository's deletedAt filtering without
+  // needing the domain Role entity to expose a raw timestamp.
+  private readonly deletedIds = new Set<string>();
 
   constructor(private readonly permissionRepository: FakePermissionRepository) {}
 
-  seed(name: string, permissions: Permission[] = [], description: string | null = null): Role {
-    const role = new Role(randomUUID(), name, description, permissions);
+  seed(name: string, permissions: Permission[] = [], description: string | null = null, isDefault = false): Role {
+    const role = new Role(randomUUID(), name, description, permissions, isDefault);
     this.roles.set(role.getId(), role);
     return role;
   }
 
   async findAllPaginated(skip: number, take: number): Promise<{ items: Role[]; total: number }> {
-    const all = [...this.roles.values()];
+    const all = [...this.roles.values()].filter((role) => !this.deletedIds.has(role.getId()));
     return { items: all.slice(skip, skip + take), total: all.length };
   }
 
   async findById(id: string): Promise<Role | null> {
+    if (this.deletedIds.has(id)) {
+      return null;
+    }
     return this.roles.get(id) ?? null;
+  }
+
+  async findDefault(): Promise<Role | null> {
+    return [...this.roles.values()].find((role) => role.getIsDefault() && !this.deletedIds.has(role.getId())) ?? null;
   }
 
   async create(name: string, description?: string): Promise<Role> {
@@ -43,8 +53,13 @@ export class FakeRoleRepository implements RoleRepository {
       existing.getName(),
       existing.getDescription(),
       newPermissions,
+      existing.getIsDefault(),
     );
     this.roles.set(roleId, updated);
     return updated;
+  }
+
+  async softDelete(id: string): Promise<void> {
+    this.deletedIds.add(id);
   }
 }

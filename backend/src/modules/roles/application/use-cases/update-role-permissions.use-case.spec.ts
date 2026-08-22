@@ -14,8 +14,10 @@ describe('UpdateRolePermissionsUseCase', () => {
     roleRepository = {
       findAllPaginated: jest.fn(),
       findById: jest.fn(),
+      findDefault: jest.fn(),
       create: jest.fn(),
       replacePermissions: jest.fn(),
+      softDelete: jest.fn(),
     };
     permissionRepository = { findAllPaginated: jest.fn(), findManyByIds: jest.fn() };
     useCase = new UpdateRolePermissionsUseCase(roleRepository, permissionRepository);

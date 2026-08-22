@@ -73,6 +73,24 @@ describe('UserFormComponent', () => {
       expect(component.isSubmitting).toBe(false);
     });
 
+    it('pre-selects the default role for a new user, still overridable', () => {
+      const component = create(null);
+      httpMock.expectOne((r) => r.url.endsWith('/roles')).flush({
+        items: [
+          { id: 'role-1', name: 'Administrador', description: null, permissions: [], isDefault: false },
+          { id: 'role-2', name: 'Solicitante', description: null, permissions: [], isDefault: true },
+        ],
+        total: 2,
+        page: 1,
+        pageSize: 100,
+      });
+
+      expect(component.form.value.roleId).toBe('role-2');
+
+      component.form.patchValue({ roleId: 'role-1' });
+      expect(component.form.value.roleId).toBe('role-1');
+    });
+
     it('maps a 409 conflict to a duplicate-email message', () => {
       const component = createInCreateMode();
       component.form.setValue({
