@@ -31,4 +31,12 @@ export class RolesService {
   updatePermissions(roleId: string, request: UpdateRolePermissionsRequest): Observable<Role> {
     return this.http.patch<Role>(`${environment.apiUrl}/roles/${roleId}`, request);
   }
+
+  // Default-role feature — logical delete (ADR-22): the backend reassigns
+  // every user on this role to the default role first, then soft-deletes
+  // it; reassignedUsers is how many were moved, shown in the confirmation
+  // flow's result.
+  deleteRole(roleId: string): Observable<{ reassignedUsers: number }> {
+    return this.http.delete<{ reassignedUsers: number }>(`${environment.apiUrl}/roles/${roleId}`);
+  }
 }

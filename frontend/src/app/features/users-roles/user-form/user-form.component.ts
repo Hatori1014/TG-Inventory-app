@@ -69,7 +69,16 @@ export class UserFormComponent {
       });
     } else {
       this.rolesService.listRoles(1, 100).subscribe({
-        next: (response) => this.roles.set(response.items),
+        next: (response) => {
+          this.roles.set(response.items);
+          // Default-role feature, at the user's explicit request: a new
+          // user starts on the default role — pre-selected, still fully
+          // overridable before submitting, same as any other form default.
+          const defaultRole = response.items.find((role) => role.isDefault);
+          if (defaultRole) {
+            this.form.patchValue({ roleId: defaultRole.id });
+          }
+        },
       });
     }
   }

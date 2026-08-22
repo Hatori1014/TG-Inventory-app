@@ -14,6 +14,8 @@ describe('ListUsersUseCase', () => {
       findAllPaginated: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      reassignRole: jest.fn(),
+      findRoleStatus: jest.fn(),
     };
     useCase = new ListUsersUseCase(repository);
   });

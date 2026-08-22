@@ -27,6 +27,10 @@ export class UpdateUserUseCase {
       throw new NotFoundException(`User ${id} not found`);
     }
 
+    if (dto.roleId !== undefined && (await this.userRepository.findRoleStatus(dto.roleId)) === 'deleted') {
+      throw new BadRequestException(`roleId "${dto.roleId}" refers to a deleted role`);
+    }
+
     try {
       const updated = await this.userRepository.update(id, dto);
       return toUserResponseDto(updated);

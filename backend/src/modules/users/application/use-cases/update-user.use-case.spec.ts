@@ -14,6 +14,8 @@ describe('UpdateUserUseCase', () => {
       findAllPaginated: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      reassignRole: jest.fn(),
+      findRoleStatus: jest.fn().mockResolvedValue('active'),
     };
     useCase = new UpdateUserUseCase(repository);
   });
@@ -46,6 +48,16 @@ describe('UpdateUserUseCase', () => {
     repository.update.mockRejectedValue({ code: 'P2003' });
 
     await expect(useCase.execute('1', { roleId: 'missing' })).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws BadRequestException when the new roleId refers to a (logically) deleted role', async () => {
+    repository.findById.mockResolvedValue(
+      new User('1', 'Buyer', 'buyer@tg-group.local', 'hash', 'role-1', 'Comprador', 'active'),
+    );
+    repository.findRoleStatus.mockResolvedValue('deleted');
+
+    await expect(useCase.execute('1', { roleId: 'role-deleted' })).rejects.toThrow(BadRequestException);
+    expect(repository.update).not.toHaveBeenCalled();
   });
 
   it('updates the user and returns it mapped to a DTO', async () => {

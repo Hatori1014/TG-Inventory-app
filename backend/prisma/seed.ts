@@ -86,6 +86,23 @@ const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   // criterion as "Comprador"/"Solicitante" above.
   { module: 'requests', action: 'approve' },
   { module: 'requests', action: 'integrate' },
+  // Default-role feature — "eliminar rol" (soft delete, ADR-22) reassigns
+  // orphaned users to the default role instead of leaving a dangling
+  // roleId.
+  { module: 'roles', action: 'delete' },
+];
+
+// Default-role feature, at the user's explicit request: the role every new
+// user starts on, and the reassignment target when another role is
+// deleted — so it can never itself be deleted (DeleteRoleUseCase checks
+// isDefault before allowing it). Scoped to exactly "sees/creates its own
+// requests" (requests:create/read — the same scope ListRequestsUseCase
+// already applies for a plain requester, no extra logic needed since there
+// is no requests:approve/integrate to broaden it).
+const DEFAULT_ROLE_NAME = 'Solicitante';
+const DEFAULT_ROLE_PERMISSIONS: Array<{ module: string; action: string }> = [
+  { module: 'requests', action: 'create' },
+  { module: 'requests', action: 'read' },
 ];
 
 // HU-04, at the user's explicit request: unlike Category/Unit (left empty
@@ -112,13 +129,42 @@ async function seedStarterPersonTypes() {
 }
 
 async function upsertAdminRole() {
-  const existing = await prisma.role.findUnique({ where: { name: ADMIN_ROLE_NAME } });
+  // findFirst, not findUnique: name is no longer a blanket-unique field
+  // (ADR-22 — unique only among non-deleted roles, migration
+  // 20260822010000), and this script runs against a plain PrismaClient,
+  // not the NestJS PrismaService that auto-filters deletedAt for `role`.
+  const existing = await prisma.role.findFirst({ where: { name: ADMIN_ROLE_NAME, deletedAt: null } });
   if (existing) {
     return existing;
   }
   return prisma.role.create({
     data: { name: ADMIN_ROLE_NAME, description: 'Acceso total al sistema' },
   });
+}
+
+async function upsertDefaultRole() {
+  const existing = await prisma.role.findFirst({ where: { isDefault: true, deletedAt: null } });
+  if (existing) {
+    return existing;
+  }
+  return prisma.role.create({
+    data: {
+      name: DEFAULT_ROLE_NAME,
+      description: 'Rol por defecto — solo ve y crea sus propias solicitudes',
+      isDefault: true,
+    },
+  });
+}
+
+async function grantDefaultRolePermissions(roleId: string) {
+  for (const { module, action } of DEFAULT_ROLE_PERMISSIONS) {
+    const permission = await upsertPermission(module, action);
+    await prisma.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId, permissionId: permission.id } },
+      update: {},
+      create: { roleId, permissionId: permission.id },
+    });
+  }
 }
 
 async function upsertPermission(module: string, action: string) {
@@ -152,6 +198,8 @@ async function main() {
 
   const adminRole = await upsertAdminRole();
   await grantBootstrapPermissions(adminRole.id);
+  const defaultRole = await upsertDefaultRole();
+  await grantDefaultRolePermissions(defaultRole.id);
   await seedStarterDocumentTypes();
   await seedStarterPersonTypes();
   const passwordHash = await bcrypt.hash(password, 10);

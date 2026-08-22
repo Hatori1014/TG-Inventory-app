@@ -31,4 +31,16 @@ describe('Role', () => {
 
     expect(role.getPermissions()).toHaveLength(1);
   });
+
+  describe('getIsDefault', () => {
+    it('defaults to false when not passed (existing call sites unaffected)', () => {
+      const role = new Role('1', 'Comprador', null, []);
+      expect(role.getIsDefault()).toBe(false);
+    });
+
+    it('reflects true when constructed as the default role', () => {
+      const role = new Role('1', 'Solicitante', null, [], true);
+      expect(role.getIsDefault()).toBe(true);
+    });
+  });
 });

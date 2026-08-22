@@ -11,8 +11,10 @@ describe('CreateRoleUseCase', () => {
     repository = {
       findAllPaginated: jest.fn(),
       findById: jest.fn(),
+      findDefault: jest.fn(),
       create: jest.fn(),
       replacePermissions: jest.fn(),
+      softDelete: jest.fn(),
     };
     useCase = new CreateRoleUseCase(repository);
   });
@@ -24,7 +26,7 @@ describe('CreateRoleUseCase', () => {
     const result = await useCase.execute({ name: 'Comprador', description: 'Buys stuff' });
 
     expect(repository.create).toHaveBeenCalledWith('Comprador', 'Buys stuff');
-    expect(result).toEqual({ id: '1', name: 'Comprador', description: 'Buys stuff', permissions: [] });
+    expect(result).toEqual({ id: '1', name: 'Comprador', description: 'Buys stuff', permissions: [], isDefault: false });
   });
 
   it('throws ConflictException when the role name already exists (P2002)', async () => {

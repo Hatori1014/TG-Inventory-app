@@ -15,8 +15,17 @@ datasource db {
 
 model Role {
   id             String          @id @default(uuid())
-  name           String          @unique
+  // ADR-22 — logical deletion: unique only among non-deleted rows (partial
+  // index, migration 20260822010000, same pattern HU-04 used for
+  // Supplier.taxId). A blanket @@unique would permanently block reusing a
+  // role's name after it's deleted.
+  name           String
   description    String?
+  // Marks the one role every new user starts on and that a real "eliminar
+  // rol" action reassigns orphaned users to — never itself deletable.
+  // Partial unique index enforces at most one row can ever be true.
+  isDefault      Boolean         @default(false) @map("is_default")
+  deletedAt      DateTime?       @map("deleted_at")
   users          User[]
   permissions    RolePermission[]
   approvalFlows  ApprovalFlow[]
