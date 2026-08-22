@@ -75,6 +75,19 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: 'ph-list-magnifying-glass',
         description: 'Consultá existencias por producto y ubicación.',
       },
+      {
+        label: 'Stock mínimo',
+        path: '/inventory/minimum-stock',
+        icon: 'ph-warning',
+        description: 'Definí el umbral mínimo de stock por producto.',
+        roles: ['Administrador'],
+      },
+      {
+        label: 'Alertas',
+        path: '/alerts',
+        icon: 'ph-bell-ringing',
+        description: 'Panel de productos por debajo de su mínimo.',
+      },
     ],
   },
   {
@@ -115,6 +128,20 @@ export const NAV_SECTIONS: NavSection[] = [
         path: '/purchases/price-comparison',
         icon: 'ph-chart-line',
         description: 'Compará precios de compra entre proveedores.',
+        roles: ['Administrador'],
+      },
+    ],
+  },
+  {
+    // HU-15, first MVP4 screen — grows with consumo (HU-16) y
+    // aprobación (HU-17) as those HUs land.
+    label: 'Solicitudes',
+    items: [
+      {
+        label: 'Mis solicitudes',
+        path: '/requests',
+        icon: 'ph-clipboard-text',
+        description: 'Creá y seguí tus solicitudes de compra.',
         roles: ['Administrador'],
       },
     ],

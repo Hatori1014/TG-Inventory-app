@@ -3,7 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PaginatedResponse } from '../../shared/models/paginated-response.model';
-import { CreateMovementRequest, Movement, StockItem, TransferResult } from '../../shared/models/inventory.model';
+import {
+  CreateMovementRequest,
+  MinimumStock,
+  Movement,
+  StockAlert,
+  StockItem,
+  TransferResult,
+} from '../../shared/models/inventory.model';
 import { Batch, CreateBatchRequest } from '../../shared/models/batch.model';
 
 @Injectable({ providedIn: 'root' })
@@ -44,5 +51,25 @@ export class InventoryService {
     return this.http.get<PaginatedResponse<Batch>>(`${environment.apiUrl}/inventory/batches/${productId}`, {
       params: { page, pageSize },
     });
+  }
+
+  // HU-11 — one minimum per product (DoR resolved by the user).
+  listMinimumStock(page = 1, pageSize = 100): Observable<PaginatedResponse<MinimumStock>> {
+    return this.http.get<PaginatedResponse<MinimumStock>>(`${environment.apiUrl}/inventory/minimum-stock`, {
+      params: { page, pageSize },
+    });
+  }
+
+  createMinimumStock(productId: string, minimumQuantity: number): Observable<MinimumStock> {
+    return this.http.post<MinimumStock>(`${environment.apiUrl}/inventory/minimum-stock`, { productId, minimumQuantity });
+  }
+
+  updateMinimumStock(id: string, minimumQuantity: number): Observable<MinimumStock> {
+    return this.http.patch<MinimumStock>(`${environment.apiUrl}/inventory/minimum-stock/${id}`, { minimumQuantity });
+  }
+
+  // HU-12 — GET /alerts, "cualquier autenticado" (no permission gate).
+  listAlerts(): Observable<StockAlert[]> {
+    return this.http.get<StockAlert[]>(`${environment.apiUrl}/alerts`);
   }
 }

@@ -1,0 +1,106 @@
+<div class="request-form-page-header">
+  <h1>{{ isEditMode ? 'Continuar solicitud' : 'Nueva solicitud de compra' }}</h1>
+  <span class="request-form-page-route">/requests</span>
+</div>
+
+@if (loading()) {
+  <p class="request-form-hint">Cargando...</p>
+} @else {
+  <div class="request-form-card">
+    <h2 class="request-form-title">Solicitud de compra a proveedor</h2>
+    <p class="request-form-subtitle">
+      Guardá como borrador para completarla después, o enviala directamente para que entre al flujo de aprobación.
+    </p>
+
+    <form [formGroup]="form">
+      <div class="request-field">
+        <label for="request-supplier">Proveedor</label>
+        <select id="request-supplier" formControlName="supplierId">
+          <option value="">Sin elegir todavía</option>
+          @for (supplier of suppliers(); track supplier.id) {
+            <option [value]="supplier.id">{{ supplier.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="request-items" formArrayName="items">
+        <div class="request-items-header">
+          <span>Ítems</span>
+          <button type="button" class="request-add-item-btn" (click)="addItem()">+ Agregar ítem</button>
+        </div>
+
+        @for (item of items.controls; track item; let i = $index) {
+          <div class="request-item-row" [formGroupName]="i">
+            <div class="request-item-fields">
+              <div class="request-field">
+                <label>Producto</label>
+                <select formControlName="productId">
+                  <option value="">Sin elegir</option>
+                  @for (product of products(); track product.id) {
+                    <option [value]="product.id">{{ product.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="request-field">
+                <label>Ubicación destino</label>
+                <select formControlName="locationId">
+                  <option value="">Sin elegir</option>
+                  @for (location of locations(); track location.id) {
+                    <option [value]="location.id">{{ location.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="request-field request-field--narrow">
+                <label>Cantidad</label>
+                <input type="number" step="0.0001" min="0.0001" formControlName="quantity" />
+              </div>
+
+              <div class="request-field request-field--narrow">
+                <label>Precio estimado</label>
+                <input type="number" step="0.01" min="0" formControlName="estimatedPrice" />
+              </div>
+            </div>
+
+            <div class="request-item-footer">
+              <span class="request-item-subtotal">Estimado: {{ itemSubtotal(i) | number: '1.2-2' }}</span>
+              <button
+                type="button"
+                class="request-remove-item-btn"
+                [disabled]="items.length <= 1"
+                (click)="removeItem(i)"
+              >
+                Quitar
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="request-field">
+        <label for="request-notes">Notas</label>
+        <textarea id="request-notes" formControlName="notes" rows="2" placeholder="Opcional"></textarea>
+      </div>
+
+      <div class="request-total">
+        <span>Total estimado</span>
+        <span class="request-total-amount">{{ totalEstimated | number: '1.2-2' }}</span>
+      </div>
+
+      @if (errorMessage) {
+        <p class="request-form-error" role="alert">{{ errorMessage }}</p>
+      }
+
+      <div class="request-form-actions">
+        <a routerLink="/requests" class="request-cancel-btn">Cancelar</a>
+        <button type="button" class="request-draft-btn" [disabled]="isSubmitting" (click)="saveDraft()">
+          Guardar borrador
+        </button>
+        <button type="button" class="request-submit-btn" [disabled]="isSubmitting" (click)="submitRequest()">
+          Enviar solicitud
+        </button>
+      </div>
+    </form>
+  </div>
+}
