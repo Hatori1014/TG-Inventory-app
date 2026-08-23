@@ -42,6 +42,15 @@ export class ProductFormComponent {
   showNewCategory = signal(false);
   newCategoryName = '';
 
+  // HU-26 — image upload acts immediately on selection, same UX pattern as
+  // createUnitInline/createCategoryInline (doesn't wait for the main form
+  // submit). imagePreviewUrl is an object URL from a blob fetched with the
+  // JWT attached (R2 is private — a plain <img src> can't do that, see
+  // ProductsService.getProductImage), revoked whenever it's replaced.
+  imagePreviewUrl = signal<string | null>(null);
+  isUploadingImage = false;
+  imageError: string | null = null;
+
   form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
     description: ['', [Validators.maxLength(500)]],
@@ -70,6 +79,9 @@ export class ProductFormComponent {
               status: product.status,
               requiresBatch: product.requiresBatch,
             });
+            if (product.imageUrl) {
+              this.loadImagePreview();
+            }
           }
           this.loading.set(false);
         },
@@ -145,6 +157,48 @@ export class ProductFormComponent {
             : error.status === 400
               ? 'La unidad o categoría seleccionada no es válida.'
               : 'No se pudo guardar el producto. Intentá de nuevo.';
+      },
+    });
+  }
+
+  private loadImagePreview(): void {
+    this.productsService.getProductImage(this.productId as string).subscribe({
+      next: (blob) => this.setPreview(blob),
+      // A 404 here just means the product has no image yet (or it hasn't
+      // finished uploading) — not worth surfacing as an error.
+      error: () => {},
+    });
+  }
+
+  private setPreview(blob: Blob): void {
+    const previous = this.imagePreviewUrl();
+    if (previous) {
+      URL.revokeObjectURL(previous);
+    }
+    this.imagePreviewUrl.set(URL.createObjectURL(blob));
+  }
+
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || !this.productId) return;
+
+    this.imageError = null;
+    this.isUploadingImage = true;
+    this.productsService.uploadProductImage(this.productId, file).subscribe({
+      next: () => {
+        this.isUploadingImage = false;
+        this.setPreview(file);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isUploadingImage = false;
+        this.imageError =
+          error.status === 400
+            ? 'El archivo no es una imagen JPG, PNG o WEBP válida, o supera los 5MB.'
+            : error.status === 403
+              ? 'No tenés permiso para subir la imagen.'
+              : 'No se pudo subir la imagen. Intentá de nuevo.';
       },
     });
   }

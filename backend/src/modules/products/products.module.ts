@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { R2StorageService } from '../../storage/r2-storage.service';
 import { ProductsController } from './products.controller';
 import { CategoriesController } from './categories.controller';
 import { UnitsController } from './units.controller';
 import { CreateProductUseCase } from './application/use-cases/create-product.use-case';
 import { ListProductsUseCase } from './application/use-cases/list-products.use-case';
 import { UpdateProductUseCase } from './application/use-cases/update-product.use-case';
+import { UploadProductImageUseCase } from './application/use-cases/upload-product-image.use-case';
+import { GetProductImageUseCase } from './application/use-cases/get-product-image.use-case';
 import { CreateCategoryUseCase } from './application/use-cases/create-category.use-case';
 import { ListCategoriesUseCase } from './application/use-cases/list-categories.use-case';
 import { UpdateCategoryUseCase } from './application/use-cases/update-category.use-case';
@@ -18,13 +21,20 @@ import { UnitPrismaRepository } from './infrastructure/unit.prisma.repository';
 
 // No APP_GUARD registered here — PermissionsGuard is already global via
 // RolesModule; this module only uses @RequirePermission() on writes.
+// HU-26/27 — R2StorageService is this module's own provider (same
+// no-shared-module pattern PrismaService already uses everywhere), not a
+// separate exported StorageModule: ProductsModule is its only consumer
+// today.
 @Module({
   controllers: [ProductsController, CategoriesController, UnitsController],
   providers: [
     PrismaService,
+    R2StorageService,
     CreateProductUseCase,
     ListProductsUseCase,
     UpdateProductUseCase,
+    UploadProductImageUseCase,
+    GetProductImageUseCase,
     CreateCategoryUseCase,
     ListCategoriesUseCase,
     UpdateCategoryUseCase,
