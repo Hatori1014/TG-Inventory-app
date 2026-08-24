@@ -17,6 +17,7 @@ interface UpdateProductData {
   unitId?: string;
   categoryId?: string;
   status?: ProductStatus;
+  imageUrl?: string;
 }
 
 // In-memory stand-in for ProductPrismaRepository — never touches Postgres
@@ -106,6 +107,7 @@ export class FakeProductRepository {
       categoryId,
       category,
       status: data.status ?? existing.status,
+      imageUrl: data.imageUrl ?? existing.imageUrl,
     };
     this.products.set(id, updated);
     return updated;

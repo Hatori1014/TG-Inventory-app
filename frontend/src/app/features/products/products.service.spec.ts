@@ -74,4 +74,37 @@ describe('ProductsService', () => {
     expect(req.request.body).toEqual({ status: 'discontinued' });
     req.flush(expected);
   });
+
+  it('uploadProductImage() POSTs multipart form data to /products/:id/image', () => {
+    const expected: Product = {
+      id: '1',
+      name: 'Arroz',
+      description: null,
+      unit,
+      category: null,
+      requiresBatch: false,
+      imageUrl: 'products/1/x.webp',
+      status: 'active',
+    };
+    const file = new File(['fake-bytes'], 'photo.jpg', { type: 'image/jpeg' });
+
+    service.uploadProductImage('1', file).subscribe();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/products/1/image`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body instanceof FormData).toBe(true);
+    expect((req.request.body as FormData).get('file')).toBe(file);
+    req.flush(expected);
+  });
+
+  it('getProductImage() GETs /products/:id/image as a blob', () => {
+    const expectedBlob = new Blob(['fake-webp'], { type: 'image/webp' });
+
+    service.getProductImage('1').subscribe();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/products/1/image`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+    req.flush(expectedBlob);
+  });
 });
