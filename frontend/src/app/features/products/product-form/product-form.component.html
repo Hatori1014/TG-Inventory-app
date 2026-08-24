@@ -83,6 +83,29 @@
 
       @if (isEditMode) {
         <div class="product-field">
+          <label>Imagen</label>
+          <div class="product-image-row">
+            @if (imagePreviewUrl()) {
+              <img [src]="imagePreviewUrl()" alt="Imagen del producto" class="product-image-preview" />
+            } @else {
+              <div class="product-image-placeholder">
+                <i class="ph ph-image"></i>
+              </div>
+            }
+            <div class="product-image-controls">
+              <label class="product-image-upload-btn">
+                {{ isUploadingImage ? 'Subiendo...' : 'Subir imagen' }}
+                <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onImageSelected($event)" [disabled]="isUploadingImage" hidden />
+              </label>
+              <span class="product-image-hint">JPG, PNG o WEBP, máx. 5MB.</span>
+              @if (imageError) {
+                <p class="product-form-error" role="alert">{{ imageError }}</p>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="product-field">
           <label>Estado</label>
           <div class="product-status-toggle">
             <label class="product-status-option" [class.product-status-option--active]="form.value.status === 'active'">
