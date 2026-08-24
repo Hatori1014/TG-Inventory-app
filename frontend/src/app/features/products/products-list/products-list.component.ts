@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ProductsService } from '../products.service';
 import { Product } from '../../../shared/models/product.model';
+import { ProductThumbnailComponent } from '../../../shared/components/product-thumbnail/product-thumbnail.component';
 
 // TT-24 phase 5 — matches the Claude Design mockup: table with a
 // description subline, "Lote"/"Estado" badges, and real pagination (the
@@ -17,7 +18,7 @@ import { Product } from '../../../shared/models/product.model';
 @Component({
   selector: 'app-products-list',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, ProductThumbnailComponent],
   templateUrl: './products-list.component.html',
   styleUrl: './products-list.component.scss',
 })
