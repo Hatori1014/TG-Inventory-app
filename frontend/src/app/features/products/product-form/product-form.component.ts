@@ -42,14 +42,23 @@ export class ProductFormComponent {
   showNewCategory = signal(false);
   newCategoryName = '';
 
-  // HU-26 — image upload acts immediately on selection, same UX pattern as
-  // createUnitInline/createCategoryInline (doesn't wait for the main form
-  // submit). imagePreviewUrl is an object URL from a blob fetched with the
-  // JWT attached (R2 is private — a plain <img src> can't do that, see
-  // ProductsService.getProductImage), revoked whenever it's replaced.
+  // HU-26 — in edit mode, image upload acts immediately on selection, same
+  // UX pattern as createUnitInline/createCategoryInline (doesn't wait for
+  // the main form submit). imagePreviewUrl is an object URL from a blob
+  // fetched with the JWT attached (R2 is private — a plain <img src>
+  // can't do that, see ProductsService.getProductImage), revoked whenever
+  // it's replaced.
+  //
+  // In create mode there's no product id yet to upload against — the
+  // user's explicit follow-up after testing staging: the image picker has
+  // to be available when creating a product too, not only when editing
+  // one. So the selected file is only staged (previewed from the local
+  // File, no server round-trip) and actually uploaded right after the
+  // product is created, inside onSubmit().
   imagePreviewUrl = signal<string | null>(null);
   isUploadingImage = false;
   imageError: string | null = null;
+  private pendingImageFile: File | null = null;
 
   form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
@@ -145,7 +154,22 @@ export class ProductFormComponent {
         });
 
     request$.subscribe({
-      next: () => {
+      next: (product) => {
+        if (!this.isEditMode && this.pendingImageFile) {
+          // Best-effort: the product itself is already created successfully
+          // by this point — a failed image upload shouldn't block leaving
+          // the form, there's nothing more useful to do here than let the
+          // user retry it from the edit screen. Navigate away either way.
+          const leave = () => {
+            this.isSubmitting = false;
+            this.router.navigateByUrl('/products');
+          };
+          this.productsService.uploadProductImage(product.id, this.pendingImageFile).subscribe({
+            next: leave,
+            error: leave,
+          });
+          return;
+        }
         this.isSubmitting = false;
         this.router.navigateByUrl('/products');
       },
@@ -182,11 +206,21 @@ export class ProductFormComponent {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = '';
-    if (!file || !this.productId) return;
+    if (!file) return;
 
     this.imageError = null;
+
+    if (!this.isEditMode) {
+      // No product id yet — stage it and preview the local file as-is;
+      // the real upload (with the server-side validation/resize) happens
+      // in onSubmit() once the product exists.
+      this.pendingImageFile = file;
+      this.setPreview(file);
+      return;
+    }
+
     this.isUploadingImage = true;
-    this.productsService.uploadProductImage(this.productId, file).subscribe({
+    this.productsService.uploadProductImage(this.productId as string, file).subscribe({
       next: () => {
         this.isUploadingImage = false;
         this.setPreview(file);
