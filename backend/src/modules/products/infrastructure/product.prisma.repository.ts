@@ -18,6 +18,11 @@ export interface UpdateProductData {
   categoryId?: string;
   status?: ProductStatus;
   requiresBatch?: boolean;
+  // HU-26 — the R2 object key for the product's image, not a browsable
+  // URL: the bucket is private (the user's explicit choice), so the
+  // backend proxies it via GET /products/:id/image rather than a client
+  // ever reading this value directly.
+  imageUrl?: string;
 }
 
 // No domain/ layer — trivial CRUD (convenciones.md). Injected directly by
