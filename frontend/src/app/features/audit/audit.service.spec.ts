@@ -37,4 +37,24 @@ describe('AuditService', () => {
     expect(req.request.params.get('entity')).toBe('Role');
     req.flush({ items: [], total: 0, page: 1, pageSize: 20 });
   });
+
+  it('listErrorEvents() calls GET /error-events with page/pageSize params', () => {
+    service.listErrorEvents(1, 20).subscribe();
+
+    const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/error-events` && r.method === 'GET');
+    expect(req.request.params.get('page')).toBe('1');
+    expect(req.request.params.get('pageSize')).toBe('20');
+    expect(req.request.params.has('module')).toBe(false);
+    expect(req.request.params.has('action')).toBe(false);
+    req.flush({ items: [], total: 0, page: 1, pageSize: 20 });
+  });
+
+  it('listErrorEvents() forwards the module/action filters when given', () => {
+    service.listErrorEvents(1, 20, 'roles', 'delete').subscribe();
+
+    const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/error-events`);
+    expect(req.request.params.get('module')).toBe('roles');
+    expect(req.request.params.get('action')).toBe('delete');
+    req.flush({ items: [], total: 0, page: 1, pageSize: 20 });
+  });
 });

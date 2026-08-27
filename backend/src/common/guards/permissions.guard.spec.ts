@@ -12,6 +12,18 @@ describe('PermissionsGuard', () => {
     } as unknown as ExecutionContext;
   }
 
+  // Unlike buildContext, this exposes the exact request object instance so
+  // a test can inspect what the guard attached to it afterwards.
+  function buildContextWithRequest(user: unknown): { context: ExecutionContext; request: Record<string, unknown> } {
+    const request: Record<string, unknown> = { user };
+    const context = {
+      getHandler: jest.fn(),
+      getClass: jest.fn(),
+      switchToHttp: () => ({ getRequest: () => request }),
+    } as unknown as ExecutionContext;
+    return { context, request };
+  }
+
   it('allows the request without querying the database when no permission is required', async () => {
     const reflector = { getAllAndOverride: jest.fn().mockReturnValue(undefined) } as unknown as Reflector;
     const findFirst = jest.fn();
@@ -65,6 +77,37 @@ describe('PermissionsGuard', () => {
     expect(findFirst).toHaveBeenCalledWith({
       where: { role: { name: undefined }, permission: { module: 'roles', action: 'create' } },
     });
+  });
+
+  // HU-31 — GlobalExceptionFilter reads this back to know which
+  // module/action a failing request was for; ArgumentsHost doesn't
+  // reliably expose enough to derive it there directly.
+  it('stashes the required permission on the request when access is granted', async () => {
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue({ module: 'roles', action: 'create' }),
+    } as unknown as Reflector;
+    const findFirst = jest.fn().mockResolvedValue({ roleId: '1', permissionId: 'p1' });
+    const prisma = { rolePermission: { findFirst } } as any;
+    const guard = new PermissionsGuard(reflector, prisma);
+    const { context, request } = buildContextWithRequest({ role: 'Administrador' });
+
+    await guard.canActivate(context);
+
+    expect(request['requiredPermission']).toEqual({ module: 'roles', action: 'create' });
+  });
+
+  it('stashes the required permission on the request even when access is denied', async () => {
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue({ module: 'roles', action: 'create' }),
+    } as unknown as Reflector;
+    const findFirst = jest.fn().mockResolvedValue(null);
+    const prisma = { rolePermission: { findFirst } } as any;
+    const guard = new PermissionsGuard(reflector, prisma);
+    const { context, request } = buildContextWithRequest({ role: 'Comprador' });
+
+    await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+
+    expect(request['requiredPermission']).toEqual({ module: 'roles', action: 'create' });
   });
 
   it('reads metadata with the REQUIRE_PERMISSION_KEY token', async () => {
