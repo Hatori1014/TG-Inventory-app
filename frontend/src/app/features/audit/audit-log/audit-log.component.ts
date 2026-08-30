@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuditService } from '../audit.service';
 import { AuditEvent } from '../../../shared/models/audit-event.model';
 
@@ -18,7 +19,7 @@ const ENTITY_OPTIONS = ['User', 'Role', 'Request'];
 @Component({
   selector: 'app-audit-log',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, RouterLink, RouterLinkActive],
   templateUrl: './audit-log.component.html',
   styleUrl: './audit-log.component.scss',
 })

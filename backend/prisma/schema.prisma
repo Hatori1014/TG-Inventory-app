@@ -72,6 +72,7 @@ model User {
   requestsCreated   Request[]             @relation("requester")
   requestApprovals  RequestApproval[]
   auditEvents       AuditEvent[]
+  errorEvents       ErrorEvent[]
 
   @@index([roleId])
   @@map("user")
@@ -544,6 +545,33 @@ model AuditEvent {
   @@index([entity, entityId])
   @@index([occurredAt])
   @@map("audit_event")
+}
+
+// HU-31, at the user's explicit request: a dedicated table, separate from
+// AuditEvent — an error isn't "a user's action on an entity" (AuditEvent's
+// shape), it's a failure of a request. Recorded by GlobalExceptionFilter
+// (TT-15) for every error response, 4xx and 5xx alike, so it doubles as
+// the panel to answer "what's actually failing and where" — module/action
+// come from the same @RequirePermission() metadata PermissionsGuard
+// already reads (via Reflector), null when the failing route doesn't
+// carry one (e.g. a public route, or a plain 401 from a missing/invalid
+// token before any handler metadata is even reached).
+model ErrorEvent {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  user       User?    @relation(fields: [userId], references: [id])
+  module     String?
+  action     String?
+  method     String
+  path       String
+  statusCode Int      @map("status_code")
+  message    String
+  occurredAt DateTime @default(now()) @map("occurred_at")
+
+  @@index([module, action])
+  @@index([statusCode])
+  @@index([occurredAt])
+  @@map("error_event")
 }
 
 // ---------- Idempotency (TT-18) ----------
