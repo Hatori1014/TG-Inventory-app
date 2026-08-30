@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 import { AuditLogComponent } from './audit-log.component';
 
 describe('AuditLogComponent', () => {
@@ -9,7 +10,7 @@ describe('AuditLogComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [AuditLogComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     });
     httpMock = TestBed.inject(HttpTestingController);
   });
@@ -90,5 +91,15 @@ describe('AuditLogComponent', () => {
     expect(scrollWrapper).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('Ada Admin');
     expect(fixture.nativeElement.textContent).toContain('role.delete');
+  });
+
+  it('links to the error log tab', () => {
+    const fixture = TestBed.createComponent(AuditLogComponent);
+    httpMock.expectOne((r) => r.url.endsWith('/audit-events')).flush({ items: [], total: 0, page: 1, pageSize: 20 });
+    fixture.detectChanges();
+
+    const link = fixture.nativeElement.querySelector('a[href="/audit/errors"]');
+    expect(link).toBeTruthy();
+    expect(link.textContent).toContain('Errores del sistema');
   });
 });

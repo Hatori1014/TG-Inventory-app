@@ -95,6 +95,11 @@ const ADMIN_BOOTSTRAP_PERMISSIONS: Array<{ module: string; action: string }> = [
   // RecordAuditEventUseCase, called from other modules, never from a
   // client-facing endpoint.
   { module: 'audit', action: 'read' },
+  // HU-31 — read-only access to the error log (GET /error-events). Same
+  // criterion as audit:read: rows only ever come from
+  // RecordErrorEventUseCase (called from GlobalExceptionFilter), never a
+  // client-facing write endpoint.
+  { module: 'errors', action: 'read' },
 ];
 
 // Default-role feature, at the user's explicit request: the role every new

@@ -1,0 +1,100 @@
+<div class="error-page-header">
+  <h1>Auditoría</h1>
+  <span class="error-page-route">/error-events</span>
+</div>
+
+<div class="error-tabs">
+  <a routerLink="/audit" routerLinkActive="error-tab-btn--active" [routerLinkActiveOptions]="{ exact: true }" class="error-tab-btn">
+    Acciones sensibles
+  </a>
+  <a routerLink="/audit/errors" routerLinkActive="error-tab-btn--active" class="error-tab-btn">Errores del sistema</a>
+</div>
+
+<div class="error-table-card">
+  <div class="error-table-header">
+    <h2>{{ total() }} errores</h2>
+    <div class="error-header-actions">
+      <input
+        type="text"
+        class="error-filter-input"
+        placeholder="Módulo (ej. roles)"
+        [(ngModel)]="moduleFilter"
+        (change)="applyFilter()"
+      />
+      <input
+        type="text"
+        class="error-filter-input"
+        placeholder="Acción (ej. delete)"
+        [(ngModel)]="actionFilter"
+        (change)="applyFilter()"
+      />
+    </div>
+  </div>
+
+  <div class="error-table-scroll">
+    <table class="error-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th>Módulo</th>
+          <th>Acción</th>
+          <th>Ruta</th>
+          <th>Usuario</th>
+          <th>Mensaje</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td colspan="7" class="error-empty">Cargando...</td>
+          </tr>
+        } @else {
+          @for (event of events(); track event.id) {
+            <tr>
+              <td class="error-col-muted">{{ event.occurredAt | date: 'short' }}</td>
+              <td>
+                <span class="error-status-badge" [class.error-status-badge--5xx]="event.statusCode >= 500">
+                  {{ event.statusCode }}
+                </span>
+              </td>
+              <td class="error-col-muted">{{ event.module || '—' }}</td>
+              <td class="error-col-muted">{{ event.action || '—' }}</td>
+              <td class="error-col-muted">{{ event.method }} {{ event.path }}</td>
+              <td>{{ event.userLabel || '—' }}</td>
+              <td class="error-message">{{ event.message }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="error-empty">No hay errores registrados.</td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="error-pagination">
+    <span>Página {{ page() }} de {{ totalPages() }} · {{ total() }} errores</span>
+    <div class="error-pagination-controls">
+      <button
+        type="button"
+        class="error-page-btn"
+        [disabled]="page() <= 1"
+        (click)="previousPage()"
+        aria-label="Página anterior"
+      >
+        <i class="ph ph-caret-left"></i>
+      </button>
+      <button
+        type="button"
+        class="error-page-btn"
+        [disabled]="page() >= totalPages()"
+        (click)="nextPage()"
+        aria-label="Página siguiente"
+      >
+        <i class="ph ph-caret-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
