@@ -3,6 +3,13 @@
   <span class="audit-page-route">/audit-events</span>
 </div>
 
+<div class="audit-tabs">
+  <a routerLink="/audit" routerLinkActive="audit-tab-btn--active" [routerLinkActiveOptions]="{ exact: true }" class="audit-tab-btn">
+    Acciones sensibles
+  </a>
+  <a routerLink="/audit/errors" routerLinkActive="audit-tab-btn--active" class="audit-tab-btn">Errores del sistema</a>
+</div>
+
 <div class="audit-table-card">
   <div class="audit-table-header">
     <h2>{{ total() }} eventos</h2>

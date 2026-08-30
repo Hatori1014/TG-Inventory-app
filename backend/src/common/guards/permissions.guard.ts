@@ -25,7 +25,17 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const { user } = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest();
+    // HU-31 — GlobalExceptionFilter needs to know which module/action a
+    // failing request was for, but ArgumentsHost (what exception filters
+    // receive) doesn't reliably expose getHandler()/getClass() the way
+    // this guard's real ExecutionContext does — verified the hard way,
+    // it crashed the whole process on the first real error once trusted.
+    // This guard already resolves `required` to decide access, so it
+    // stashes it on the request for the filter to read back, regardless
+    // of whether the grant check below ends up passing or throwing.
+    request.requiredPermission = required;
+    const { user } = request;
 
     const grant = await this.prisma.rolePermission.findFirst({
       where: {
