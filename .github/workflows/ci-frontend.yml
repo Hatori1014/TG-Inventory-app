@@ -11,7 +11,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Branch protection requires this check to pass, but a required check
       # that never runs (because paths: filtered it out) blocks the PR
@@ -25,7 +25,7 @@ jobs:
             frontend:
               - 'frontend/**'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: steps.filter.outputs.frontend == 'true'
         with:
           node-version: '20'
